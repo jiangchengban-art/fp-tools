@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>株ポートフォリオ試算ツール（モンテカルロ）</title>
+<style>
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    background: #f4f6f9;
+    color: #2c3e50;
+    margin: 0;
+    padding: 20px;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .subtitle { color: #7f8c8d; font-size: 13px; margin-bottom: 20px; }
+  .card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 16px; margin: 0 0 12px 0; border-left: 4px solid #2980b9; padding-left: 8px; }
+  label { font-size: 13px; color: #555; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 8px; }
+  input[type=number] {
+    width: 140px; padding: 6px 8px; font-size: 14px;
+    border: 1px solid #ccc; border-radius: 4px;
+  }
+  .preset-buttons button {
+    padding: 6px 14px; margin-right: 6px; border: 1px solid #2980b9;
+    background: #fff; color: #2980b9; border-radius: 4px; cursor: pointer; font-size: 13px;
+  }
+  .preset-buttons button.active { background: #2980b9; color: #fff; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 6px 8px; text-align: right; border-bottom: 1px solid #eee; }
+  th { color: #7f8c8d; font-weight: normal; text-align: center; }
+  td:first-child, th:first-child { text-align: left; }
+  td:nth-child(2), th:nth-child(2) { text-align: left; }
+  table input[type=number] { width: 70px; padding: 4px; text-align: right; }
+  table input[type=text] { width: 110px; padding: 4px; }
+  .alloc-sum { font-weight: bold; }
+  .ok { color: #27ae60; }
+  .ng { color: #c0392b; }
+  .add-btn, .run-btn {
+    padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
+  }
+  .add-btn { background: #ecf0f1; color: #2c3e50; margin-top: 8px; }
+  .run-btn { background: #2980b9; color: #fff; font-size: 16px; padding: 12px 28px; }
+  .run-btn:disabled { background: #bdc3c7; cursor: not-allowed; }
+  .result-table { margin-top: 12px; }
+  .result-table th, .result-table td { text-align: center; }
+  .toggle-row { margin-top: 10px; font-size: 13px; }
+  .toggle-row button {
+    padding: 4px 12px; border: 1px solid #2980b9; background: #fff; color: #2980b9;
+    border-radius: 4px; cursor: pointer; font-size: 12px;
+  }
+  .toggle-row button.active { background: #2980b9; color: #fff; }
+  canvas { width: 100%; border: 1px solid #eee; border-radius: 4px; margin-top: 10px; background: #fff; }
+  .note {
+    font-size: 12px; color: #7f8c8d; line-height: 1.6; background: #fdf6e3;
+    border-left: 4px solid #e67e22; padding: 12px 14px; border-radius: 4px;
+  }
+  .small { font-size: 12px; color: #7f8c8d; }
+  .remove-btn { color: #c0392b; cursor: pointer; font-size: 12px; border: none; background: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>株ポートフォリオ試算ツール</h1>
+  <div class="subtitle">モンテカルロ・シミュレーション（1,000試行）／ 最悪・平均・ベストの3点を併記</div>
+
+  <!-- ① 入力 -->
+  <div class="card">
+    <h2>① 基本条件</h2>
+    <div class="row">
+      <label>初期資金（円）<br><input type="number" id="initialAmount" value="10000000" min="0" step="10000"></label>
+      <label>毎月積立額（円・任意）<br><input type="number" id="monthlyContribution" value="0" min="0" step="1000"></label>
+    </div>
+    <div class="row">
+      <label>試算期間：</label>
+      <div class="preset-buttons" id="periodButtons">
+        <button data-years="1">1年</button>
+        <button data-years="3">3年</button>
+        <button data-years="5" class="active">5年</button>
+        <button data-years="10">10年</button>
+        <button data-years="20">20年</button>
+      </div>
+    </div>
+    <div class="small">想定インフレ率：年 2.0%（実質値表示の換算に使用）</div>
+  </div>
+
+  <!-- ④ 配分テーブル -->
+  <div class="card">
+    <h2>② 商品配分</h2>
+    <table id="allocTable">
+      <thead>
+        <tr>
+          <th>選択</th>
+          <th>商品名</th>
+          <th>期待リターン(%)</th>
+          <th>リスク(標準偏差%)</th>
+          <th>配分(%)</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="allocBody"></tbody>
+    </table>
+    <button class="add-btn" id="addRowBtn">＋ 商品を追加</button>
+    <div class="row" style="margin-top:10px;">
+      <span>配分合計：</span>
+      <span class="alloc-sum" id="allocSum">0%</span>
+      <span id="allocStatus"></span>
+    </div>
+  </div>
+
+  <div class="card" style="text-align:center;">
+    <button class="run-btn" id="runBtn" disabled>シミュレーション実行</button>
+    <div class="small" id="runHint" style="margin-top:8px;">配分合計を100%にすると実行できます</div>
+  </div>
+
+  <!-- ⑤ 結果 -->
+  <div class="card" id="resultCard" style="display:none;">
+    <h2>③ 結果サマリー（3点併記）</h2>
+    <table class="result-table">
+      <thead><tr><th>ケース</th><th>最終資産</th><th>年率換算</th></tr></thead>
+      <tbody id="resultBody"></tbody>
+    </table>
+    <div class="toggle-row">
+      表示切替：
+      <button id="btnNominal" class="active">名目</button>
+      <button id="btnReal">実質（インフレ2%控除後）</button>
+    </div>
+    <div class="small" id="resultNote" style="margin-top:8px;"></div>
+
+    <h2 style="margin-top:20px;">④ 資産推移（パーセンタイル帯）</h2>
+    <canvas id="bandChart" width="800" height="320"></canvas>
+    <div class="small">帯：5〜95パーセンタイル（最悪〜ベスト） ／ 太線：中央値（平均ケース）</div>
+
+    <h2 style="margin-top:20px;">⑤ 最終資産の分布（ヒストグラム）</h2>
+    <canvas id="histChart" width="800" height="240"></canvas>
+    <div class="small">1,000試行における最終資産の分布</div>
+  </div>
+
+  <!-- 免責 -->
+  <div class="note">
+    <strong>ご注意</strong><br>
+    本ツールの試算は AI による参考情報です。期待リターン・リスクは過去傾向に基づく仮定値であり、将来の運用成果を保証するものではありません。
+    モンテカルロ試算は正規分布を仮定した簡易モデルであり、資産間の相関は考慮していません（独立と仮定）。
+    実際の市場では資産同士が連動する場合があり、本試算は分散効果をやや過大に見積もる可能性があります。
+    投資の最終判断は、ご自身で税理士・FP等の有資格の専門家にご相談のうえ行ってください。
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---- 王道7商品（初期値・編集可） ----
+  var DEFAULT_ASSETS = [
+    { name: '全世界株式（オルカン相当）', ret: 5.5, risk: 18,  alloc: 40, checked: true },
+    { name: '米国株式（S&P500相当）',     ret: 6.0, risk: 20,  alloc: 20, checked: true },
+    { name: '先進国債券',                 ret: 1.5, risk: 5,   alloc: 20, checked: true },
+    { name: '国内債券',                   ret: 0.8, risk: 3,   alloc: 0,  checked: false },
+    { name: '金（ゴールド）',             ret: 3.0, risk: 15,  alloc: 10, checked: true },
+    { name: 'REIT（不動産）',             ret: 4.0, risk: 17,  alloc: 0,  checked: false },
+    { name: '現金・預金',                 ret: 0.1, risk: 0.5, alloc: 10, checked: true }
+  ];
+
+  var INFLATION = 0.02;
+  var TRIALS = 1000;
+  var selectedYears = 5;
+  var lastResult = null; // { sortedFinals, paths, years }
+  var displayMode = 'nominal'; // or 'real'
+
+  var allocBody = document.getElementById('allocBody');
+  var allocSumEl = document.getElementById('allocSum');
+  var allocStatusEl = document.getElementById('allocStatus');
+  var runBtn = document.getElementById('runBtn');
+  var runHint = document.getElementById('runHint');
+
+  // ---- 行生成 ----
+  function createRow(asset) {
+    var tr = document.createElement('tr');
+
+    var tdCheck = document.createElement('td');
+    var chk = document.createElement('input');
+    chk.type = 'checkbox';
+    chk.checked = asset.checked;
+    chk.addEventListener('change', onAnyChange);
+    tdCheck.appendChild(chk);
+
+    var tdName = document.createElement('td');
+    var nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.value = asset.name;
+    tdName.appendChild(nameInput);
+
+    var tdRet = document.createElement('td');
+    var retInput = document.createElement('input');
+    retInput.type = 'number';
+    retInput.step = '0.1';
+    retInput.value = asset.ret;
+    tdRet.appendChild(retInput);
+
+    var tdRisk = document.createElement('td');
+    var riskInput = document.createElement('input');
+    riskInput.type = 'number';
+    riskInput.step = '0.1';
+    riskInput.min = '0';
+    riskInput.value = asset.risk;
+    tdRisk.appendChild(riskInput);
+
+    var tdAlloc = document.createElement('td');
+    var allocInput = document.createElement('input');
+    allocInput.type = 'number';
+    allocInput.step = '1';
+    allocInput.min = '0';
+    allocInput.max = '100';
+    allocInput.value = asset.alloc;
+    allocInput.addEventListener('input', onAnyChange);
+    tdAlloc.appendChild(allocInput);
+
+    var tdRemove = document.createElement('td');
+    var removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-btn';
+    removeBtn.textContent = '削除';
+    removeBtn.addEventListener('click', function () {
+      tr.remove();
+      onAnyChange();
+    });
+    tdRemove.appendChild(removeBtn);
+
+    tr.appendChild(tdCheck);
+    tr.appendChild(tdName);
+    tr.appendChild(tdRet);
+    tr.appendChild(tdRisk);
+    tr.appendChild(tdAlloc);
+    tr.appendChild(tdRemove);
+
+    tr._getData = function () {
+      return {
+        checked: chk.checked,
+        name: nameInput.value || '（無名の商品）',
+        ret: parseFloat(retInput.value) || 0,
+        risk: Math.max(0, parseFloat(riskInput.value) || 0),
+        alloc: parseFloat(allocInput.value) || 0
+      };
+    };
+
+    return tr;
+  }
+
+  function buildDefaultRows() {
+    allocBody.innerHTML = '';
+    DEFAULT_ASSETS.forEach(function (a) {
+      allocBody.appendChild(createRow(a));
+    });
+  }
+
+  function getRowsData() {
+    return Array.prototype.map.call(allocBody.children, function (tr) {
+      return tr._getData();
+    });
+  }
+
+  // ---- 配分合計の検証 ----
+  function onAnyChange() {
+    var rows = getRowsData().filter(function (r) { return r.checked; });
+    var sum = rows.reduce(function (acc, r) { return acc + r.alloc; }, 0);
+    sum = Math.round(sum * 100) / 100;
+    allocSumEl.textContent = sum + '%';
+
+    var ok = (Math.abs(sum - 100) < 0.001) && rows.length > 0;
+    if (ok) {
+      allocSumEl.className = 'alloc-sum ok';
+      allocStatusEl.innerHTML = '<span class="ok">✅ OK（100%）</span>';
+      runBtn.disabled = false;
+      runHint.textContent = '実行できます';
+    } else {
+      allocSumEl.className = 'alloc-sum ng';
+      allocStatusEl.innerHTML = '<span class="ng">⚠ 選択中の商品の配分合計を100%にしてください</span>';
+      runBtn.disabled = true;
+      runHint.textContent = '配分合計を100%にすると実行できます';
+    }
+    return { rows: rows, sum: sum, ok: ok };
+  }
+
+  document.getElementById('addRowBtn').addEventListener('click', function () {
+    allocBody.appendChild(createRow({ name: '新規商品', ret: 3.0, risk: 10, alloc: 0, checked: true }));
+    onAnyChange();
+  });
+
+  // ---- 期間プリセット ----
+  var periodButtons = document.getElementById('periodButtons');
+  periodButtons.addEventListener('click', function (e) {
+    if (e.target.tagName !== 'BUTTON') return;
+    Array.prototype.forEach.call(periodButtons.children, function (b) { b.classList.remove('active'); });
+    e.target.classList.add('active');
+    selectedYears = parseInt(e.target.getAttribute('data-years'), 10);
+  });
+
+  // ---- 正規乱数（Box-Muller法） ----
+  function randNormal() {
+    var u = 0, v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  }
+
+  // ---- モンテカルロ実行 ----
+  function runSimulation() {
+    var check = onAnyChange();
+    if (!check.ok) return;
+
+    var initial = Math.max(0, parseFloat(document.getElementById('initialAmount').value) || 0);
+    var monthly = Math.max(0, parseFloat(document.getElementById('monthlyContribution').value) || 0);
+    var annualContribution = monthly * 12;
+    var years = selectedYears;
+    var assets = check.rows.map(function (r) {
+      return { ratio: r.alloc / 100, mu: r.ret / 100, sigma: r.risk / 100 };
+    });
+
+    var finals = new Array(TRIALS);
+    var paths = new Array(TRIALS); // 各試行の年次推移（グラフ用に間引いて保持）
+
+    for (var i = 0; i < TRIALS; i++) {
+      var amount = initial;
+      var path = [amount];
+      for (var y = 0; y < years; y++) {
+        var portfolioReturn = 0;
+        for (var k = 0; k < assets.length; k++) {
+          var assetReturn = assets[k].mu + assets[k].sigma * randNormal();
+          portfolioReturn += assets[k].ratio * assetReturn;
+        }
+        amount = amount * (1 + portfolioReturn) + annualContribution;
+        path.push(amount);
+      }
+      finals[i] = amount;
+      paths[i] = path;
+    }
+
+    var sortedFinals = finals.slice().sort(function (a, b) { return a - b; });
+    lastResult = { sortedFinals: sortedFinals, paths: paths, years: years, initial: initial, annualContribution: annualContribution };
+
+    renderResult();
+  }
+
+  function percentile(sortedArr, p) {
+    var idx = Math.floor((sortedArr.length - 1) * p);
+    return sortedArr[idx];
+  }
+
+  function formatYen(v) {
+    return Math.round(v).toLocaleString('ja-JP') + '円';
+  }
+
+  function annualizedReturn(initial, finalAmt, years) {
+    if (initial <= 0 || years <= 0) return null;
+    return (Math.pow(finalAmt / initial, 1 / years) - 1) * 100;
+  }
+
+  function applyDeflator(value, years) {
+    if (displayMode === 'real') {
+      return value / Math.pow(1 + INFLATION, years);
+    }
+    return value;
+  }
+
+  function renderResult() {
+    if (!lastResult) return;
+    document.getElementById('resultCard').style.display = 'block';
+
+    var years = lastResult.years;
+    var sf = lastResult.sortedFinals;
+    var worst = percentile(sf, 0.05);
+    var median = percentile(sf, 0.50);
+    var best = percentile(sf, 0.95);
+
+    var rows = [
+      { label: '📈 ベスト（上位5%）', value: best },
+      { label: '➡️ 平均（中央値）', value: median },
+      { label: '📉 最悪（下位5%）', value: worst }
+    ];
+
+    var tbody = document.getElementById('resultBody');
+    tbody.innerHTML = '';
+    rows.forEach(function (r) {
+      var displayVal = applyDeflator(r.value, years);
+      var ar = annualizedReturn(lastResult.initial, displayVal, years);
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + r.label + '</td>' +
+        '<td>' + formatYen(displayVal) + '</td>' +
+        '<td>' + (ar === null ? '—' : (ar >= 0 ? '+' : '') + ar.toFixed(1) + '%') + '</td>';
+      tbody.appendChild(tr);
+    });
+
+    var noteEl = document.getElementById('resultNote');
+    if (displayMode === 'real') {
+      noteEl.textContent = '※ 実質値：年率インフレ 2.0% を控除した、現在の貨幣価値換算での金額です。';
+    } else {
+      noteEl.textContent = '※ 名目値：物価変動を考慮しない、将来時点での額面金額です。';
+    }
+    noteEl.textContent += '（試算は1,000試行のモンテカルロ・シミュレーションによる参考値であり、将来を保証するものではありません）';
+
+    drawBandChart();
+    drawHistogram();
+  }
+
+  document.getElementById('btnNominal').addEventListener('click', function () {
+    displayMode = 'nominal';
+    this.classList.add('active');
+    document.getElementById('btnReal').classList.remove('active');
+    renderResult();
+  });
+  document.getElementById('btnReal').addEventListener('click', function () {
+    displayMode = 'real';
+    this.classList.add('active');
+    document.getElementById('btnNominal').classList.remove('active');
+    renderResult();
+  });
+
+  // ---- グラフ：パーセンタイル帯 ----
+  function drawBandChart() {
+    var canvas = document.getElementById('bandChart');
+    var ctx = canvas.getContext('2d');
+    var W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    var years = lastResult.years;
+    var paths = lastResult.paths;
+    var padding = { left: 90, right: 20, top: 20, bottom: 36 };
+    var plotW = W - padding.left - padding.right;
+    var plotH = H - padding.top - padding.bottom;
+
+    // 各年ごとのパーセンタイル値を算出
+    var p05 = [], p50 = [], p95 = [];
+    for (var y = 0; y <= years; y++) {
+      var vals = paths.map(function (p) { return applyDeflator(p[y], y); });
+      vals.sort(function (a, b) { return a - b; });
+      p05.push(percentile(vals, 0.05));
+      p50.push(percentile(vals, 0.50));
+      p95.push(percentile(vals, 0.95));
+    }
+
+    var maxVal = Math.max.apply(null, p95);
+    var minVal = Math.min(0, Math.min.apply(null, p05));
+
+    function xAt(y) { return padding.left + (y / years) * plotW; }
+    function yAt(v) { return padding.top + plotH - ((v - minVal) / (maxVal - minVal)) * plotH; }
+
+    // 軸
+    ctx.strokeStyle = '#ddd';
+    ctx.fillStyle = '#7f8c8d';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    var gridLines = 5;
+    for (var g = 0; g <= gridLines; g++) {
+      var v = minVal + (maxVal - minVal) * (g / gridLines);
+      var yy = yAt(v);
+      ctx.beginPath();
+      ctx.moveTo(padding.left, yy);
+      ctx.lineTo(W - padding.right, yy);
+      ctx.stroke();
+      ctx.fillText(Math.round(v / 10000).toLocaleString('ja-JP') + '万円', padding.left - 8, yy + 4);
+    }
+    ctx.textAlign = 'center';
+    for (var yr = 0; yr <= years; yr++) {
+      if (years > 10 && yr % 2 !== 0) continue;
+      ctx.fillText(yr + '年目', xAt(yr), H - padding.bottom + 16);
+    }
+
+    // 帯（5〜95パーセンタイル）
+    ctx.beginPath();
+    for (var i = 0; i <= years; i++) {
+      var px = xAt(i), py = yAt(p95[i]);
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    for (var j = years; j >= 0; j--) {
+      ctx.lineTo(xAt(j), yAt(p05[j]));
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(41, 128, 185, 0.15)';
+    ctx.fill();
+
+    // 中央値ライン
+    ctx.beginPath();
+    for (var k = 0; k <= years; k++) {
+      var pxk = xAt(k), pyk = yAt(p50[k]);
+      if (k === 0) ctx.moveTo(pxk, pyk); else ctx.lineTo(pxk, pyk);
+    }
+    ctx.strokeStyle = '#2980b9';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+
+    // 凡例
+    ctx.fillStyle = 'rgba(41, 128, 185, 0.3)';
+    ctx.fillRect(padding.left, 6, 14, 10);
+    ctx.fillStyle = '#555';
+    ctx.textAlign = 'left';
+    ctx.fillText(' 5〜95パーセンタイル帯（最悪〜ベスト）', padding.left + 18, 15);
+  }
+
+  // ---- グラフ：ヒストグラム ----
+  function drawHistogram() {
+    var canvas = document.getElementById('histChart');
+    var ctx = canvas.getContext('2d');
+    var W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    var years = lastResult.years;
+    var finals = lastResult.sortedFinals.map(function (v) { return applyDeflator(v, years); });
+    var min = finals[0], max = finals[finals.length - 1];
+    var bins = 30;
+    var binWidth = (max - min) / bins || 1;
+    var counts = new Array(bins).fill(0);
+    finals.forEach(function (v) {
+      var idx = Math.min(bins - 1, Math.floor((v - min) / binWidth));
+      counts[idx]++;
+    });
+    var maxCount = Math.max.apply(null, counts);
+
+    var padding = { left: 90, right: 20, top: 20, bottom: 36 };
+    var plotW = W - padding.left - padding.right;
+    var plotH = H - padding.top - padding.bottom;
+    var barW = plotW / bins;
+
+    ctx.fillStyle = '#7f8c8d';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    var gridLines = 4;
+    for (var g = 0; g <= gridLines; g++) {
+      var c = Math.round(maxCount * (g / gridLines));
+      var yy = padding.top + plotH - (c / maxCount) * plotH;
+      ctx.strokeStyle = '#eee';
+      ctx.beginPath();
+      ctx.moveTo(padding.left, yy);
+      ctx.lineTo(W - padding.right, yy);
+      ctx.stroke();
+      ctx.fillText(c + '件', padding.left - 8, yy + 4);
+    }
+
+    for (var i = 0; i < bins; i++) {
+      var barH = (counts[i] / maxCount) * plotH;
+      var x = padding.left + i * barW;
+      var y = padding.top + plotH - barH;
+      ctx.fillStyle = 'rgba(41, 128, 185, 0.6)';
+      ctx.fillRect(x + 1, y, barW - 2, barH);
+    }
+
+    ctx.fillStyle = '#555';
+    ctx.textAlign = 'left';
+    ctx.fillText('最終資産：' + Math.round(min / 10000).toLocaleString('ja-JP') + '万円', padding.left, H - 10);
+    ctx.textAlign = 'right';
+    ctx.fillText(Math.round(max / 10000).toLocaleString('ja-JP') + '万円', W - padding.right, H - 10);
+  }
+
+  runBtn.addEventListener('click', runSimulation);
+
+  // ---- 初期化 ----
+  buildDefaultRows();
+  onAnyChange();
+})();
+</script>
+</body>
+</html>
