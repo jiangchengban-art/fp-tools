@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>タイLTR移住 統合プランナー</title>
+<style>
+  :root {
+    --bg: #14161f; --card: #1d2030; --card2: #252939; --border: #2a2e42;
+    --text: #d8dee9; --muted: #8b95a7; --label: #aab2c0;
+    --accent: #5dade2; --accent2: #f5b041; --ok: #58d68d; --ng: #ec7063;
+    --head: #f0f3f7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    background: var(--bg); color: var(--text); margin: 0; padding: 0;
+    line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, #15324f, #1d2030);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 22px; display: flex; align-items: center;
+    justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  header h1 { font-size: 19px; margin: 0; color: var(--head); }
+  header .tagline { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .header-actions button, .lang-toggle button {
+    padding: 6px 12px; border: 1px solid var(--border); background: var(--card2);
+    color: var(--text); border-radius: 4px; cursor: pointer; font-size: 12px;
+  }
+  .header-actions button:hover { background: #303651; }
+  .lang-toggle button.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .layout { display: flex; max-width: 1180px; margin: 0 auto; gap: 18px; padding: 18px; align-items: flex-start; }
+  .nav {
+    flex: 0 0 232px; background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px; position: sticky; top: 78px;
+  }
+  .nav .nav-item {
+    display: flex; gap: 10px; align-items: flex-start; padding: 10px 10px;
+    border-radius: 6px; cursor: pointer; margin-bottom: 4px; border: 1px solid transparent;
+  }
+  .nav .nav-item:hover { background: var(--card2); }
+  .nav .nav-item.active { background: #1a2c40; border-color: var(--accent); }
+  .nav .nav-num {
+    flex: 0 0 24px; height: 24px; border-radius: 50%; background: var(--card2);
+    color: var(--muted); text-align: center; line-height: 24px; font-size: 13px; font-weight: bold;
+  }
+  .nav .nav-item.active .nav-num { background: var(--accent); color: var(--bg); }
+  .nav .nav-item.done .nav-num { background: var(--ok); color: var(--bg); }
+  .nav .nav-label { font-size: 13px; padding-top: 3px; }
+  .nav .nav-sub { font-size: 11px; color: var(--muted); }
+  .main { flex: 1 1 auto; min-width: 0; }
+  .phase { display: none; }
+  .phase.active { display: block; }
+  .card {
+    background: var(--card); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    padding: 18px 20px; margin-bottom: 16px; border: 1px solid var(--border);
+  }
+  .card h2 { font-size: 17px; margin: 0 0 4px 0; color: var(--head); }
+  .card h3 { font-size: 14px; margin: 18px 0 8px 0; border-left: 4px solid var(--accent); padding-left: 8px; color: #eef1f5; }
+  .card .desc { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+  label { font-size: 13px; color: var(--label); }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-bottom: 10px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  input[type=number], input[type=text], select {
+    background: var(--card2); color: #e6e9ef; border: 1px solid #3a3f55;
+    border-radius: 4px; padding: 6px 8px; font-size: 14px; width: 150px;
+  }
+  select { width: 168px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: normal; text-align: center; }
+  td:first-child, th:first-child { text-align: left; }
+  td:nth-child(2), th:nth-child(2) { text-align: left; }
+  table input[type=number] { width: 72px; padding: 4px; text-align: right; }
+  table input[type=text] { width: 120px; padding: 4px; }
+  .btn {
+    padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
+    background: var(--card2); color: var(--text);
+  }
+  .btn-primary { background: var(--accent); color: var(--bg); font-weight: bold; }
+  .btn-primary:disabled { background: #3a3f55; color: #7a8294; cursor: not-allowed; }
+  .btn-amber { background: var(--card); color: var(--accent2); border: 1px solid var(--accent2); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .preset-buttons button, .toggle-row button {
+    padding: 6px 14px; margin-right: 6px; border: 1px solid var(--accent);
+    background: var(--card); color: var(--accent); border-radius: 4px; cursor: pointer; font-size: 13px;
+  }
+  .preset-buttons button.active, .toggle-row button.active { background: var(--accent); color: var(--bg); }
+  canvas { width: 100%; border: 1px solid var(--border); border-radius: 4px; margin-top: 10px; background: #1a1d2b; }
+  .small { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .ok { color: var(--ok); } .ng { color: var(--ng); }
+  .remove-btn { color: var(--ng); cursor: pointer; font-size: 12px; border: none; background: none; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 6px 0 4px; }
+  .kpi {
+    background: var(--card2); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .kpi .k-label { font-size: 12px; color: var(--muted); }
+  .kpi .k-value { font-size: 22px; font-weight: bold; color: var(--head); margin-top: 4px; }
+  .kpi .k-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .kpi.best .k-value { color: var(--ok); }
+  .kpi.worst .k-value { color: var(--ng); }
+  .kpi.mid .k-value { color: var(--accent); }
+  .badge {
+    display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px;
+    background: var(--card2); color: var(--muted); border: 1px solid var(--border); margin-left: 6px;
+  }
+  .badge-src { background: #14271c; color: #7fd8a0; border-color: #2a5238; }
+  .warn {
+    font-size: 12.5px; color: #f3d9a7; line-height: 1.65; background: #2a2517;
+    border-left: 4px solid var(--accent2); padding: 12px 14px; border-radius: 4px; margin: 12px 0;
+  }
+  .note {
+    font-size: 12px; color: var(--label); line-height: 1.65; background: #1a1d2b;
+    border-left: 4px solid var(--muted); padding: 12px 14px; border-radius: 4px; margin: 12px 0;
+  }
+  .check-list { list-style: none; padding: 0; margin: 0; }
+  .check-list li {
+    display: flex; align-items: flex-start; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  .check-list input { margin-top: 3px; }
+  .check-list .c-sub { font-size: 11px; color: var(--muted); }
+  .step {
+    display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .step .step-no {
+    flex: 0 0 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--bg);
+    text-align: center; line-height: 28px; font-weight: bold; font-size: 14px;
+  }
+  .step .step-title { font-size: 14px; color: var(--head); }
+  .step .step-desc { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .pill-ok { color: var(--ok); font-weight: bold; }
+  .pill-ng { color: var(--ng); font-weight: bold; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .footer-disc {
+    max-width: 1180px; margin: 0 auto; padding: 0 18px 30px;
+  }
+  .nav-bottom { display: flex; justify-content: space-between; margin-top: 8px; }
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; }
+    .nav { position: static; flex: 1 1 auto; width: 100%; }
+    .two-col { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: 1fr; }
+  }
+  @media print {
+    header .header-actions, .nav, .nav-bottom, .btn, .preset-buttons, .toggle-row { display: none !important; }
+    .phase { display: block !important; page-break-before: always; }
+    .phase:first-of-type { page-break-before: auto; }
+    body { background: #fff; color: #000; }
+    .card { border: 1px solid #ccc; box-shadow: none; background: #fff; color:#000; }
+    .card h2, .card h3, .kpi .k-value { color: #000; }
+    .small, .kpi .k-label, .desc { color: #444; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1 data-i18n="app.title">タイLTR移住 統合プランナー</h1>
+    <div class="tagline" data-i18n="app.tagline">資産形成からビザ取得・移住後の生活まで、ひとつで設計</div>
+  </div>
+  <div class="header-actions">
+    <span class="lang-toggle" id="langToggle">
+      <button data-lang="ja" class="active">日本語</button>
+      <button data-lang="en">EN</button>
+    </span>
+    <button id="btnSave" data-i18n="btn.save">保存</button>
+    <button id="btnLoad" data-i18n="btn.load">読込</button>
+    <button id="btnExport" data-i18n="btn.export">JSON出力</button>
+    <button id="btnImport" data-i18n="btn.import">JSON取込</button>
+    <button id="btnPrint" data-i18n="btn.print">計画書を印刷/PDF</button>
+    <input type="file" id="fileInput" accept="application/json" style="display:none">
+  </div>
+</header>
+
+<div class="layout">
+  <!-- フェーズナビ -->
+  <nav class="nav" id="phaseNav">
+    <div class="nav-item active" data-phase="1">
+      <div class="nav-num">1</div>
+      <div><div class="nav-label" data-i18n="nav.1">現状診断・ゴール設定</div><div class="nav-sub" data-i18n="nav.1sub">資産・FX・家族</div></div>
+    </div>
+    <div class="nav-item" data-phase="2">
+      <div class="nav-num">2</div>
+      <div><div class="nav-label" data-i18n="nav.2">資産形成シミュレーション</div><div class="nav-sub" data-i18n="nav.2sub">FX→株・モンテカルロ</div></div>
+    </div>
+    <div class="nav-item" data-phase="3">
+      <div class="nav-num">3</div>
+      <div><div class="nav-label" data-i18n="nav.3">LTR要件トラッカー</div><div class="nav-sub" data-i18n="nav.3sub">達成見込み年を算出</div></div>
+    </div>
+    <div class="nav-item" data-phase="4">
+      <div class="nav-num">4</div>
+      <div><div class="nav-label" data-i18n="nav.4">手続き・書類・費用</div><div class="nav-sub" data-i18n="nav.4sub">申請ステップと一時費用</div></div>
+    </div>
+    <div class="nav-item" data-phase="5">
+      <div class="nav-num">5</div>
+      <div><div class="nav-label" data-i18n="nav.5">移住後の生活費・税金</div><div class="nav-sub" data-i18n="nav.5sub">生活費・税・4%ルール</div></div>
+    </div>
+  </nav>
+
+  <div class="main">
+
+    <!-- ============ フェーズ1 ============ -->
+    <section class="phase active" id="phase1">
+      <div class="card">
+        <h2 data-i18n="p1.h">① 現状診断・ゴール設定</h2>
+        <div class="desc" data-i18n="p1.desc">現在の資産・FX収益・家族構成を入力します。すべての試算の出発点です。金額は「万円」単位で入力してください。</div>
+
+        <h3 data-i18n="p1.basic">基本情報</h3>
+        <div class="row">
+          <div class="field"><label data-i18n="p1.age">現在の年齢</label><input type="number" id="age" value="40" min="18" max="80"></div>
+          <div class="field"><label data-i18n="p1.household">家族構成</label>
+            <select id="household">
+              <option value="single" data-i18n="p1.hh.single">単身</option>
+              <option value="couple" data-i18n="p1.hh.couple">夫婦</option>
+              <option value="family3" data-i18n="p1.hh.family3">夫婦＋子（家族3人）</option>
+            </select>
+          </div>
+          <div class="field"><label data-i18n="p1.target">移住目標年</label><input type="number" id="targetYear" value="2031" min="2026" max="2045"></div>
+        </div>
+
+        <h3 data-i18n="p1.assets">現在の資産内訳（万円）</h3>
+        <div class="row">
+          <div class="field"><label data-i18n="p1.cash">現預金</label><input type="number" id="aCash" value="1500" min="0" step="50"></div>
+          <div class="field"><label data-i18n="p1.nisa">NISA評価額</label><input type="number" id="aNisa" value="800" min="0" step="50"></div>
+          <div class="field"><label data-i18n="p1.ideco">iDeCo評価額</label><input type="number" id="aIdeco" value="200" min="0" step="50"></div>
+          <div class="field"><label data-i18n="p1.fx">FX口座残高</label><input type="number" id="aFx" value="1000" min="0" step="50"></div>
+          <div class="field"><label data-i18n="p1.other">その他</label><input type="number" id="aOther" value="0" min="0" step="50"></div>
+        </div>
+        <div class="small" id="assetTotal"></div>
+
+        <h3 data-i18n="p1.fxbiz">FX収益の前提</h3>
+        <div class="row">
+          <div class="field"><label data-i18n="p1.fxprofit">年間利益（万円）</label><input type="number" id="fxProfit" value="500" min="0" step="10"></div>
+          <div class="field"><label data-i18n="p1.fxsd">年間利益の標準偏差（万円）</label><input type="number" id="fxSd" value="200" min="0" step="10"></div>
+          <div class="field"><label data-i18n="p1.fxcons">保守係数（0.5〜1.0）</label><input type="number" id="fxCons" value="0.7" min="0.3" max="1" step="0.05"></div>
+        </div>
+        <div class="small" data-i18n="p1.fxnote">※ コアルール準拠：FX利益は変動が大きいため、保守係数（推奨0.7）を掛けて控えめに織り込みます。年間利益×保守係数が「毎年コア資産（株式等）へ振り替える額」になります。</div>
+
+        <h3 data-i18n="p1.fxrate">為替前提</h3>
+        <div class="row">
+          <div class="field"><label>USD/JPY</label><input type="number" id="usdJpy" value="150" min="80" max="250" step="1"></div>
+          <div class="field"><label>THB/JPY</label><input type="number" id="thbJpy" value="4.5" min="2" max="8" step="0.1"></div>
+        </div>
+        <div class="small" data-i18n="p1.ratenote">初期値は移住調査時点（2026年5月）の前提値です。LTR資産要件はUSD建てのため、USD/JPYが円安になるほど円換算の必要額が増えます。<span class="badge badge-src">出典: migration_requirements.yaml</span></div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="p1.summaryh">ゴールまでの距離（サマリー）</h2>
+        <div class="desc" data-i18n="p1.summarydesc">フェーズ②で資産形成シミュレーションを実行すると、LTR取得までの「あと何年・いくら」がここに表示されます。</div>
+        <div class="kpi-grid" id="p1Summary">
+          <div class="kpi"><div class="k-label" data-i18n="p1.k.now">現在の総資産</div><div class="k-value" id="kNow">—</div></div>
+          <div class="kpi"><div class="k-label" data-i18n="p1.k.gap">LTR要件まで不足額</div><div class="k-value" id="kGap">—</div><div class="k-sub" data-i18n="p1.k.gapsub">グローバル資産USD1M換算</div></div>
+          <div class="kpi mid"><div class="k-label" data-i18n="p1.k.year">達成見込み（中央値）</div><div class="k-value" id="kYear">—</div><div class="k-sub" data-i18n="p1.k.yearsub">②実行後に算出</div></div>
+        </div>
+      </div>
+      <div class="nav-bottom"><span></span><button class="btn btn-primary" data-goto="2" data-i18n="btn.next">次へ：資産形成シミュレーション →</button></div>
+    </section>
+
+    <!-- ============ フェーズ2 ============ -->
+    <section class="phase" id="phase2">
+      <div class="card">
+        <h2 data-i18n="p2.h">② 資産形成シミュレーション（FX→株）</h2>
+        <div class="desc" data-i18n="p2.desc">現在の総資産を元手に、毎年FX利益（×保守係数）をコア資産へ振り替えながら運用した場合の資産推移をモンテカルロ（1,000試行）で試算します。</div>
+
+        <div class="row">
+          <div class="field"><label data-i18n="p2.years">試算期間</label>
+            <div class="preset-buttons" id="periodButtons" style="display:flex;">
+              <button data-years="5">5年</button>
+              <button data-years="10" class="active">10年</button>
+              <button data-years="15">15年</button>
+              <button data-years="20">20年</button>
+              <button data-years="30">30年</button>
+            </div>
+          </div>
+        </div>
+        <div class="small" id="p2Inputs"></div>
+
+        <h3 title="初期値の根拠：GPIF第5期基本ポートフォリオ（2025年4月〜）および J.P.モルガン 2026 Long-Term Capital Market Assumptions を参考に保守調整" data-i18n="p2.alloc">商品配分 ⓘ</h3>
+        <table id="allocTable">
+          <thead><tr>
+            <th data-i18n="p2.sel">選択</th><th data-i18n="p2.name">商品名</th>
+            <th data-i18n="p2.ret">期待リターン(%)</th><th data-i18n="p2.risk">リスク(%)</th>
+            <th data-i18n="p2.ratio">配分(%)</th><th></th>
+          </tr></thead>
+          <tbody id="allocBody"></tbody>
+        </table>
+        <div style="margin-top:8px;">
+          <button class="btn btn-sm" id="addRowBtn" data-i18n="p2.add">＋ 商品を追加</button>
+          <button class="btn btn-sm btn-amber" id="autoBtn" data-i18n="p2.auto">🤖 おまかせで組む</button>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <span data-i18n="p2.sum">配分合計：</span><span id="allocSum">0%</span><span id="allocStatus"></span>
+        </div>
+        <div class="row">
+          <label data-i18n="p2.corr">資産間の相関：</label>
+          <div class="toggle-row" id="corrToggle" style="display:inline-block;">
+            <button type="button" data-corr="on" class="active" data-i18n="p2.corron">考慮する（推奨）</button>
+            <button type="button" data-corr="off" data-i18n="p2.corroff">独立と仮定</button>
+          </div>
+        </div>
+        <div class="small" data-i18n="p2.srcnote">期待リターン・リスク・相関の初期値は、GPIF第5期基本ポートフォリオ（2025年4月〜）および J.P.モルガン 2026 Long-Term Capital Market Assumptions を参考に保守調整した仮定値です（編集可能）。<span class="badge badge-src">出典: GPIF / JPM 2026 LTCMA</span></div>
+
+        <div style="text-align:center; margin-top:14px;">
+          <button class="btn btn-primary" id="runBtn" disabled data-i18n="p2.run">シミュレーション実行</button>
+          <div class="small" id="runHint" data-i18n="p2.runhint">配分合計を100%にすると実行できます</div>
+        </div>
+      </div>
+
+      <div class="card" id="p2Result" style="display:none;">
+        <h2 data-i18n="p2.resulth">結果（3点併記）</h2>
+        <div class="kpi-grid">
+          <div class="kpi worst"><div class="k-label" data-i18n="p2.worst">📉 最悪（下位5%）</div><div class="k-value" id="r2Worst">—</div></div>
+          <div class="kpi mid"><div class="k-label" data-i18n="p2.median">➡️ 平均（中央値）</div><div class="k-value" id="r2Median">—</div></div>
+          <div class="kpi best"><div class="k-label" data-i18n="p2.best">📈 ベスト（上位5%）</div><div class="k-value" id="r2Best">—</div></div>
+        </div>
+        <div class="toggle-row" style="margin-top:6px;">
+          <button id="btnNominal" class="active" data-i18n="p2.nominal">名目</button>
+          <button id="btnReal" data-i18n="p2.real">実質（インフレ2%控除後）</button>
+        </div>
+        <h3 data-i18n="p2.band">資産推移（パーセンタイル帯）</h3>
+        <canvas id="bandChart" width="820" height="320"></canvas>
+        <div class="small" data-i18n="p2.bandnote">帯：5〜95パーセンタイル（最悪〜ベスト） ／ 太線：中央値（平均ケース）</div>
+        <h3 data-i18n="p2.hist">最終資産の分布</h3>
+        <canvas id="histChart" width="820" height="240"></canvas>
+      </div>
+      <div class="nav-bottom"><button class="btn" data-goto="1" data-i18n="btn.prev">← 戻る</button><button class="btn btn-primary" data-goto="3" data-i18n="btn.next3">次へ：LTR要件トラッカー →</button></div>
+    </section>
+
+    <!-- ============ フェーズ3 ============ -->
+    <section class="phase" id="phase3">
+      <div class="card">
+        <h2 data-i18n="p3.h">③ LTR要件トラッカー</h2>
+        <div class="desc" data-i18n="p3.desc">タイ LTR ビザ「Wealthy Global Citizen」カテゴリの資産要件と、フェーズ②の資産推移を突き合わせ、達成見込み年を自動算出します。</div>
+
+        <h3 data-i18n="p3.req">資産要件（LTR Wealthy Global Citizen）</h3>
+        <table>
+          <thead><tr><th data-i18n="p3.item">項目</th><th data-i18n="p3.usd">USD要件</th><th data-i18n="p3.jpy">円換算（現在の為替）</th><th data-i18n="p3.status">現状</th></tr></thead>
+          <tbody id="p3ReqBody"></tbody>
+        </table>
+        <div class="small" data-i18n="p3.reqnote">健康保険要件：USD50,000以上の医療保障 ／ または銀行残高USD100,000を12ヶ月維持 ／ またはタイ社会保障機構(SSO)登録のいずれか。<span class="badge badge-src">出典: BOI公式 確認日2026-05-10</span></div>
+
+        <h3 data-i18n="p3.achieve">達成見込み年（フェーズ②の試算より）</h3>
+        <div class="kpi-grid" id="p3Achieve">
+          <div class="kpi worst"><div class="k-label" data-i18n="p3.a.worst">悲観（下位5%）</div><div class="k-value" id="a3Worst">—</div></div>
+          <div class="kpi mid"><div class="k-label" data-i18n="p3.a.median">中央値</div><div class="k-value" id="a3Median">—</div></div>
+          <div class="kpi best"><div class="k-label" data-i18n="p3.a.best">楽観（上位5%）</div><div class="k-value" id="a3Best">—</div></div>
+        </div>
+        <div class="small" id="p3AchieveNote" data-i18n="p3.achievenote">フェーズ②を実行すると算出されます。グローバル資産USD1M（円換算）に到達する最初の年を表示します。</div>
+      </div>
+
+      <div class="card">
+        <h3 data-i18n="p3.invest">タイ国内投資 USD500,000 の適格／不適格</h3>
+        <div class="desc" data-i18n="p3.investdesc">グローバル資産USD1Mとは別に、タイ国内への USD500,000 の投資が必須です。以下が認められる投資先です。</div>
+        <div class="two-col">
+          <div>
+            <div class="small"><span class="pill-ok" data-i18n="p3.eligible">✅ 適格</span></div>
+            <ul class="check-list" id="p3Eligible"></ul>
+          </div>
+          <div>
+            <div class="small"><span class="pill-ng" data-i18n="p3.noteligible">❌ 不適格</span></div>
+            <ul class="check-list" id="p3NotEligible"></ul>
+          </div>
+        </div>
+        <div class="note" data-i18n="p3.investnote">タイ国内投資USD500Kは「グローバル資産USD1M」に含めて二重カウントできない点に注意してください（実務上は別枠で確保が必要）。公式情報は <a href="https://ltr.boi.go.th/" target="_blank" rel="noopener" style="color:var(--accent)">ltr.boi.go.th</a> で確認できます。</div>
+      </div>
+      <div class="nav-bottom"><button class="btn" data-goto="2" data-i18n="btn.prev">← 戻る</button><button class="btn btn-primary" data-goto="4" data-i18n="btn.next4">次へ：手続き・書類・費用 →</button></div>
+    </section>
+
+    <!-- ============ フェーズ4 ============ -->
+    <section class="phase" id="phase4">
+      <div class="card">
+        <h2 data-i18n="p4.h">④ 手続き・必要書類・移住一時費用</h2>
+        <div class="desc" data-i18n="p4.desc">LTRビザ申請の流れ、必要書類、移住にかかる一時費用を整理します。</div>
+        <h3 data-i18n="p4.flow">申請ワークフロー（標準処理 60営業日）</h3>
+        <div id="p4Steps"></div>
+        <div class="small" data-i18n="p4.flownote">※ 上記は一般的な流れの目安です。最新の手順・必要書類は必ず <a href="https://ltr.boi.go.th/" target="_blank" rel="noopener" style="color:var(--accent)">BOI公式サイト</a> および専門エージェント・弁護士でご確認ください。<span class="badge badge-src">出典: BOI / 移住調査報告書</span></div>
+      </div>
+
+      <div class="card">
+        <h3 data-i18n="p4.docs">必要書類チェックリスト</h3>
+        <ul class="check-list" id="p4Docs"></ul>
+        <div class="small" id="p4DocsProgress"></div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="p4.costh">移住一時費用の計算</h2>
+        <div class="desc" data-i18n="p4.costdesc">ビザ申請料・引越・初期住居費・予備費などの一時費用を見積もります（万円）。家族人数に応じて申請料が変わります。</div>
+        <div class="row">
+          <div class="field"><label data-i18n="p4.persons">申請人数（本人＋同伴家族）</label><input type="number" id="cPersons" value="1" min="1" max="6"></div>
+          <div class="field"><label data-i18n="p4.movecost">引越・渡航費</label><input type="number" id="cMove" value="50" min="0" step="5"></div>
+          <div class="field"><label data-i18n="p4.housing">初期住居費（敷金・前家賃等）</label><input type="number" id="cHousing" value="60" min="0" step="5"></div>
+          <div class="field"><label data-i18n="p4.reserve">予備費・その他</label><input type="number" id="cReserve" value="40" min="0" step="5"></div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="k-label" data-i18n="p4.feevisa">ビザ申請料（自動）</div><div class="k-value" id="cFee">—</div><div class="k-sub" data-i18n="p4.feesub">THB50,000/人</div></div>
+          <div class="kpi mid"><div class="k-label" data-i18n="p4.totalcost">一時費用合計</div><div class="k-value" id="cTotal">—</div></div>
+          <div class="kpi"><div class="k-label" data-i18n="p4.refcost">参考レンジ</div><div class="k-value" id="cRef" style="font-size:16px;">—</div><div class="k-sub" data-i18n="p4.refsub">移住調査報告書より</div></div>
+        </div>
+        <div class="small" data-i18n="p4.famnote">家族同伴ルール：配偶者1名＋20歳未満・未婚の子最大4名まで同一の10年ビザ。<span class="badge badge-src">出典: migration_requirements.yaml</span></div>
+      </div>
+      <div class="nav-bottom"><button class="btn" data-goto="3" data-i18n="btn.prev">← 戻る</button><button class="btn btn-primary" data-goto="5" data-i18n="btn.next5">次へ：移住後の生活費・税金 →</button></div>
+    </section>
+
+    <!-- ============ フェーズ5 ============ -->
+    <section class="phase" id="phase5">
+      <div class="card">
+        <h2 data-i18n="p5.h">⑤ 移住後の生活費・税金シミュレーション</h2>
+        <div class="desc" data-i18n="p5.desc">タイ移住後の生活費（為替・インフレ連動）とFX利益への課税、資産の持続年数を試算します。</div>
+
+        <div class="warn" data-i18n="p5.warn">⚠️ 重要：FX取引の利益が「外国源泉所得」として LTR の免税（Royal Decree 743）の対象になるか、公式ガイダンスがありません。事業所得と認定されると最大35%課税される可能性があります。実際の移住前に、タイの税務弁護士・大手会計事務所（Big4）の書面確認（Ruling）が必須です。</div>
+
+        <h3 data-i18n="p5.living">生活費の前提</h3>
+        <div class="row">
+          <div class="field"><label data-i18n="p5.level">生活レベル</label>
+            <select id="livLevel">
+              <option value="min" data-i18n="p5.lv.min">最小</option>
+              <option value="mid" selected data-i18n="p5.lv.mid">中位</option>
+              <option value="max" data-i18n="p5.lv.max">最大</option>
+            </select>
+          </div>
+          <div class="field"><label data-i18n="p5.monthly">月間生活費（万円・自動）</label><input type="number" id="livMonthly" value="22" min="0" step="1"></div>
+          <div class="field"><label data-i18n="p5.inflation">現地インフレ率(%)</label><input type="number" id="livInf" value="2" min="0" max="10" step="0.1"></div>
+        </div>
+        <div class="small" id="p5LivNote"></div>
+
+        <h3 data-i18n="p5.tax">FX利益への課税シナリオ</h3>
+        <div class="toggle-row" id="taxToggle" style="display:flex;">
+          <button data-tax="optimistic" data-i18n="p5.tax.opt">楽観 0%</button>
+          <button data-tax="realistic" class="active" data-i18n="p5.tax.real">現実 10%</button>
+          <button data-tax="pessimistic" data-i18n="p5.tax.pes">悲観 35%</button>
+        </div>
+        <div class="small" id="p5TaxNote"></div>
+
+        <h3 data-i18n="p5.fourpct">4%ルール（必要元本）</h3>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="k-label" data-i18n="p5.annualliving">年間生活費</div><div class="k-value" id="f4Annual">—</div></div>
+          <div class="kpi mid"><div class="k-label" data-i18n="p5.required">必要元本（4%ルール）</div><div class="k-value" id="f4Required">—</div><div class="k-sub" data-i18n="p5.requiredsub">年間生活費 ÷ 0.04</div></div>
+          <div class="kpi"><div class="k-label" data-i18n="p5.coverage">現在資産での達成度</div><div class="k-value" id="f4Coverage">—</div></div>
+        </div>
+
+        <h3 data-i18n="p5.sustain">移住後の資産持続シミュレーション</h3>
+        <div class="desc" data-i18n="p5.sustaindesc">移住開始時の資産（フェーズ②の中央値、または手入力）を元手に、運用リターン＋FX税後利益−生活費で資産がどれだけ持続するかをモンテカルロ試算します。</div>
+        <div class="row">
+          <div class="field"><label data-i18n="p5.startasset">移住開始時の資産（万円）</label><input type="number" id="sStart" value="0" min="0" step="100"></div>
+          <div class="field"><label data-i18n="p5.fxcontinue">移住後もFXを継続</label>
+            <select id="sFxContinue"><option value="yes" data-i18n="p5.yes">はい</option><option value="no" data-i18n="p5.no">いいえ</option></select>
+          </div>
+          <div class="field"><label data-i18n="p5.horizon">試算期間（年）</label><input type="number" id="sHorizon" value="40" min="5" max="60"></div>
+        </div>
+        <div style="text-align:center; margin-top:10px;">
+          <button class="btn btn-primary" id="sustainBtn" data-i18n="p5.runsustain">持続シミュレーション実行</button>
+        </div>
+        <div id="p5SustainResult" style="display:none;">
+          <div class="kpi-grid" style="margin-top:14px;">
+            <div class="kpi worst"><div class="k-label" data-i18n="p5.s.worst">悲観（下位5%）資産枯渇</div><div class="k-value" id="s5Worst">—</div></div>
+            <div class="kpi mid"><div class="k-label" data-i18n="p5.s.median">中央値での資産枯渇</div><div class="k-value" id="s5Median">—</div></div>
+            <div class="kpi best"><div class="k-label" data-i18n="p5.s.survive">期間満了まで存続する確率</div><div class="k-value" id="s5Survive">—</div></div>
+          </div>
+          <canvas id="sustainChart" width="820" height="280"></canvas>
+          <div class="small" data-i18n="p5.sustainnote">帯：5〜95パーセンタイル ／ 太線：中央値。前提：運用リターンはフェーズ②の選択資産の加重平均、生活費はインフレで毎年増加、FX利益は税後で加算（継続選択時）。</div>
+        </div>
+      </div>
+      <div class="nav-bottom"><button class="btn" data-goto="4" data-i18n="btn.prev">← 戻る</button><button class="btn btn-primary" id="btnPrint2" data-i18n="btn.makeplan">📄 計画書を出力（印刷/PDF）</button></div>
+    </section>
+
+  </div>
+</div>
+
+<div class="footer-disc">
+  <div class="note" id="disclaimer">
+    <strong data-i18n="disc.title">ご注意（免責）</strong><br>
+    <span data-i18n="disc.body">本ツールはAIを活用した参考情報であり、投資・税務・ビザ取得の最終判断は、必ずご自身で税理士・FP・移民弁護士等の有資格専門家にご相談のうえ行ってください。ビザ要件・税制・為替・生活費は変動します。各数値は調査時点の公表値・仮定値であり、将来の成果や制度の継続を保証するものではありません。</span><br>
+    <span class="small" id="discMeta"></span>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ===================== データ（出典: migration_requirements.yaml / 移住調査報告書 / GPIF・JPM） =====================
+  var META = { updated: '2026-06-15', visaConfirmed: '2026-05-10', cma: 'GPIF第5期(2025-04〜) / J.P.モルガン 2026 LTCMA' };
+
+  var DEFAULT_ASSETS = [
+    { name: '全世界株式（オルカン相当）', ret: 5.5, risk: 18,  alloc: 40, checked: true },
+    { name: '米国株式（S&P500相当）',     ret: 6.0, risk: 19,  alloc: 20, checked: true },
+    { name: '先進国債券',                 ret: 2.5, risk: 6,   alloc: 20, checked: true },
+    { name: '国内債券',                   ret: 1.0, risk: 3,   alloc: 0,  checked: false },
+    { name: '金（ゴールド）',             ret: 3.5, risk: 15,  alloc: 10, checked: true },
+    { name: 'REIT（不動産）',             ret: 4.5, risk: 17,  alloc: 0,  checked: false },
+    { name: '現金・預金',                 ret: 0.3, risk: 0.5, alloc: 10, checked: true }
+  ];
+  var ASSET_NAMES = DEFAULT_ASSETS.map(function (a) { return a.name; });
+  var CORR_MATRIX = [
+    [ 1.00,  0.90,  0.10, -0.05,  0.05,  0.60,  0.00 ],
+    [ 0.90,  1.00,  0.15, -0.05,  0.05,  0.55,  0.00 ],
+    [ 0.10,  0.15,  1.00,  0.40,  0.20,  0.20,  0.05 ],
+    [-0.05, -0.05,  0.40,  1.00,  0.05,  0.10,  0.10 ],
+    [ 0.05,  0.05,  0.20,  0.05,  1.00,  0.10,  0.00 ],
+    [ 0.60,  0.55,  0.20,  0.10,  0.10,  1.00,  0.00 ],
+    [ 0.00,  0.00,  0.05,  0.10,  0.00,  0.00,  1.00 ]
+  ];
+  function getCorrelation(a, b) {
+    if (a === b) return 1.0;
+    var ia = ASSET_NAMES.indexOf(a), ib = ASSET_NAMES.indexOf(b);
+    if (ia === -1 || ib === -1) return 0;
+    return CORR_MATRIX[ia][ib];
+  }
+
+  var LTR = {
+    globalUSD: 1000000, thaiInvestUSD: 500000,
+    healthInsuranceUSD: 50000, bankBalanceUSD: 100000,
+    feeTHB: 50000, processingDays: 60, visaYears: 10,
+    eligible: [
+      { t: 'タイ国債（5年以上満期）', s: '満期5年以上の政府債' },
+      { t: 'タイ企業への直接投資', s: '現地企業への出資' },
+      { t: 'タイ不動産（所有権登記）', s: '登記を伴う不動産取得' }
+    ],
+    notEligible: [
+      { t: '暗号資産・トークン', s: '対象外' },
+      { t: '金先物・美術品・時計・宝飾品', s: '対象外' },
+      { t: 'FX口座残高', s: '投資要件には算入不可' }
+    ]
+  };
+  // FX利益への課税シナリオ（移住調査時点の仮定）
+  var TAX = { optimistic: 0.00, realistic: 0.10, pessimistic: 0.35 };
+  // 生活費（万円/月。出典：移住調査報告書）
+  var LIVING = {
+    single:  { min: 15, mid: 22, max: 34 },
+    couple:  { min: 22, mid: 32, max: 48 },
+    family3: { min: 27, mid: 40, max: 59 }
+  };
+  // 移住一時費用の参考レンジ（万円。出典：移住調査報告書）
+  var ONETIME_REF = { single: '145〜300万円', couple: '155〜325万円', family3: '165〜350万円' };
+
+  // ===================== i18n =====================
+  var I18N = {
+    ja: {
+      'app.title':'タイLTR移住 統合プランナー','app.tagline':'資産形成からビザ取得・移住後の生活まで、ひとつで設計',
+      'btn.save':'保存','btn.load':'読込','btn.export':'JSON出力','btn.import':'JSON取込','btn.print':'計画書を印刷/PDF',
+      'btn.next':'次へ →','btn.next3':'次へ：LTR要件トラッカー →','btn.next4':'次へ：手続き・書類・費用 →','btn.next5':'次へ：移住後の生活費・税金 →','btn.prev':'← 戻る','btn.makeplan':'📄 計画書を出力（印刷/PDF）',
+      'nav.1':'現状診断・ゴール設定','nav.1sub':'資産・FX・家族','nav.2':'資産形成シミュレーション','nav.2sub':'FX→株・モンテカルロ',
+      'nav.3':'LTR要件トラッカー','nav.3sub':'達成見込み年を算出','nav.4':'手続き・書類・費用','nav.4sub':'申請ステップと一時費用','nav.5':'移住後の生活費・税金','nav.5sub':'生活費・税・4%ルール'
+    },
+    en: {
+      'app.title':'Thailand LTR Migration Planner','app.tagline':'Plan everything from wealth-building to visa and post-move life',
+      'btn.save':'Save','btn.load':'Load','btn.export':'Export JSON','btn.import':'Import JSON','btn.print':'Print / PDF plan',
+      'btn.next':'Next →','btn.next3':'Next: LTR Requirement Tracker →','btn.next4':'Next: Procedures & Costs →','btn.next5':'Next: Post-move Living & Tax →','btn.prev':'← Back','btn.makeplan':'📄 Generate plan (Print/PDF)',
+      'nav.1':'Diagnosis & Goal','nav.1sub':'Assets / FX / Family','nav.2':'Wealth-building Sim','nav.2sub':'FX→Stocks · Monte Carlo',
+      'nav.3':'LTR Requirement Tracker','nav.3sub':'Estimated achievement year','nav.4':'Procedures, Docs & Costs','nav.4sub':'Steps & one-time costs','nav.5':'Post-move Living & Tax','nav.5sub':'Living · Tax · 4% rule'
+    }
+  };
+  var lang = 'ja';
+  function t(k){ return (I18N[lang] && I18N[lang][k]) || I18N.ja[k] || k; }
+  function applyI18n() {
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      var k = el.getAttribute('data-i18n');
+      var v = (I18N[lang] && I18N[lang][k]);
+      if (v) el.textContent = v; // 未定義キーは日本語の既定テキストのまま（EN未翻訳箇所のフォールバック）
+    });
+    document.documentElement.lang = lang;
+  }
+
+  // ===================== 共通ユーティリティ =====================
+  function $(id){ return document.getElementById(id); }
+  function num(id){ return parseFloat($(id).value) || 0; }
+  function fmtMan(v){ return Math.round(v).toLocaleString('ja-JP') + '万円'; }
+  function fmtOku(v){ // v: 万円 → 億表記併用
+    var oku = v / 10000;
+    if (Math.abs(oku) >= 1) return oku.toFixed(2).replace(/\.00$/,'') + '億円';
+    return fmtMan(v);
+  }
+  function randNormal(){ var u=0,v=0; while(u===0)u=Math.random(); while(v===0)v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+  function choleskyDecomposition(m){
+    var n=m.length,L=[]; for(var i=0;i<n;i++)L.push(new Array(n).fill(0));
+    for(var i=0;i<n;i++){ for(var j=0;j<=i;j++){ var s=0; for(var k=0;k<j;k++)s+=L[i][k]*L[j][k];
+      if(i===j) L[i][j]=Math.sqrt(Math.max(0,m[i][i]-s)); else L[i][j]=(L[j][j]!==0)?(m[i][j]-s)/L[j][j]:0; } }
+    return L;
+  }
+  function correlatedNormals(L){ var n=L.length,z=new Array(n); for(var i=0;i<n;i++)z[i]=randNormal();
+    var out=new Array(n).fill(0); for(var i=0;i<n;i++) for(var j=0;j<=i;j++) out[i]+=L[i][j]*z[j]; return out; }
+  function percentile(sorted,p){ return sorted[Math.floor((sorted.length-1)*p)]; }
+
+  var INFLATION = 0.02, TRIALS = 1000;
+  var selectedYears = 10, displayMode = 'nominal', useCorrelation = true;
+  var taxScenario = 'realistic';
+  var lastResult = null;    // フェーズ②結果
+  var lastSustain = null;   // フェーズ⑤結果
+
+  // ===================== フェーズ切替 =====================
+  var phaseNav = $('phaseNav');
+  function gotoPhase(n){
+    document.querySelectorAll('.phase').forEach(function(p){ p.classList.remove('active'); });
+    $('phase'+n).classList.add('active');
+    Array.prototype.forEach.call(phaseNav.children, function(it){
+      it.classList.toggle('active', it.getAttribute('data-phase')===String(n));
+    });
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  phaseNav.addEventListener('click', function(e){
+    var it = e.target.closest('.nav-item'); if(!it) return;
+    gotoPhase(it.getAttribute('data-phase'));
+  });
+  document.querySelectorAll('[data-goto]').forEach(function(b){
+    b.addEventListener('click', function(){ gotoPhase(b.getAttribute('data-goto')); });
+  });
+  function markDone(n){
+    Array.prototype.forEach.call(phaseNav.children, function(it){
+      if(it.getAttribute('data-phase')===String(n)) it.classList.add('done');
+    });
+  }
+
+  // ===================== フェーズ1 =====================
+  function currentAssetsTotal(){ return num('aCash')+num('aNisa')+num('aIdeco')+num('aFx')+num('aOther'); }
+  function globalTargetMan(){ return LTR.globalUSD * num('usdJpy') / 10000; }      // 万円
+  function thaiInvestMan(){ return LTR.thaiInvestUSD * num('usdJpy') / 10000; }
+
+  function refreshPhase1(){
+    var total = currentAssetsTotal();
+    $('assetTotal').textContent = '現在の総資産：' + fmtOku(total) + '（' + fmtMan(total) + '）';
+    $('kNow').textContent = fmtOku(total);
+    var gap = Math.max(0, globalTargetMan() - total);
+    $('kGap').textContent = gap <= 0 ? '達成済み ✅' : fmtOku(gap);
+    if (lastResult) updateAchievement();
+  }
+  ['age','household','targetYear','aCash','aNisa','aIdeco','aFx','aOther','fxProfit','fxSd','fxCons','usdJpy','thbJpy']
+    .forEach(function(id){ $(id).addEventListener('input', function(){ refreshPhase1(); refreshLinked(); }); });
+
+  function refreshLinked(){
+    // 為替・資産変更時に③④⑤の連動値を更新
+    renderP3Req();
+    refreshPhase4Cost();
+    refreshPhase5Living();
+  }
+
+  // ===================== フェーズ2：配分テーブル＋MC =====================
+  var allocBody = $('allocBody');
+  function createRow(asset){
+    var tr = document.createElement('tr');
+    function cell(child){ var td=document.createElement('td'); td.appendChild(child); return td; }
+    var chk=document.createElement('input'); chk.type='checkbox'; chk.checked=asset.checked; chk.addEventListener('change',onAllocChange);
+    var name=document.createElement('input'); name.type='text'; name.value=asset.name;
+    var ret=document.createElement('input'); ret.type='number'; ret.step='0.1'; ret.value=asset.ret;
+    var risk=document.createElement('input'); risk.type='number'; risk.step='0.1'; risk.min='0'; risk.value=asset.risk;
+    var alloc=document.createElement('input'); alloc.type='number'; alloc.step='1'; alloc.min='0'; alloc.max='100'; alloc.value=asset.alloc; alloc.addEventListener('input',onAllocChange);
+    var rm=document.createElement('button'); rm.className='remove-btn'; rm.textContent='削除'; rm.addEventListener('click',function(){tr.remove();onAllocChange();});
+    tr.appendChild(cell(chk)); tr.appendChild(cell(name)); tr.appendChild(cell(ret)); tr.appendChild(cell(risk)); tr.appendChild(cell(alloc)); tr.appendChild(cell(rm));
+    tr._get=function(){ return { checked:chk.checked, name:name.value||'（無名）', ret:parseFloat(ret.value)||0, risk:Math.max(0,parseFloat(risk.value)||0), alloc:parseFloat(alloc.value)||0 }; };
+    return tr;
+  }
+  function buildDefaultRows(){ allocBody.innerHTML=''; DEFAULT_ASSETS.forEach(function(a){ allocBody.appendChild(createRow(a)); }); }
+  function getRows(){ return Array.prototype.map.call(allocBody.children, function(tr){ return tr._get(); }); }
+  function onAllocChange(){
+    var rows=getRows().filter(function(r){return r.checked;});
+    var sum=Math.round(rows.reduce(function(a,r){return a+r.alloc;},0)*100)/100;
+    $('allocSum').textContent=sum+'%';
+    var ok=(Math.abs(sum-100)<0.001)&&rows.length>0;
+    $('allocSum').className = ok?'ok':'ng';
+    $('allocStatus').innerHTML = ok?'<span class="ok"> ✅ OK</span>':'<span class="ng"> ⚠ 選択中の配分合計を100%に</span>';
+    $('runBtn').disabled=!ok;
+    $('runHint').textContent = ok?'実行できます':'配分合計を100%にすると実行できます';
+    return {rows:rows,ok:ok};
+  }
+  $('addRowBtn').addEventListener('click',function(){ allocBody.appendChild(createRow({name:'新規商品',ret:3,risk:10,alloc:0,checked:true})); onAllocChange(); });
+  $('autoBtn').addEventListener('click',function(){ buildDefaultRows(); onAllocChange(); });
+  var periodButtons=$('periodButtons');
+  periodButtons.addEventListener('click',function(e){ if(e.target.tagName!=='BUTTON')return;
+    Array.prototype.forEach.call(periodButtons.children,function(b){b.classList.remove('active');});
+    e.target.classList.add('active'); selectedYears=parseInt(e.target.getAttribute('data-years'),10); });
+  var corrToggle=$('corrToggle');
+  corrToggle.addEventListener('click',function(e){ if(e.target.tagName!=='BUTTON')return;
+    Array.prototype.forEach.call(corrToggle.children,function(b){b.classList.remove('active');});
+    e.target.classList.add('active'); useCorrelation=(e.target.getAttribute('data-corr')==='on'); });
+
+  function runSimulation(){
+    var c=onAllocChange(); if(!c.ok)return;
+    var initial=currentAssetsTotal();                       // 万円
+    var annualContribution=num('fxProfit')*num('fxCons');   // FX利益×保守係数（万円/年）→コアへ振替
+    var years=selectedYears;
+    var assets=c.rows.map(function(r){ return {name:r.name, ratio:r.alloc/100, mu:r.ret/100, sigma:r.risk/100}; });
+    var L=null;
+    if(useCorrelation){ var cm=assets.map(function(a){return assets.map(function(b){return getCorrelation(a.name,b.name);});}); L=choleskyDecomposition(cm); }
+    var finals=new Array(TRIALS), paths=new Array(TRIALS);
+    for(var i=0;i<TRIALS;i++){
+      var amt=initial, path=[amt];
+      for(var y=0;y<years;y++){
+        var pr=0, zv=useCorrelation?correlatedNormals(L):null;
+        for(var k=0;k<assets.length;k++){ var z=useCorrelation?zv[k]:randNormal(); pr+=assets[k].ratio*(assets[k].mu+assets[k].sigma*z); }
+        amt=amt*(1+pr)+annualContribution; path.push(amt);
+      }
+      finals[i]=amt; paths[i]=path;
+    }
+    var sorted=finals.slice().sort(function(a,b){return a-b;});
+    // 加重平均リターン（フェーズ⑤の持続試算で使用）
+    var wMu=0,wSig=0; assets.forEach(function(a){ wMu+=a.ratio*a.mu; wSig+=a.ratio*a.sigma; });
+    lastResult={ sorted:sorted, paths:paths, years:years, initial:initial, contribution:annualContribution, wMu:wMu, wSig:wSig };
+    $('p2Inputs').textContent='元手：'+fmtOku(initial)+' ／ 毎年のコア振替額：'+fmtMan(annualContribution)+'（FX利益'+fmtMan(num('fxProfit'))+'×保守係数'+num('fxCons')+'）';
+    renderResult(); markDone(2); updateAchievement(); refreshPhase5StartDefault();
+  }
+  function applyDeflator(v,years){ return displayMode==='real'? v/Math.pow(1+INFLATION,years) : v; }
+  function renderResult(){
+    if(!lastResult)return;
+    $('p2Result').style.display='block';
+    var y=lastResult.years, sf=lastResult.sorted;
+    $('r2Worst').textContent=fmtOku(applyDeflator(percentile(sf,0.05),y));
+    $('r2Median').textContent=fmtOku(applyDeflator(percentile(sf,0.50),y));
+    $('r2Best').textContent=fmtOku(applyDeflator(percentile(sf,0.95),y));
+    drawBandChart(); drawHistogram();
+  }
+  $('btnNominal').addEventListener('click',function(){ displayMode='nominal'; this.classList.add('active'); $('btnReal').classList.remove('active'); renderResult(); });
+  $('btnReal').addEventListener('click',function(){ displayMode='real'; this.classList.add('active'); $('btnNominal').classList.remove('active'); renderResult(); });
+  $('runBtn').addEventListener('click',runSimulation);
+
+  // ---- Canvas: パーセンタイル帯（汎用） ----
+  function drawBand(canvasId, paths, years, targetLine){
+    var cv=$(canvasId), ctx=cv.getContext('2d'), W=cv.width, H=cv.height;
+    ctx.clearRect(0,0,W,H);
+    var pad={left:90,right:20,top:20,bottom:36}, pw=W-pad.left-pad.right, ph=H-pad.top-pad.bottom;
+    var p05=[],p50=[],p95=[];
+    for(var y=0;y<=years;y++){ var vals=paths.map(function(p){return applyDeflator(p[y],y);}); vals.sort(function(a,b){return a-b;});
+      p05.push(percentile(vals,0.05)); p50.push(percentile(vals,0.50)); p95.push(percentile(vals,0.95)); }
+    var maxV=Math.max.apply(null,p95); if(targetLine) maxV=Math.max(maxV,targetLine);
+    var minV=Math.min(0,Math.min.apply(null,p05));
+    function xAt(y){return pad.left+(y/years)*pw;} function yAt(v){return pad.top+ph-((v-minV)/((maxV-minV)||1))*ph;}
+    ctx.strokeStyle='#3a3f55'; ctx.fillStyle='#8b95a7'; ctx.font='11px sans-serif'; ctx.textAlign='right';
+    for(var g=0;g<=5;g++){ var v=minV+(maxV-minV)*(g/5), yy=yAt(v); ctx.beginPath(); ctx.moveTo(pad.left,yy); ctx.lineTo(W-pad.right,yy); ctx.stroke();
+      ctx.fillText(fmtOku(v),pad.left-8,yy+4); }
+    ctx.textAlign='center';
+    for(var yr=0;yr<=years;yr++){ if(years>12 && yr%2!==0)continue; ctx.fillText(yr+'年',xAt(yr),H-pad.bottom+16); }
+    ctx.beginPath();
+    for(var i=0;i<=years;i++){ var px=xAt(i),py=yAt(p95[i]); if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py); }
+    for(var j=years;j>=0;j--) ctx.lineTo(xAt(j),yAt(p05[j]));
+    ctx.closePath(); ctx.fillStyle='rgba(93,173,226,0.18)'; ctx.fill();
+    ctx.beginPath();
+    for(var k=0;k<=years;k++){ var pxk=xAt(k),pyk=yAt(p50[k]); if(k===0)ctx.moveTo(pxk,pyk);else ctx.lineTo(pxk,pyk); }
+    ctx.strokeStyle='#5dade2'; ctx.lineWidth=2.5; ctx.stroke(); ctx.lineWidth=1;
+    if(targetLine){ var ty=yAt(targetLine); ctx.strokeStyle='#f5b041'; ctx.setLineDash([6,4]); ctx.beginPath(); ctx.moveTo(pad.left,ty); ctx.lineTo(W-pad.right,ty); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle='#f5b041'; ctx.textAlign='left'; ctx.fillText('LTR要件 '+fmtOku(targetLine),pad.left+4,ty-4); }
+  }
+  function drawBandChart(){ drawBand('bandChart', lastResult.paths, lastResult.years, globalTargetMan()); }
+  function drawHistogram(){
+    var cv=$('histChart'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height; ctx.clearRect(0,0,W,H);
+    var years=lastResult.years, finals=lastResult.sorted.map(function(v){return applyDeflator(v,years);});
+    var min=finals[0],max=finals[finals.length-1],bins=30,bw=(max-min)/bins||1,counts=new Array(bins).fill(0);
+    finals.forEach(function(v){ counts[Math.min(bins-1,Math.floor((v-min)/bw))]++; });
+    var maxC=Math.max.apply(null,counts), pad={left:90,right:20,top:20,bottom:36}, pw=W-pad.left-pad.right, ph=H-pad.top-pad.bottom, barW=pw/bins;
+    ctx.fillStyle='#8b95a7'; ctx.font='11px sans-serif'; ctx.textAlign='right';
+    for(var g=0;g<=4;g++){ var c=Math.round(maxC*(g/4)), yy=pad.top+ph-(c/maxC)*ph; ctx.strokeStyle='#2a2e42'; ctx.beginPath(); ctx.moveTo(pad.left,yy); ctx.lineTo(W-pad.right,yy); ctx.stroke(); ctx.fillText(c+'件',pad.left-8,yy+4); }
+    for(var i=0;i<bins;i++){ var bh=(counts[i]/maxC)*ph,x=pad.left+i*barW,y=pad.top+ph-bh; ctx.fillStyle='rgba(93,173,226,0.65)'; ctx.fillRect(x+1,y,barW-2,bh); }
+    ctx.fillStyle='#aab2c0'; ctx.textAlign='left'; ctx.fillText('最終資産：'+fmtOku(min),pad.left,H-10); ctx.textAlign='right'; ctx.fillText(fmtOku(max),W-pad.right,H-10);
+  }
+
+  // ===================== フェーズ3：LTR要件 =====================
+  function renderP3Req(){
+    var tbody=$('p3ReqBody'); if(!tbody)return;
+    var total=currentAssetsTotal(), gT=globalTargetMan(), tI=thaiInvestMan();
+    function statusCell(have,need){ return have>=need ? '<span class="pill-ok">達成 ✅</span>' : '<span class="pill-ng">不足 '+fmtOku(need-have)+'</span>'; }
+    tbody.innerHTML =
+      '<tr><td>グローバル資産</td><td>USD 1,000,000</td><td>'+fmtOku(gT)+'</td><td>'+statusCell(total,gT)+'</td></tr>'+
+      '<tr><td>タイ国内投資（必須）</td><td>USD 500,000</td><td>'+fmtOku(tI)+'</td><td><span class="small">別枠で確保が必要</span></td></tr>'+
+      '<tr><td>健康保険 等</td><td>USD 50,000 等</td><td>—</td><td><span class="small">保険/残高/SSOのいずれか</span></td></tr>';
+  }
+  function renderP3Lists(){
+    function fill(id,arr,cls){ var ul=$(id); ul.innerHTML=''; arr.forEach(function(x){ var li=document.createElement('li');
+      li.innerHTML='<span class="'+cls+'">●</span><div>'+x.t+'<div class="c-sub">'+x.s+'</div></div>'; ul.appendChild(li); }); }
+    fill('p3Eligible',LTR.eligible,'pill-ok'); fill('p3NotEligible',LTR.notEligible,'pill-ng');
+  }
+  function updateAchievement(){
+    if(!lastResult){ return; }
+    var gT=globalTargetMan(), years=lastResult.years, paths=lastResult.paths;
+    function firstYear(p){ // pパーセンタイルの年次系列が初めてgTに到達する年
+      for(var y=0;y<=years;y++){ var vals=paths.map(function(pp){return pp[y];}); vals.sort(function(a,b){return a-b;});
+        if(percentile(vals,p)>=gT) return y; }
+      return null;
+    }
+    function label(y){ if(y===null) return '>'+years+'年'; if(y===0) return '達成済み'; return 'あと'+y+'年'; }
+    var yW=firstYear(0.05), yM=firstYear(0.50), yB=firstYear(0.95);
+    $('a3Worst').textContent=label(yW); $('a3Median').textContent=label(yM); $('a3Best').textContent=label(yB);
+    $('kYear').textContent=label(yM);
+    var base=new Date().getFullYear();
+    $('p3AchieveNote').textContent='現在('+base+'年)を起点に、グローバル資産USD1M（'+fmtOku(gT)+'）へ到達する年。中央値で'+(yM===null?(years+'年以内に未達'):(base+yM)+'年頃')+'。目標移住年：'+num('targetYear')+'年。';
+  }
+
+  // ===================== フェーズ4：手続き・書類・費用 =====================
+  var STEPS = [
+    { t:'事前準備：資産要件の充足確認', d:'グローバル資産USD1M・タイ国内投資USD500K・健康保険(or残高/SSO)を整える。資産証明の英文書類を準備。' },
+    { t:'BOI（投資委員会）へオンライン申請', d:'LTRポータル(ltr.boi.go.th)でWealthy Global Citizenカテゴリを選択し書類アップロード。' },
+    { t:'書類審査（標準60営業日）', d:'資産・投資・保険の要件審査。追加資料を求められる場合あり。' },
+    { t:'承認通知（Endorsement Letter）受領', d:'承認後、ビザ発給のための招請状を受領。' },
+    { t:'ビザ発給（在外タイ大使館/領事館 or タイ国内）', d:'申請料 THB50,000/人を納付しLTRビザを取得。' },
+    { t:'入国・デジタルワークパーミット等の手続き', d:'必要に応じて90日レポート免除・空港ファストトラック等のLTR特典を有効化。' }
+  ];
+  var DOCS = [
+    { t:'パスポート（残存期間十分）', s:'本人・同伴家族全員分' },
+    { t:'資産証明（USD1M以上）', s:'銀行残高証明・運用報告書など英文' },
+    { t:'タイ国内投資の証憑（USD500K）', s:'国債/不動産登記/出資証明' },
+    { t:'健康保険証書（USD50,000以上）', s:'または銀行残高USD100,000×12ヶ月 or SSO登録' },
+    { t:'収入・職業の証明', s:'FX/投資収益の継続性を示す資料' },
+    { t:'戸籍・婚姻・出生証明（家族同伴時）', s:'英訳・公証が必要な場合あり' },
+    { t:'証明写真', s:'規格に準拠' }
+  ];
+  function renderSteps(){ var c=$('p4Steps'); c.innerHTML='';
+    STEPS.forEach(function(s,i){ var d=document.createElement('div'); d.className='step';
+      d.innerHTML='<div class="step-no">'+(i+1)+'</div><div><div class="step-title">'+s.t+'</div><div class="step-desc">'+s.d+'</div></div>'; c.appendChild(d); }); }
+  function renderDocs(){ var ul=$('p4Docs'); ul.innerHTML='';
+    DOCS.forEach(function(d,i){ var li=document.createElement('li');
+      var cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!(state.docs && state.docs[i]); cb.dataset.idx=i;
+      cb.addEventListener('change',function(){ state.docs[i]=cb.checked; updateDocsProgress(); autoSave(); });
+      var div=document.createElement('div'); div.innerHTML=d.t+'<div class="c-sub">'+d.s+'</div>';
+      li.appendChild(cb); li.appendChild(div); ul.appendChild(li); });
+    updateDocsProgress();
+  }
+  function updateDocsProgress(){ var done=(state.docs||[]).filter(Boolean).length; $('p4DocsProgress').textContent='準備済み：'+done+' / '+DOCS.length+'件'; }
+  function refreshPhase4Cost(){
+    var persons=Math.max(1,num('cPersons'));
+    var feeMan = persons * (LTR.feeTHB * num('thbJpy') / 10000); // THB→円→万円
+    var total = feeMan + num('cMove') + num('cHousing') + num('cReserve');
+    $('cFee').textContent=fmtMan(feeMan);
+    $('cTotal').textContent=fmtMan(total);
+    $('cRef').textContent=ONETIME_REF[$('household').value]||ONETIME_REF.single;
+  }
+  ['cPersons','cMove','cHousing','cReserve'].forEach(function(id){ $(id).addEventListener('input',refreshPhase4Cost); });
+
+  // ===================== フェーズ5：生活費・税・4%・持続 =====================
+  function refreshPhase5Living(){
+    var hh=$('household').value, lv=$('livLevel').value;
+    var table=LIVING[hh]||LIVING.single;
+    $('livMonthly').value = table[lv];
+    var annual=num('livMonthly')*12;
+    $('f4Annual').textContent=fmtMan(annual);
+    var required=annual/0.04;
+    $('f4Required').textContent=fmtOku(required);
+    var total=currentAssetsTotal();
+    var cov=required>0?(total/required*100):0;
+    $('f4Coverage').textContent=cov.toFixed(0)+'%'+(cov>=100?' ✅':'');
+    $('f4Coverage').parentElement.className='kpi '+(cov>=100?'best':(cov>=60?'mid':'worst'));
+    $('p5LivNote').innerHTML='家族構成「'+({single:'単身',couple:'夫婦',family3:'家族3人'}[hh])+'」の生活レベル別目安：最小'+table.min+'／中位'+table.mid+'／最大'+table.max+'万円（月額）。THB/JPY='+num('thbJpy')+'を前提。<span class="badge badge-src">出典: 移住調査報告書</span>';
+    var rate=TAX[taxScenario];
+    $('p5TaxNote').textContent='選択中：税率'+(rate*100)+'%。FX利益'+fmtMan(num('fxProfit'))+'に対し税後手取りは約'+fmtMan(num('fxProfit')*(1-rate))+'（保守係数適用前）。';
+  }
+  $('livLevel').addEventListener('change',refreshPhase5Living);
+  $('livMonthly').addEventListener('input',function(){ var annual=num('livMonthly')*12; $('f4Annual').textContent=fmtMan(annual);
+    var required=annual/0.04; $('f4Required').textContent=fmtOku(required);
+    var cov=required>0?(currentAssetsTotal()/required*100):0; $('f4Coverage').textContent=cov.toFixed(0)+'%'+(cov>=100?' ✅':''); });
+  $('livInf').addEventListener('input',function(){});
+  var taxToggle=$('taxToggle');
+  taxToggle.addEventListener('click',function(e){ if(e.target.tagName!=='BUTTON')return;
+    Array.prototype.forEach.call(taxToggle.children,function(b){b.classList.remove('active');});
+    e.target.classList.add('active'); taxScenario=e.target.getAttribute('data-tax'); refreshPhase5Living(); });
+
+  function refreshPhase5StartDefault(){
+    if(lastResult && num('sStart')===0){ $('sStart').value=Math.round(percentile(lastResult.sorted,0.50)); }
+  }
+  function runSustain(){
+    var start=num('sStart')>0?num('sStart'):(lastResult?percentile(lastResult.sorted,0.50):currentAssetsTotal());
+    var horizon=Math.max(5,num('sHorizon'));
+    var mu=lastResult?lastResult.wMu:0.04, sig=lastResult?lastResult.wSig:0.10;
+    var inf=num('livInf')/100;
+    var rate=TAX[taxScenario];
+    var fxNet=($('sFxContinue').value==='yes')? num('fxProfit')*num('fxCons')*(1-rate) : 0;
+    var liv0=num('livMonthly')*12;
+    var finals=new Array(TRIALS), paths=new Array(TRIALS), depletYears=[];
+    for(var i=0;i<TRIALS;i++){
+      var amt=start, path=[amt], dep=null;
+      for(var y=0;y<horizon;y++){
+        var r=mu+sig*randNormal();
+        var liv=liv0*Math.pow(1+inf,y);
+        amt=amt*(1+r)+fxNet-liv;
+        if(amt<0){ amt=0; if(dep===null)dep=y+1; }
+        path.push(amt);
+      }
+      finals[i]=amt; paths[i]=path; depletYears.push(dep);
+    }
+    lastSustain={paths:paths,years:horizon,start:start};
+    // 各試行の枯渇年（枯渇しなければhorizon+1扱い）をソートして分位
+    var depSorted=depletYears.map(function(d){return d===null?(horizon+1):d;}).sort(function(a,b){return a-b;});
+    function depYear(p){ var v=percentile(depSorted,p); return v>horizon? ('期間内に枯渇せず'):(v+'年で枯渇'); }
+    $('s5Worst').textContent=depYear(0.05);
+    $('s5Median').textContent=depYear(0.50);
+    var surviveRate=depletYears.filter(function(d){return d===null;}).length/TRIALS*100;
+    $('s5Survive').textContent=surviveRate.toFixed(0)+'%';
+    $('p5SustainResult').style.display='block';
+    drawBand('sustainChart',paths,horizon,null);
+    markDone(5);
+  }
+  $('sustainBtn').addEventListener('click',runSustain);
+
+  // ===================== 保存・読込・出力 =====================
+  var INPUT_IDS=['age','household','targetYear','aCash','aNisa','aIdeco','aFx','aOther','fxProfit','fxSd','fxCons','usdJpy','thbJpy',
+    'cPersons','cMove','cHousing','cReserve','livLevel','livMonthly','livInf','sStart','sFxContinue','sHorizon'];
+  var state={ docs:[], };
+  function collect(){
+    var d={ inputs:{}, docs:state.docs, taxScenario:taxScenario, selectedYears:selectedYears, useCorrelation:useCorrelation, lang:lang,
+      alloc:getRows() };
+    INPUT_IDS.forEach(function(id){ d.inputs[id]=$(id).value; });
+    return d;
+  }
+  function restore(d){
+    if(!d)return;
+    if(d.inputs) INPUT_IDS.forEach(function(id){ if(d.inputs[id]!==undefined) $(id).value=d.inputs[id]; });
+    if(d.docs) state.docs=d.docs;
+    if(d.taxScenario){ taxScenario=d.taxScenario; Array.prototype.forEach.call(taxToggle.children,function(b){ b.classList.toggle('active',b.getAttribute('data-tax')===taxScenario); }); }
+    if(d.selectedYears){ selectedYears=d.selectedYears; Array.prototype.forEach.call(periodButtons.children,function(b){ b.classList.toggle('active',parseInt(b.getAttribute('data-years'),10)===selectedYears); }); }
+    if(typeof d.useCorrelation==='boolean'){ useCorrelation=d.useCorrelation; Array.prototype.forEach.call(corrToggle.children,function(b){ b.classList.toggle('active',(b.getAttribute('data-corr')==='on')===useCorrelation); }); }
+    if(d.alloc && d.alloc.length){ allocBody.innerHTML=''; d.alloc.forEach(function(a){ allocBody.appendChild(createRow(a)); }); }
+    if(d.lang){ lang=d.lang; setLang(lang,true); }
+    refreshAll();
+  }
+  function autoSave(){ try{ localStorage.setItem('thltr_v1', JSON.stringify(collect())); }catch(e){} }
+  function refreshAll(){ refreshPhase1(); onAllocChange(); renderP3Req(); renderP3Lists(); refreshPhase4Cost(); updateDocsProgress(); refreshPhase5Living(); refreshLinked(); }
+
+  $('btnSave').addEventListener('click',function(){ autoSave(); flash($('btnSave'),lang==='en'?'Saved':'保存しました'); });
+  $('btnLoad').addEventListener('click',function(){ try{ var s=localStorage.getItem('thltr_v1'); if(s){ restore(JSON.parse(s)); renderDocs(); flash($('btnLoad'),lang==='en'?'Loaded':'読込みました'); } else flash($('btnLoad'),lang==='en'?'No data':'保存なし'); }catch(e){} });
+  $('btnExport').addEventListener('click',function(){ var a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([JSON.stringify(collect(),null,2)],{type:'application/json'}));
+    a.download='thailand_ltr_plan_'+new Date().toISOString().slice(0,10)+'.json'; a.click(); });
+  $('btnImport').addEventListener('click',function(){ $('fileInput').click(); });
+  $('fileInput').addEventListener('change',function(e){ var f=e.target.files[0]; if(!f)return; var r=new FileReader();
+    r.onload=function(ev){ try{ restore(JSON.parse(ev.target.result)); renderDocs(); }catch(err){ alert('JSONの読込に失敗しました'); } }; r.readAsText(f); });
+  function doPrint(){ autoSave(); window.print(); }
+  $('btnPrint').addEventListener('click',doPrint);
+  $('btnPrint2').addEventListener('click',doPrint);
+  function flash(btn,msg){ var o=btn.textContent; btn.textContent=msg; setTimeout(function(){ btn.textContent=o; },1200); }
+
+  // ===================== 言語切替 =====================
+  var langToggle=$('langToggle');
+  function setLang(l,silent){ lang=l; Array.prototype.forEach.call(langToggle.children,function(b){ b.classList.toggle('active',b.getAttribute('data-lang')===l); });
+    applyI18n(); if(!silent) refreshAll(); }
+  langToggle.addEventListener('click',function(e){ if(e.target.tagName!=='BUTTON')return; setLang(e.target.getAttribute('data-lang')); });
+
+  // ===================== 初期化 =====================
+  function init(){
+    buildDefaultRows(); onAllocChange();
+    // 既定の書類状態
+    state.docs = DOCS.map(function(){ return false; });
+    renderSteps(); renderDocs(); renderP3Lists();
+    $('discMeta').textContent='データ更新日：'+META.updated+' ／ ビザ要件確認日：'+META.visaConfirmed+' ／ 期待リターン根拠：'+META.cma+' ／ FX課税は0%/10%/35%の仮定シナリオ（要専門家確認）。';
+    // localStorage 自動復元
+    try{ var s=localStorage.getItem('thltr_v1'); if(s){ var d=JSON.parse(s); if(d.docs && d.docs.length) state.docs=d.docs; restore(d); renderDocs(); } }catch(e){}
+    applyI18n();
+    refreshAll();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
