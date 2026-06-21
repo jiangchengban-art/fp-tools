@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>海外FX資金フロー・プランナー（XM / VANTAGE / XS）</title>
+<style>
+  :root {
+    --bg: #14161f; --card: #1d2030; --card2: #252939; --border: #2a2e42;
+    --text: #d8dee9; --muted: #8b95a7; --label: #aab2c0;
+    --accent: #5dade2; --accent2: #f5b041; --ok: #58d68d; --ng: #ec7063;
+    --warn: #e67e22; --head: #f0f3f7;
+    --risk-high: #ec7063; --risk-mid: #f5b041; --risk-low: #58d68d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    background: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.55;
+  }
+  header {
+    background: linear-gradient(135deg, #15324f, #1d2030);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 22px; display: flex; align-items: center;
+    justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  header h1 { font-size: 19px; margin: 0; color: var(--head); }
+  header .tagline { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .header-actions button {
+    padding: 6px 12px; border: 1px solid var(--border); background: var(--card2);
+    color: var(--text); border-radius: 4px; cursor: pointer; font-size: 12px;
+  }
+  .header-actions button:hover { background: #303651; }
+  .layout { display: flex; max-width: 1180px; margin: 0 auto; gap: 18px; padding: 18px; align-items: flex-start; }
+  .nav {
+    flex: 0 0 220px; background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px; position: sticky; top: 78px;
+  }
+  .nav .nav-item {
+    display: flex; gap: 10px; align-items: flex-start; padding: 10px;
+    border-radius: 6px; cursor: pointer; margin-bottom: 4px; border: 1px solid transparent;
+  }
+  .nav .nav-item:hover { background: var(--card2); }
+  .nav .nav-item.active { background: #1a2c40; border-color: var(--accent); }
+  .nav .nav-num {
+    flex: 0 0 24px; height: 24px; border-radius: 50%; background: var(--card2);
+    color: var(--muted); text-align: center; line-height: 24px; font-size: 13px; font-weight: bold;
+  }
+  .nav .nav-item.active .nav-num { background: var(--accent); color: var(--bg); }
+  .nav .nav-label { font-size: 13px; padding-top: 3px; }
+  .nav .nav-sub { font-size: 11px; color: var(--muted); }
+  .main { flex: 1 1 auto; min-width: 0; }
+  .mod { display: none; }
+  .mod.active { display: block; }
+  .card {
+    background: var(--card); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    padding: 18px 20px; margin-bottom: 16px; border: 1px solid var(--border);
+  }
+  .card h2 { font-size: 16px; margin: 0 0 12px 0; border-left: 4px solid var(--accent); padding-left: 8px; color: var(--head); }
+  .card h3 { font-size: 14px; margin: 14px 0 8px 0; color: var(--accent2); }
+  label { font-size: 13px; color: var(--label); }
+  .row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 10px; }
+  .field { display: flex; flex-direction: column; gap: 3px; }
+  input[type=number], select {
+    background: var(--card2); color: #e6e9ef; border: 1px solid #3a3f55; border-radius: 4px;
+    padding: 6px 8px; font-size: 14px; width: 160px;
+  }
+  select { width: 180px; cursor: pointer; }
+  .run-btn {
+    padding: 10px 24px; border: none; border-radius: 4px; cursor: pointer;
+    font-size: 15px; font-weight: bold; background: var(--accent); color: var(--bg);
+  }
+  .run-btn:hover { filter: brightness(1.1); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+  th, td { padding: 7px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+  th { color: var(--muted); font-weight: normal; font-size: 12px; background: var(--card2); }
+  .risk-high { color: var(--risk-high); font-weight: bold; }
+  .risk-mid { color: var(--risk-mid); font-weight: bold; }
+  .risk-low { color: var(--risk-low); font-weight: bold; }
+  .badge {
+    display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: bold;
+  }
+  .badge-high { background: rgba(236,112,99,0.2); color: var(--risk-high); border: 1px solid var(--risk-high); }
+  .badge-mid { background: rgba(245,176,65,0.2); color: var(--risk-mid); border: 1px solid var(--risk-mid); }
+  .badge-low { background: rgba(88,214,141,0.2); color: var(--risk-low); border: 1px solid var(--risk-low); }
+  .note {
+    font-size: 12px; color: var(--label); line-height: 1.6; background: #2a2517;
+    border-left: 4px solid var(--warn); padding: 12px 14px; border-radius: 4px; margin: 12px 0;
+  }
+  .note-info {
+    font-size: 12px; color: var(--label); line-height: 1.6; background: #172a3a;
+    border-left: 4px solid var(--accent); padding: 12px 14px; border-radius: 4px; margin: 12px 0;
+  }
+  .note-danger {
+    font-size: 12px; color: #f5b7b1; line-height: 1.6; background: #2d1a1a;
+    border-left: 4px solid var(--ng); padding: 12px 14px; border-radius: 4px; margin: 12px 0;
+  }
+  .small { font-size: 12px; color: var(--muted); }
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px; margin: 12px 0;
+  }
+  .summary-box {
+    background: var(--card2); border-radius: 6px; padding: 14px;
+    border: 1px solid var(--border); text-align: center;
+  }
+  .summary-box .val { font-size: 22px; font-weight: bold; color: var(--head); margin: 6px 0 2px; }
+  .summary-box .lbl { font-size: 11px; color: var(--muted); }
+  .flow-svg { width: 100%; max-width: 800px; margin: 0 auto; display: block; }
+  .checklist label {
+    display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px;
+    border-radius: 4px; cursor: pointer; font-size: 13px; color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+  .checklist label:hover { background: var(--card2); }
+  .checklist input[type=checkbox] { margin-top: 2px; accent-color: var(--accent); flex-shrink: 0; }
+  .checklist .done { text-decoration: line-through; color: var(--muted); }
+  .step-card {
+    background: var(--card2); border-radius: 6px; padding: 14px 16px;
+    margin-bottom: 10px; border-left: 3px solid var(--accent);
+  }
+  .step-card .step-num {
+    font-size: 11px; font-weight: bold; color: var(--accent); margin-bottom: 4px;
+  }
+  .step-card .step-title { font-size: 14px; color: var(--head); margin-bottom: 6px; }
+  .step-card .step-body { font-size: 12px; color: var(--label); }
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tab-bar button {
+    padding: 6px 14px; border: 1px solid var(--border); background: var(--card2);
+    color: var(--muted); border-radius: 4px 4px 0 0; cursor: pointer; font-size: 12px;
+  }
+  .tab-bar button.active { background: var(--card); color: var(--accent); border-bottom-color: var(--card); }
+  .result-bar {
+    display: flex; align-items: center; gap: 8px; margin: 10px 0;
+    background: var(--card2); border-radius: 4px; padding: 6px 10px; overflow: hidden;
+  }
+  .result-bar .bar-label { font-size: 12px; color: var(--label); flex: 0 0 80px; }
+  .result-bar .bar-track { flex: 1; height: 18px; background: #1a1d2b; border-radius: 3px; position: relative; overflow: hidden; }
+  .result-bar .bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+  .result-bar .bar-val { font-size: 13px; font-weight: bold; flex: 0 0 100px; text-align: right; }
+  .disclaimer {
+    font-size: 11px; color: var(--muted); background: var(--card2);
+    padding: 12px 14px; border-radius: 4px; margin-top: 16px; line-height: 1.6;
+    border: 1px solid var(--border);
+  }
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; }
+    .nav { flex: none; width: 100%; position: static; display: flex; overflow-x: auto; gap: 4px; padding: 6px; }
+    .nav .nav-item { flex: 0 0 auto; margin-bottom: 0; }
+    .nav .nav-sub { display: none; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media print {
+    body { background: #fff; color: #222; }
+    header { position: static; background: #fff; border-bottom: 2px solid #333; }
+    header h1 { color: #111; }
+    .nav { display: none; }
+    .layout { display: block; padding: 0 10px; }
+    .mod { display: block !important; page-break-before: always; }
+    .mod:first-child { page-break-before: avoid; }
+    .card { background: #fff; border: 1px solid #ccc; box-shadow: none; }
+    .card h2 { color: #111; border-left-color: #333; }
+    th { background: #eee; }
+    .header-actions { display: none; }
+    .run-btn { display: none; }
+    .badge-high { border-color: #c0392b; color: #c0392b; }
+    .badge-mid { border-color: #d68910; color: #d68910; }
+    .badge-low { border-color: #1e8449; color: #1e8449; }
+    .note, .note-info, .note-danger { border-left-width: 3px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>海外FX資金フロー・プランナー</h1>
+    <div class="tagline">複数FX口座の出金ルート比較・手取り試算・改正資金決済法対応</div>
+  </div>
+  <div class="header-actions">
+    <select id="brokerSelect" onchange="switchBroker()" style="padding: 8px 12px; margin-right: 10px;">
+      <optgroup label="保有口座">
+        <option value="xm">XM Trading</option>
+        <option value="vantage">VANTAGE Markets</option>
+        <option value="xs">XS.com</option>
+      </optgroup>
+      <optgroup label="第1グループ（定番・日本人最多）">
+        <option value="exness">Exness</option>
+        <option value="titanfx">TitanFX</option>
+        <option value="axiory">AXIORY</option>
+      </optgroup>
+      <optgroup label="第2グループ（ボーナス重視）">
+        <option value="fxgt">FXGT</option>
+        <option value="bigboss">BigBoss</option>
+        <option value="hfm">HFM（旧HotForex）</option>
+      </optgroup>
+      <optgroup label="第3グループ（高レバ・特化型）">
+        <option value="fbs">FBS</option>
+        <option value="is6fx">IS6FX</option>
+        <option value="milton">Milton Markets</option>
+      </optgroup>
+    </select>
+    <button onclick="doSave()">💾 保存</button>
+    <button onclick="doLoad()">📂 読込</button>
+    <button onclick="window.print()">🖨 印刷/PDF</button>
+  </div>
+</header>
+
+<div class="layout">
+<nav class="nav" id="nav">
+  <div class="nav-item active" data-mod="1" onclick="gotoMod(1)">
+    <div class="nav-num">1</div>
+    <div><div class="nav-label">資金フロー図</div><div class="nav-sub">ルート全体像・リスク信号</div></div>
+  </div>
+  <div class="nav-item" data-mod="2" onclick="gotoMod(2)">
+    <div class="nav-num">2</div>
+    <div><div class="nav-label">手取りシミュレーター</div><div class="nav-sub">税額・手数料・最終手取り</div></div>
+  </div>
+  <div class="nav-item" data-mod="3" onclick="gotoMod(3)">
+    <div class="nav-num">3</div>
+    <div><div class="nav-label">ルート比較</div><div class="nav-sub">出金経路＋カード比較</div></div>
+  </div>
+  <div class="nav-item" data-mod="4" onclick="gotoMod(4)">
+    <div class="nav-num">4</div>
+    <div><div class="nav-label">手順ナビ</div><div class="nav-sub">ステップ＆チェックリスト</div></div>
+  </div>
+  <div class="nav-item" data-mod="5" onclick="gotoMod(5)">
+    <div class="nav-num">5</div>
+    <div><div class="nav-label">注意点まとめ</div><div class="nav-sub">税務・規制・用語解説</div></div>
+  </div>
+</nav>
+
+<div class="main">
+
+<!-- ===== Module 1: Fund Flow Map ===== -->
+<div class="mod active" id="mod1">
+  <div class="card">
+    <h2>XM資金フロー全体像</h2>
+    <p class="small">各経路のリスクレベル（2026年6月・改正資金決済法施行後）を色で表示しています。</p>
+
+    <svg class="flow-svg" viewBox="0 0 780 520" xmlns="http://www.w3.org/2000/svg">
+      <!-- XM Box -->
+      <rect x="300" y="10" width="180" height="50" rx="8" fill="#1d2030" stroke="#5dade2" stroke-width="2"/>
+      <text x="390" y="42" text-anchor="middle" fill="#f0f3f7" font-size="15" font-weight="bold">XM口座残高</text>
+
+      <!-- Split arrows -->
+      <line x1="340" y1="60" x2="140" y2="120" stroke="#8b95a7" stroke-width="1.5" stroke-dasharray="4"/>
+      <line x1="390" y1="60" x2="390" y2="120" stroke="#8b95a7" stroke-width="1.5" stroke-dasharray="4"/>
+      <line x1="440" y1="60" x2="640" y2="120" stroke="#8b95a7" stroke-width="1.5" stroke-dasharray="4"/>
+
+      <!-- Route A: Crypto -->
+      <rect x="40" y="120" width="200" height="46" rx="6" fill="#0d2818" stroke="#58d68d" stroke-width="1.5"/>
+      <text x="140" y="140" text-anchor="middle" fill="#58d68d" font-size="12" font-weight="bold">A. 仮想通貨出金（USDT等）</text>
+      <text x="140" y="156" text-anchor="middle" fill="#aab2c0" font-size="10">🟢 リスク低〜中</text>
+
+      <!-- Route B: Bank -->
+      <rect x="290" y="120" width="200" height="46" rx="6" fill="#2d1a1a" stroke="#ec7063" stroke-width="1.5"/>
+      <text x="390" y="140" text-anchor="middle" fill="#ec7063" font-size="12" font-weight="bold">B. 銀行送金</text>
+      <text x="390" y="156" text-anchor="middle" fill="#aab2c0" font-size="10">🔴 リスク高（凍結報告あり）</text>
+
+      <!-- Route C: Credit return -->
+      <rect x="540" y="120" width="200" height="46" rx="6" fill="#2a2517" stroke="#f5b041" stroke-width="1.5"/>
+      <text x="640" y="140" text-anchor="middle" fill="#f5b041" font-size="12" font-weight="bold">C. クレカ返金</text>
+      <text x="640" y="156" text-anchor="middle" fill="#aab2c0" font-size="10">🟡 入金額まで限定</text>
+
+      <!-- Crypto sub-routes -->
+      <line x1="90" y1="166" x2="90" y2="210" stroke="#58d68d" stroke-width="1"/>
+      <line x1="190" y1="166" x2="190" y2="210" stroke="#58d68d" stroke-width="1"/>
+
+      <rect x="10" y="210" width="160" height="42" rx="5" fill="#1d2030" stroke="#2a2e42" stroke-width="1"/>
+      <text x="90" y="228" text-anchor="middle" fill="#d8dee9" font-size="11" font-weight="bold">cryptoカードで決済</text>
+      <text x="90" y="242" text-anchor="middle" fill="#58d68d" font-size="10">RedotPay / Tria</text>
+
+      <rect x="120" y="210" width="160" height="42" rx="5" fill="#1d2030" stroke="#2a2e42" stroke-width="1"/>
+      <text x="200" y="228" text-anchor="middle" fill="#d8dee9" font-size="11" font-weight="bold">国内取引所で円転</text>
+      <text x="200" y="242" text-anchor="middle" fill="#f5b041" font-size="10">トラベルルール注意</text>
+
+      <!-- Crypto card destinations -->
+      <line x1="90" y1="252" x2="90" y2="290" stroke="#58d68d" stroke-width="1"/>
+      <rect x="20" y="290" width="140" height="36" rx="5" fill="#1d2030" stroke="#58d68d" stroke-width="1"/>
+      <text x="90" y="312" text-anchor="middle" fill="#58d68d" font-size="12" font-weight="bold">🛒 普段使い</text>
+
+      <!-- Yen conversion destinations -->
+      <line x1="200" y1="252" x2="200" y2="290" stroke="#5dade2" stroke-width="1"/>
+      <rect x="170" y="290" width="60" height="36" rx="5" fill="#1d2030" stroke="#5dade2" stroke-width="1"/>
+      <text x="200" y="312" text-anchor="middle" fill="#d8dee9" font-size="11">銀行</text>
+
+      <line x1="200" y1="326" x2="140" y2="360" stroke="#5dade2" stroke-width="1"/>
+      <line x1="200" y1="326" x2="260" y2="360" stroke="#5dade2" stroke-width="1"/>
+
+      <rect x="80" y="360" width="120" height="36" rx="5" fill="#1d2030" stroke="#5dade2" stroke-width="1"/>
+      <text x="140" y="382" text-anchor="middle" fill="#5dade2" font-size="12" font-weight="bold">🛒 普段使い</text>
+
+      <rect x="200" y="360" width="120" height="36" rx="5" fill="#1d2030" stroke="#5dade2" stroke-width="1"/>
+      <text x="260" y="382" text-anchor="middle" fill="#5dade2" font-size="12" font-weight="bold">📈 証券→株</text>
+
+      <!-- Bank route destinations -->
+      <line x1="390" y1="166" x2="390" y2="210" stroke="#ec7063" stroke-width="1"/>
+      <rect x="310" y="210" width="160" height="42" rx="5" fill="#2d1a1a" stroke="#ec7063" stroke-width="1"/>
+      <text x="390" y="228" text-anchor="middle" fill="#ec7063" font-size="11" font-weight="bold">国内銀行着金</text>
+      <text x="390" y="242" text-anchor="middle" fill="#f5b7b1" font-size="10">口座凍結・拒否リスク</text>
+
+      <line x1="390" y1="252" x2="350" y2="290" stroke="#ec7063" stroke-width="1"/>
+      <line x1="390" y1="252" x2="430" y2="290" stroke="#ec7063" stroke-width="1"/>
+      <rect x="290" y="290" width="120" height="36" rx="5" fill="#1d2030" stroke="#ec7063" stroke-width="1"/>
+      <text x="350" y="312" text-anchor="middle" fill="#ec7063" font-size="12">🛒 普段使い</text>
+      <rect x="370" y="290" width="120" height="36" rx="5" fill="#1d2030" stroke="#ec7063" stroke-width="1"/>
+      <text x="430" y="312" text-anchor="middle" fill="#ec7063" font-size="12">📈 証券→株</text>
+
+      <!-- Credit return note -->
+      <line x1="640" y1="166" x2="640" y2="210" stroke="#f5b041" stroke-width="1"/>
+      <rect x="560" y="210" width="160" height="42" rx="5" fill="#1d2030" stroke="#f5b041" stroke-width="1"/>
+      <text x="640" y="228" text-anchor="middle" fill="#f5b041" font-size="11" font-weight="bold">カード利用残高に返金</text>
+      <text x="640" y="242" text-anchor="middle" fill="#aab2c0" font-size="10">利益分は出金不可</text>
+
+      <!-- XM constraint note -->
+      <rect x="40" y="420" width="700" height="46" rx="6" fill="#2a2517" stroke="#e67e22" stroke-width="1"/>
+      <text x="390" y="440" text-anchor="middle" fill="#f5b041" font-size="12" font-weight="bold">⚠ XM出金原則: crypto出金 = crypto入金額まで｜利益分（超過分）= 銀行送金が原則</text>
+      <text x="390" y="456" text-anchor="middle" fill="#aab2c0" font-size="10">→ crypto入金額を増やすことで、cryptoルートの出金上限を引き上げられる</text>
+
+      <!-- Regulation banner -->
+      <rect x="40" y="476" width="700" height="36" rx="6" fill="#2d1a1a" stroke="#ec7063" stroke-width="1"/>
+      <text x="390" y="500" text-anchor="middle" fill="#f5b7b1" font-size="11">🔴 2026年6月施行 改正資金決済法: クロスボーダー収納代行が「為替取引」に該当 → 銀行ルートのリスク上昇</text>
+    </svg>
+
+    <div class="note">
+      <strong>読み方</strong>：あなたのXM残高は、入金方法に応じて出金ルートが決まります。<br>
+      🟢 低リスク = 仮想通貨出金（制約内なら現状で最も安全）<br>
+      🔴 高リスク = 銀行送金（凍結事例あり・規制直撃）<br>
+      🟡 限定的 = クレカ返金（入金額まで・利益は出せない）<br>
+      ※ どのルートでも <strong>FX決済益は確定時に総合課税</strong>（出金有無に関わらず課税）
+    </div>
+  </div>
+</div>
+
+<!-- ===== Module 2: Net Income Simulator ===== -->
+<div class="mod" id="mod2">
+  <div class="card">
+    <h2>手取りシミュレーター</h2>
+    <p class="small">海外FX利益にかかる税金＋出金手数料を差し引いた「実際の手取り」を3シナリオで試算します。</p>
+
+    <div class="row">
+      <div class="field">
+        <label>海外FX 年間利益（万円）</label>
+        <input type="number" id="fxProfit" value="500" min="0" step="10">
+      </div>
+      <div class="field">
+        <label>給与所得（万円、0＝FX専業）</label>
+        <input type="number" id="salary" value="0" min="0" step="10">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>出金方法</label>
+        <select id="withdrawMethod" onchange="toggleMethodFields()">
+          <option value="crypto_card">A. USDT→cryptoカード決済</option>
+          <option value="crypto_exchange">A. USDT→国内取引所→銀行</option>
+          <option value="bank">B. 銀行送金（直接）</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>出金額（万円）</label>
+        <input type="number" id="withdrawAmount" value="300" min="0" step="10">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>所得控除の合計（万円）</label>
+        <input type="number" id="deductions" value="100" min="0" step="5">
+        <span class="small">基礎控除48万＋社保＋iDeCo等の合計</span>
+      </div>
+    </div>
+
+    <button class="run-btn" onclick="calcNetIncome()" style="margin-top:12px">試算する</button>
+
+    <div id="simResult" style="display:none; margin-top:16px;">
+      <h3>試算結果</h3>
+      <div class="summary-grid" id="simSummary"></div>
+
+      <table id="simTable">
+        <thead>
+          <tr><th>項目</th><th>金額</th><th>備考</th></tr>
+        </thead>
+        <tbody id="simBody"></tbody>
+      </table>
+
+      <div id="simAlerts"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Module 3: Route Comparison ===== -->
+<div class="mod" id="mod3">
+  <div class="card">
+    <h2>出金ルート比較</h2>
+    <p class="small">2026年6月時点の調査に基づく比較です。規制・サービス内容は変動しうるため、最終確認日を参照してください。</p>
+
+    <h3>出金ルート比較</h3>
+    <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>ルート</th>
+          <th>手数料</th>
+          <th>着金目安</th>
+          <th>上限制約</th>
+          <th>課税ポイント</th>
+          <th>リスク</th>
+        </tr>
+      </thead>
+      <tbody id="withdrawalTableBody">
+      </tbody>
+    </table>
+    </div>
+
+    <div class="note-danger">
+      <strong>⚠ 銀行送金の凍結リスク</strong>：2026年6月施行の改正資金決済法により「クロスボーダー収納代行」が為替取引に該当。XM/Exnessでの国内銀行口座凍結の実際の報告あり。利益出金には銀行送金が原則だが、<strong>生活口座と出金用口座を必ず分離</strong>すること。
+    </div>
+
+    <div class="note-info" id="brokerRiskNote"></div>
+  </div>
+
+  <div class="card">
+    <h2>全12社スペック比較</h2>
+    <p class="small">2026年6月時点の調査に基づく。規制・サービス内容は変動しうるため、利用前に公式で確認してください。</p>
+    <div style="overflow-x:auto">
+    <table id="brokerComparisonTable">
+      <thead>
+        <tr>
+          <th>業者名</th>
+          <th>グループ</th>
+          <th>レバレッジ</th>
+          <th>ゼロカット</th>
+          <th>ライセンス</th>
+          <th>Crypto出金</th>
+          <th>出金制約</th>
+          <th>リスク評価</th>
+        </tr>
+      </thead>
+      <tbody id="brokerComparisonBody">
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="card" id="cryptoCardSection">
+    <h2>暗号資産カード徹底比較</h2>
+    <p class="small">最終確認日: 2026-06-21 ｜ サービス内容は頻繁に変更されます。利用前に必ず公式サイトで最新情報を確認してください。</p>
+
+    <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th style="min-width:120px">項目</th>
+          <th style="min-width:180px">RedotPay（リボットペイ）</th>
+          <th style="min-width:180px">Tria</th>
+          <th style="min-width:180px">GoMining Card</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>管理方式</strong></td>
+          <td>カストディアル（残高をRedotPayに預ける）</td>
+          <td><strong>セルフカストディ</strong>（自分のウォレットのまま）</td>
+          <td>チャージ式</td>
+        </tr>
+        <tr>
+          <td><strong>ブランド</strong></td>
+          <td>Visa</td>
+          <td>Visa</td>
+          <td>Visa</td>
+        </tr>
+        <tr>
+          <td><strong>対応通貨</strong></td>
+          <td>USDT / USDC 中心</td>
+          <td>USDT / USDC / BTC / ETH / SOL 等 1,000+</td>
+          <td>BTC / USDT / USDC 等</td>
+        </tr>
+        <tr>
+          <td><strong>年会費/発行料</strong></td>
+          <td>月額維持費<strong>無料</strong></td>
+          <td>一回 <strong>$25</strong>(Virtual) / $109(Premium) / $250(Signature)</td>
+          <td>要確認</td>
+        </tr>
+        <tr>
+          <td><strong>JPY決済手数料</strong></td>
+          <td><strong>0%</strong></td>
+          <td>FX手数料 <strong>0%</strong></td>
+          <td>要確認</td>
+        </tr>
+        <tr>
+          <td><strong>他通貨決済手数料</strong></td>
+          <td>1.2%</td>
+          <td>0%（chain abstraction）</td>
+          <td>要確認</td>
+        </tr>
+        <tr>
+          <td><strong>crypto→法定 交換</strong></td>
+          <td>約1.0〜1.2%</td>
+          <td>0%（Tria手数料なし）</td>
+          <td>要確認</td>
+        </tr>
+        <tr>
+          <td><strong>ATM出金</strong></td>
+          <td>手数料2% / 1日$10,000 / 月$200,000 / 回数制限あり</td>
+          <td>要確認</td>
+          <td>要確認</td>
+        </tr>
+        <tr>
+          <td><strong>1回の決済上限</strong></td>
+          <td>$100,000 / 1日上限なし</td>
+          <td>1日 $1,000,000（全tier共通）</td>
+          <td>要確認</td>
+        </tr>
+        <tr>
+          <td><strong>還元率</strong></td>
+          <td>なし（基本）</td>
+          <td>最大 <strong>6%</strong>（TRIAトークン、月間上限あり）<br>Virtual: 1.5% / Premium: 3-4% / Signature: 4.5-6%</td>
+          <td>要確認</td>
+        </tr>
+        <tr>
+          <td><strong>Apple/Google Pay</strong></td>
+          <td>✅ 対応</td>
+          <td>✅ 対応</td>
+          <td>✅ 対応</td>
+        </tr>
+        <tr>
+          <td><strong>バーチャルカード</strong></td>
+          <td>最短3分で発行</td>
+          <td>即時発行</td>
+          <td>要確認</td>
+        </tr>
+        <tr>
+          <td><strong>KYC（本人確認）</strong></td>
+          <td>パスポート/免許/マイナンバー＋顔写真</td>
+          <td>Visa標準KYC（承認に最大2ヶ月の報告）</td>
+          <td>要確認</td>
+        </tr>
+        <tr>
+          <td><strong>⚠ 日本での利用</strong></td>
+          <td class="risk-mid">⚠ <strong>KYC停止報告あり</strong>（2025年10月時点）<br>→ 新規発行困難の可能性。要・最新確認</td>
+          <td class="risk-mid">Asia-Pacific対象だが<strong>日本可否は明記なし</strong><br>→ 要・公式確認</td>
+          <td>2026年2月 日本対応とされる<br>→ 要・最新確認</td>
+        </tr>
+        <tr>
+          <td><strong>共通リスク</strong></td>
+          <td colspan="3" style="text-align:center" class="risk-mid">海外発行・日本未登録 ＝ 資金決済法の利用者保護枠外。将来規制でサービス停止・資金ロックの可能性</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="note">
+      <strong>推奨：</strong>1つのカードに全額を集中させず、複数ルートを確保しておくこと。特にRedotPayはKYC停止中の可能性があるため、事前に公式で確認。<br>
+      USDTで受け取り即決済 ＝ 暗号資産の値動きリスクを負わない ＋ 譲渡益の課税上乗せを最小化。
+    </div>
+  </div>
+</div>
+
+<!-- ===== Module 4: Step Navigator ===== -->
+<div class="mod" id="mod4">
+  <div class="card">
+    <h2>手順ナビゲーター</h2>
+    <p class="small">選択したルートに応じた手順を時系列で表示します。チェック状態は自動保存されます。</p>
+
+    <div class="tab-bar">
+      <button class="active" onclick="showRoute('crypto_card', this)">A-1. cryptoカード</button>
+      <button onclick="showRoute('crypto_exchange', this)">A-2. 国内取引所経由</button>
+      <button onclick="showRoute('bank', this)">B. 銀行送金</button>
+    </div>
+
+    <div id="route_crypto_card" class="route-steps">
+      <div class="step-card">
+        <div class="step-num">STEP 1 ─ 出金前</div>
+        <div class="step-title">利益額と課税対象を記録する</div>
+        <div class="step-body">MT5/MT4の決済済みポジション一覧から年間利益を確認。出金時ではなく<strong>決済時に課税</strong>される点を認識する。確定申告用にスクリーンショット保存。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 2 ─ ウォレット準備</div>
+        <div class="step-title">USDT受取ウォレットを準備する</div>
+        <div class="step-body">MetaMask, Trust Wallet等でUSDT (TRC20推奨・手数料安) の受取アドレスを用意。<strong>ネットワーク（チェーン）を送金元と揃える</strong>こと。<br>併せて、cryptoカード（RedotPay/Tria等）のアカウント開設・KYC完了を確認。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 3 ─ XMで出金申請</div>
+        <div class="step-title">XM会員ページから暗号資産出金</div>
+        <div class="step-body">XM会員ページ→「出金」→「暗号資産」→通貨（USDT等）・ネットワーク・ウォレットアドレスを入力。<br>上限 = crypto入金額まで（超過分は銀行送金）。<br>USDT(ERC20)で$300未満の場合は$15の手数料。TRC20推奨。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 4 ─ ウォレット着金確認</div>
+        <div class="step-title">24時間以内にウォレットに着金</div>
+        <div class="step-body">XM処理は24営業時間以内。ウォレットには通常即時反映。トランザクションハッシュを記録。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 5 ─ カードにチャージ</div>
+        <div class="step-title">cryptoカードにUSDTを送金/チャージ</div>
+        <div class="step-body">ウォレットからcryptoカードアプリへUSDTを転送。RedotPay=チャージ、Tria=ウォレット直結。<br>この時点では課税イベントなし（USDT→USDTの移動のみ）。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 6 ─ 決済・利用</div>
+        <div class="step-title">Visa加盟店で普段使い</div>
+        <div class="step-body">Apple Pay / Google Pay / 物理カードで決済。JPYでの決済手数料は0%。<br><strong>※税務上</strong>：USDT→JPY決済時にUSDT譲渡が発生するが、ペッグ通貨のため損益≒0。記録は保存推奨。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 7 ─ 確定申告</div>
+        <div class="step-title">年度末に確定申告</div>
+        <div class="step-body">FX利益は<strong>雑所得（総合課税）</strong>として申告。給与+FX利益の合計に累進税率。<br>出金しなかった利益も課税対象。暗号資産の譲渡記録は保管。</div>
+      </div>
+    </div>
+
+    <div id="route_crypto_exchange" class="route-steps" style="display:none">
+      <div class="step-card">
+        <div class="step-num">STEP 1 ─ 出金前</div>
+        <div class="step-title">利益額と課税対象を記録する</div>
+        <div class="step-body">MT5/MT4の決済済みポジション一覧から年間利益を確認。確定申告用にスクリーンショット保存。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 2 ─ 国内取引所口座を用意</div>
+        <div class="step-title">国内の暗号資産取引所に口座を開設・KYC</div>
+        <div class="step-body">GMOコイン、Coincheck、bitFlyer等。<strong>海外取引所</strong>を1段挟む方が着金審査リスクを低減できる（XM→海外取→国内取→銀行）。<br>⚠ トラベルルールにより、送金元情報の確認が厳格化。海外FX→国内取引所の直接送金は受取拒否の可能性あり。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 3 ─ XMで暗号資産出金</div>
+        <div class="step-title">XMからUSDT等をウォレット/取引所へ送金</div>
+        <div class="step-body">ステップはcryptoカードルートと同様。上限=crypto入金額まで。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 4 ─ 取引所でUSDTを売却（円転）</div>
+        <div class="step-title">国内取引所でUSDTをJPYに換金</div>
+        <div class="step-body">USDT/JPYペアで売却（≒課税上乗せゼロ）。取引所手数料を確認。売却後に出金申請。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 5 ─ 銀行着金</div>
+        <div class="step-title">国内銀行口座にJPY出金</div>
+        <div class="step-body">取引所からの国内出金は通常1〜3営業日。出金手数料は取引所により異なる（数百円程度）。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 6 ─ 資金の利用</div>
+        <div class="step-title">普段使い／証券口座への入金</div>
+        <div class="step-body">銀行からの振込で普段使いまたは証券口座へ入金→株購入。<br>証券口座への入金は普通の銀行振込のため追加のリスクなし。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 7 ─ 確定申告</div>
+        <div class="step-title">年度末に確定申告</div>
+        <div class="step-body">FX利益＝雑所得（総合課税）、USDT売却損益≒0。<br>暗号資産の全取引記録を保管すること。</div>
+      </div>
+    </div>
+
+    <div id="route_bank" class="route-steps" style="display:none">
+      <div class="step-card" style="border-left-color: var(--ng);">
+        <div class="step-num" style="color:var(--ng)">⚠ 重要な前提</div>
+        <div class="step-title">銀行送金ルートは2026年6月以降リスクが上昇しています</div>
+        <div class="step-body">改正資金決済法でクロスボーダー収納代行が為替取引に該当。XM/Exnessで口座凍結の実際の報告あり。<br><strong>必ず生活用口座と出金用口座を分離</strong>してください。<br>ただし利益分（crypto入金額超過分）の出金は現状このルートが原則です。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 1 ─ 出金前準備</div>
+        <div class="step-title">出金専用の銀行口座を用意</div>
+        <div class="step-body">生活口座とは別の銀行口座を用意。ネット銀行推奨。この口座が万一凍結されても生活に影響しない体制にする。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 2 ─ XMで銀行出金申請</div>
+        <div class="step-title">XM会員ページから銀行送金を選択</div>
+        <div class="step-body">XM会員ページ→「出金」→「銀行送金」→口座情報入力。<br>40万円未満の出金には2,500円の手数料。40万円以上は無料（XM側）。<br>中継銀行手数料（数千円）は別途かかる場合あり。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 3 ─ 着金確認</div>
+        <div class="step-title">2〜5営業日で着金</div>
+        <div class="step-body">⚠ 100万円超は「国外送金等調書」として税務署に自動通知。<br>着金しない場合は銀行に問い合わせ（凍結・保留の確認）。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 4 ─ 資金の利用</div>
+        <div class="step-title">普段使い／証券口座への入金</div>
+        <div class="step-body">出金用口座から必要額を生活口座や証券口座へ振替。<br>証券口座への入金は通常の国内振込。</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">STEP 5 ─ 確定申告</div>
+        <div class="step-title">年度末に確定申告</div>
+        <div class="step-body">FX利益=雑所得（総合課税）。100万超の送金は調書で税務署が把握済み。<br>正確に申告しないと税務調査リスク大。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>チェックリスト</h2>
+    <p class="small">チェック状態はブラウザに自動保存されます。</p>
+    <div class="checklist" id="checklist">
+      <label><input type="checkbox" data-ck="ck1" onchange="saveCk()"> <span>XM口座のcrypto入金額（=crypto出金上限）を確認した</span></label>
+      <label><input type="checkbox" data-ck="ck2" onchange="saveCk()"> <span>USDT受取用ウォレットを準備した（ネットワーク確認済み）</span></label>
+      <label><input type="checkbox" data-ck="ck3" onchange="saveCk()"> <span>cryptoカード（RedotPay/Tria等）のKYCを完了した</span></label>
+      <label><input type="checkbox" data-ck="ck4" onchange="saveCk()"> <span>出金用銀行口座を生活口座と分離した</span></label>
+      <label><input type="checkbox" data-ck="ck5" onchange="saveCk()"> <span>年間FX利益額を記録した（確定申告用）</span></label>
+      <label><input type="checkbox" data-ck="ck6" onchange="saveCk()"> <span>トランザクションハッシュ／送金記録を保存した</span></label>
+      <label><input type="checkbox" data-ck="ck7" onchange="saveCk()"> <span>国外送金等調書の対象（100万超）かどうか確認した</span></label>
+      <label><input type="checkbox" data-ck="ck8" onchange="saveCk()"> <span>確定申告の準備をした（雑所得として申告）</span></label>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Module 5: Notes & Reference ===== -->
+<div class="mod" id="mod5">
+
+  <div class="card">
+    <h2>3つの必須税ポイント</h2>
+
+    <div class="note-danger">
+      <strong>① FX決済益は出金しなくても課税</strong><br>
+      海外FXの利益は<strong>ポジション決済時に確定</strong>し、雑所得（総合課税）として課税。出金タイミングは無関係。<br>
+      税率は給与等と合算した総所得に対する<strong>累進税率（最大 約55.945%）</strong>。
+    </div>
+
+    <div class="note">
+      <strong>② crypto保有→決済時に「もう1回」課税イベント</strong><br>
+      BTCやETHで出金し、値上がり後に円転/決済すると、<strong>暗号資産の譲渡益</strong>が別途雑所得になる。<br>
+      <strong>USDTで受けて即使う</strong> ＝ 為替ペッグで値動き≒0 → 課税上乗せを最小化する最も合理的な方法。
+    </div>
+
+    <div class="note-info">
+      <strong>③ 100万円超の海外送金は自動通知される</strong><br>
+      銀行経由の100万円超の送金/着金は「<strong>国外送金等調書</strong>」が金融機関から税務署に提出される（法定調書）。<br>
+      隠すことは不可能。正確な確定申告で対応するのが唯一の正解。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>改正資金決済法（2026年6月1日施行）</h2>
+
+    <table>
+      <thead><tr><th>改正点</th><th>内容</th><th>あなたへの影響</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>クロスボーダー収納代行の規制</strong></td>
+          <td>海外業者との間の送金仲介が「為替取引」に該当→無登録業者は規制対象</td>
+          <td class="risk-high">銀行送金/bitwallet等の出金ルートでの口座凍結・着金拒否リスク上昇</td>
+        </tr>
+        <tr>
+          <td><strong>暗号資産「仲介業」新設</strong></td>
+          <td>媒介のみ行う登録制業者を新設。利用者資産は預からない</td>
+          <td>国内のcrypto取次サービスの選択肢が増える可能性</td>
+        </tr>
+        <tr>
+          <td><strong>国内保有命令</strong></td>
+          <td>交換業者破綻時に資産を国内に留める命令権限</td>
+          <td>国内取引所の保護は強化。<strong>海外発行カードは枠外</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note-danger">
+      <strong>重要</strong>：規制対象は「事業者」であり、出金する「個人」が直接違法になるわけではありません。<br>
+      しかし、事業者が規制に引っかかることで、あなたの出金が止まる・口座が凍結される、という<strong>実務リスク</strong>が個人に及びます。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>XM出金の基本ルール</h2>
+    <table>
+      <thead><tr><th>ルール</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td><strong>入金方法別返金原則</strong></td><td>クレカ入金分→クレカ返金、crypto入金分→crypto出金、利益分→銀行送金が原則</td></tr>
+        <tr><td><strong>crypto出金上限</strong></td><td>cryptoで入金した額まで。超過分（=利益分）は銀行送金</td></tr>
+        <tr><td><strong>出金優先順位</strong></td><td>クレカ返金 → e-wallet → crypto → 銀行送金 の順で消化</td></tr>
+        <tr><td><strong>銀行送金手数料</strong></td><td>40万円以上=無料、40万円未満=2,500円（XM側）</td></tr>
+        <tr><td><strong>crypto出金手数料</strong></td><td>原則無料（USDT-ERC20で$300未満のみ$15）</td></tr>
+        <tr><td><strong>crypto出金対応通貨</strong></td><td>BTC / ETH / XRP / USDT（TRC20/ERC20/BEP20/Polygon）/ LTC</td></tr>
+        <tr><td><strong>処理時間</strong></td><td>24営業時間以内（XM側）、ウォレットに即時反映</td></tr>
+        <tr><td><strong>名義一致</strong></td><td>出金先は口座登録と同一名義であること（AML規制）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>用語解説</h2>
+    <table>
+      <thead><tr><th>用語</th><th>意味</th></tr></thead>
+      <tbody>
+        <tr><td>総合課税（雑所得）</td><td>海外FX利益は給与等と合算して累進税率で課税。最大 所得税45%+住民税10%+復興税2.1%≒55.945%</td></tr>
+        <tr><td>申告分離課税</td><td>国内FXは一律20.315%。海外FXには適用されない</td></tr>
+        <tr><td>国外送金等調書</td><td>100万円超の海外送金/受取時に金融機関が税務署に提出する法定調書</td></tr>
+        <tr><td>トラベルルール</td><td>暗号資産送金時に送金元/先の情報を記録・共有するFATF勧告に基づく規制</td></tr>
+        <tr><td>クロスボーダー収納代行</td><td>海外業者と国内ユーザーの間で送金を仲介するサービス。2026年6月以降は為替取引に該当</td></tr>
+        <tr><td>カストディアル</td><td>サービス提供者が利用者の暗号資産を管理する方式（RedotPay等）</td></tr>
+        <tr><td>セルフカストディ</td><td>利用者自身が秘密鍵を管理する方式（Tria等）。サービス停止時も資産にアクセス可能</td></tr>
+        <tr><td>USDT (Tether)</td><td>米ドルにペッグ（1USDT≒1USD）されたステーブルコイン。価格変動リスクが極小</td></tr>
+        <tr><td>TRC20 / ERC20 / BEP20</td><td>USDTを送金するブロックチェーンの種類。TRC20は手数料が最も安い</td></tr>
+        <tr><td>KYC</td><td>Know Your Customer。本人確認手続き。パスポート等の身分証＋顔写真が一般的</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>リスク低減策まとめ</h2>
+    <table>
+      <thead><tr><th>対策</th><th>目的</th><th>詳細</th></tr></thead>
+      <tbody>
+        <tr><td><strong>口座分離</strong></td><td>凍結リスクの遮断</td><td>生活口座と海外FX出金用口座を完全分離。凍結されても生活に影響なし</td></tr>
+        <tr><td><strong>crypto入金額の確保</strong></td><td>cryptoルートの枠拡大</td><td>USDTでXMに入金→同額までcrypto出金可能に。銀行送金を減らせる</td></tr>
+        <tr><td><strong>海外取引所を1段挟む</strong></td><td>国内取引所の着金拒否回避</td><td>XM→海外取引所→国内取引所の2段構成でトラベルルール対応</td></tr>
+        <tr><td><strong>USDTで受取・即使用</strong></td><td>crypto課税上乗せの最小化</td><td>BTC等と違いペッグ通貨は譲渡損益≒0。二重課税を回避</td></tr>
+        <tr><td><strong>小口分散</strong></td><td>リスク分散</td><td>一度に大きく動かさず複数回に分ける。100万超は国外送金等調書の対象</td></tr>
+        <tr><td><strong>正確な確定申告</strong></td><td>税務リスクの排除</td><td>出金有無に関わらず決済益を雑所得として申告。調書で把握済みのため隠蔽は不可能</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<footer style="max-width:1180px; margin:0 auto; padding:0 18px 30px;">
+  <div class="disclaimer">
+    <strong>⚠ 免責事項</strong>：本ツールの内容はAIによる参考情報であり、投資・税務・法律の助言ではありません。
+    税務の最終判断は税理士等の有資格専門家にご相談ください。
+    規制・サービス内容は頻繁に変動するため、利用前に必ず公式情報を確認してください。<br>
+    <strong>出典・確認日</strong>：
+    XM出金仕様 (Myforex/FXプラス 2026-01)｜
+    改正資金決済法 (金融庁 2025-06-13公布, 2026-06施行)｜
+    RedotPay (ADPLAN/各レビュー 2025-10)｜
+    Tria (kkinvesting/spendnode 2026)｜
+    FX税制 (国税庁/05_japan_regulations.md)
+  </div>
+</footer>
+
+<script>
+var $ = function(id){ return document.getElementById(id); };
+var num = function(id){ return parseFloat($(id).value) || 0; };
+
+/* ========== 業者マスターデータ ========== */
+var selectedBroker = 'xm';
+var brokerMaster = {
+  xm: {
+    name: 'XM Trading',
+    leverage: '最大888倍',
+    zerocut: 'あり',
+    license: 'FCA（英国）、ASIC、CySEC（キプロス）',
+    withdrawal_methods: [
+      { method: 'crypto_card', name: 'USDT→cryptoカード決済', fee: 0, note: 'TRC-20推奨・カード無料' },
+      { method: 'crypto_exchange', name: 'USDT→国内取引所→銀行', fee: 0.5, note: '取引所手数料+出金手数料' },
+      { method: 'bank', name: '銀行送金', fee: 0.25, note: '40万以上無料、以下2,500円' }
+    ],
+    crypto_support: true,
+    risk_note: '改正資金決済法施行後、銀行出金リスク↑。crypto推奨',
+    settlement_risk: 'crypto出金は入金額まで制約あり'
+  },
+  vantage: {
+    name: 'VANTAGE Markets',
+    leverage: '最大2,000倍',
+    zerocut: 'あり',
+    license: 'VFSC（バヌアツ）、DFSA（ドバイ）',
+    withdrawal_methods: [
+      { method: 'crypto', name: 'USDT (BEP-20) 出金', fee: 0, note: 'ネットワーク手数料のみ（~1$）' },
+      { method: 'bank', name: '銀行送金', fee: 0, note: '基本無料（国際送金）' },
+      { method: 'ew_skrill', name: 'Skrill/Neteller', fee: 2, note: '1-2.5%手数料' }
+    ],
+    crypto_support: true,
+    risk_note: '日本人ユーザー実績は中程度。BEP-20対応で安全性↑',
+    settlement_risk: '出金上限ルール明記なし'
+  },
+  xs: {
+    name: 'XS.com',
+    leverage: '最大2,000倍',
+    zerocut: 'あり',
+    license: 'FSA（セーシェル）、ASIC、FSCA（南ア）',
+    withdrawal_methods: [
+      { method: 'bank', name: '銀行送金', fee: 0, note: '基本無料（国際送金）' },
+      { method: 'cc', name: 'クレジットカード', fee: 0, note: 'CC入金のみ返金対応' },
+      { method: 'ew_bitwallet', name: 'bitwallet/STICPAY', fee: 1, note: '手数料は業者に確認' }
+    ],
+    crypto_support: false,
+    risk_note: '⚠️ 新興ブローカー。出金トラブル報告あり。利用時は注意',
+    settlement_risk: '入金額と同一方法での出金が必須。出金2回目以降3%手数料'
+  },
+  /* ===== 第1グループ：定番・日本人利用者最多 ===== */
+  exness: {
+    name: 'Exness',
+    leverage: '無制限（条件付き）',
+    zerocut: 'あり',
+    license: 'FSA（セーシェル）、FCA（英国）、CySEC（キプロス）',
+    withdrawal_methods: [
+      { method: 'crypto', name: 'USDT / BTC 出金', fee: 0, note: '手数料無料・上限なし・即時〜24h' },
+      { method: 'bank', name: '銀行送金', fee: 0, note: '無料（中継銀行手数料は別途）' },
+      { method: 'ew_bitwallet', name: 'bitwallet', fee: 0, note: '無料（bitwallet側で出金時1%）' },
+      { method: 'ew_sticpay', name: 'STICPAY', fee: 0, note: '無料（STICPAY側で出金時2.5%+$0.3）' }
+    ],
+    crypto_support: true,
+    risk_note: '出金スピード最速級。銀行送金は凍結リスクあり（XMと同様に報告多数）',
+    settlement_risk: 'crypto出金に上限制約なし（XMと大きく異なる点）'
+  },
+  titanfx: {
+    name: 'TitanFX',
+    leverage: '最大500〜1,000倍',
+    zerocut: 'あり',
+    license: 'VFSC（バヌアツ）、FSA（モーリシャス）',
+    withdrawal_methods: [
+      { method: 'crypto', name: 'USDT / BTC 出金', fee: 0, note: '手数料無料・即時〜数時間' },
+      { method: 'bank', name: '銀行送金', fee: 0, note: '無料（中継銀行手数料は別途）' },
+      { method: 'ew_bitwallet', name: 'bitwallet', fee: 0, note: '無料（bitwallet側で出金時1%）' },
+      { method: 'ew_sticpay', name: 'STICPAY', fee: 0, note: '無料' }
+    ],
+    crypto_support: true,
+    risk_note: 'スプレッド狭・約定力高。ボーナスなし（その分コスト低）。出金トラブル報告少',
+    settlement_risk: '出金上限の明確な制約なし'
+  },
+  axiory: {
+    name: 'AXIORY',
+    leverage: '最大400〜1,000倍',
+    zerocut: 'あり',
+    license: 'IFSC（ベリーズ）',
+    withdrawal_methods: [
+      { method: 'bank', name: '銀行送金（Curfex経由）', fee: 0, note: '無料（月1回以降$5/回）' },
+      { method: 'ew_bitwallet', name: 'bitwallet', fee: 0, note: '無料' },
+      { method: 'ew_sticpay', name: 'STICPAY', fee: 0, note: '無料' },
+      { method: 'cc', name: 'クレジットカード', fee: 0, note: 'CC入金額まで返金対応' }
+    ],
+    crypto_support: false,
+    risk_note: '日本語サポート手厚・出金トラブル少・透明性重視。crypto出金は非対応',
+    settlement_risk: '銀行送金は月1回無料、2回目以降$5'
+  },
+  /* ===== 第2グループ：ボーナス・キャンペーン重視 ===== */
+  fxgt: {
+    name: 'FXGT',
+    leverage: '最大1,000〜5,000倍',
+    zerocut: 'あり',
+    license: 'FSA（セーシェル）、VFSC（バヌアツ）',
+    withdrawal_methods: [
+      { method: 'crypto', name: 'USDT / BTC / ETH 出金', fee: 0, note: '手数料無料・仮想通貨取引も可能' },
+      { method: 'bank', name: '銀行送金', fee: 0, note: '無料（中継銀行手数料は別途）' },
+      { method: 'ew_bitwallet', name: 'bitwallet', fee: 0, note: '無料' },
+      { method: 'cc', name: 'クレジットカード', fee: 0, note: 'CC入金額まで返金対応' }
+    ],
+    crypto_support: true,
+    risk_note: '仮想通貨取引も可能な統合プラットフォーム。ボーナス豪華だが出金条件に注意',
+    settlement_risk: 'ボーナス利用時はロット条件あり'
+  },
+  bigboss: {
+    name: 'BigBoss',
+    leverage: '最大999〜2,222倍',
+    zerocut: 'あり',
+    license: 'SVG（セントビンセント）',
+    withdrawal_methods: [
+      { method: 'crypto', name: 'USDT / BBC（独自）出金', fee: 0, note: '独自crypto(BBC)経由も可' },
+      { method: 'bank', name: '銀行送金', fee: 0, note: '月1回無料、2回目以降$2,000以下は手数料あり' },
+      { method: 'ew_bitwallet', name: 'bitwallet', fee: 0, note: '無料' }
+    ],
+    crypto_support: true,
+    risk_note: '高レバ・独自cryptoルート(BBC)あり。ボーナスは出金条件に注意',
+    settlement_risk: '銀行送金は$2,000未満で手数料発生の可能性'
+  },
+  hfm: {
+    name: 'HFM（旧HotForex）',
+    leverage: '最大1,000〜2,000倍',
+    zerocut: 'あり',
+    license: 'FCA（英国）、DFSA（ドバイ）、FSCA（南ア）、FSA（セーシェル）',
+    withdrawal_methods: [
+      { method: 'crypto', name: 'USDT / BTC 出金', fee: 0, note: '手数料無料' },
+      { method: 'bank', name: '銀行送金', fee: 0, note: '無料（中継銀行手数料は別途）' },
+      { method: 'ew_bitwallet', name: 'bitwallet', fee: 0, note: '無料' },
+      { method: 'ew_skrill', name: 'Skrill/Neteller', fee: 0, note: '無料（e-ウォレット側で手数料）' }
+    ],
+    crypto_support: true,
+    risk_note: '老舗グローバル大手。複数ライセンス保有で信頼性高。口座種類豊富',
+    settlement_risk: '特段の制約なし'
+  },
+  /* ===== 第3グループ：高レバ・特化型 ===== */
+  fbs: {
+    name: 'FBS',
+    leverage: '最大3,000倍',
+    zerocut: 'あり',
+    license: 'IFSC（ベリーズ）、CySEC（キプロス）',
+    withdrawal_methods: [
+      { method: 'crypto', name: 'USDT / BTC 出金', fee: 0, note: '手数料無料' },
+      { method: 'bank', name: '銀行送金', fee: 0, note: '無料（処理に数日）' },
+      { method: 'ew_bitwallet', name: 'bitwallet', fee: 0, note: '無料' },
+      { method: 'cc', name: 'クレジットカード', fee: 0, note: 'CC入金額まで返金対応' }
+    ],
+    crypto_support: true,
+    risk_note: '超高レバレッジ（3,000倍）。新興国で人気。日本人向け情報は中程度',
+    settlement_risk: '特段の制約なし'
+  },
+  is6fx: {
+    name: 'IS6FX',
+    leverage: '最大6,000倍',
+    zerocut: 'あり',
+    license: 'SVG（セントビンセント）',
+    withdrawal_methods: [
+      { method: 'crypto', name: 'USDT 出金', fee: 0, note: '手数料無料' },
+      { method: 'bank', name: '銀行送金', fee: 0, note: '月2回無料、3回目以降$45/回' },
+      { method: 'ew_bitwallet', name: 'bitwallet', fee: 0, note: '無料' }
+    ],
+    crypto_support: true,
+    risk_note: '超高レバ（6,000倍）・ボーナス充実。日本特化だが信頼性は低め',
+    settlement_risk: '銀行送金は月2回まで無料。3回目以降$45'
+  },
+  milton: {
+    name: 'Milton Markets',
+    leverage: '最大1,000倍',
+    zerocut: 'あり',
+    license: 'VFSC（バヌアツ）',
+    withdrawal_methods: [
+      { method: 'crypto', name: 'USDT 出金', fee: 0, note: '対応あり（詳細要確認）' },
+      { method: 'bank', name: '銀行送金', fee: 0, note: '無料（中継銀行手数料は別途）' },
+      { method: 'ew_bitwallet', name: 'bitwallet', fee: 0, note: '無料' }
+    ],
+    crypto_support: true,
+    risk_note: '日本語対応あり・少額向け。知名度低め',
+    settlement_risk: '特段の制約なし'
+  }
+};
+
+function switchBroker() {
+  selectedBroker = $('brokerSelect').value;
+  updateBrokerUI();
+}
+
+function updateBrokerUI() {
+  var broker = brokerMaster[selectedBroker];
+  // Module 1 タイトル更新
+  var title1 = document.querySelector('#mod1 .card h2');
+  if (title1) title1.textContent = broker.name + ' 資金フロー・全体像';
+  // Module 3 タイトル更新
+  var title3 = document.querySelector('#mod3 .card h2');
+  if (title3) title3.textContent = broker.name + ' 出金ルート比較';
+  // Module 4 タイトル更新
+  var title4 = document.querySelector('#mod4 .card h2');
+  if (title4) title4.textContent = broker.name + ' 手順ナビゲーター';
+
+  // crypto カード比較（crypto対応業者のみ表示）
+  var cardSection = $('cryptoCardSection');
+  if (cardSection) {
+    cardSection.style.display = broker.crypto_support ? 'block' : 'none';
+  }
+
+  // 出金方法セレクトを再生成
+  regenerateWithdrawalSelect();
+  // 出金ルート比較表を再生成
+  regenerateWithdrawalTable();
+  // 全社比較表を再生成（選択中ハイライト更新）
+  generateBrokerComparison();
+  // リスクノート更新
+  updateBrokerRiskNote();
+  // 手取り再計算
+  calcNetIncome();
+}
+
+function regenerateWithdrawalSelect() {
+  var broker = brokerMaster[selectedBroker];
+  var select = $('withdrawMethod');
+  if (!select) return;
+  select.innerHTML = '';
+
+  broker.withdrawal_methods.forEach(function(method) {
+    var option = document.createElement('option');
+    option.value = method.method;
+    option.textContent = method.name;
+    select.appendChild(option);
+  });
+}
+
+/* ========== Navigation ========== */
+function gotoMod(n) {
+  document.querySelectorAll('.mod').forEach(function(el){ el.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
+  $('mod'+n).classList.add('active');
+  document.querySelector('.nav-item[data-mod="'+n+'"]').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+/* ========== Module 2: Net Income Simulator ========== */
+function toggleMethodFields() {
+  // placeholder for future method-specific fields
+}
+
+function calcIncomeTax(taxableIncome) {
+  // Japanese progressive income tax (万円 input, 万円 output)
+  var brackets = [
+    {limit: 195, rate: 0.05, deduction: 0},
+    {limit: 330, rate: 0.10, deduction: 9.75},
+    {limit: 695, rate: 0.20, deduction: 42.75},
+    {limit: 900, rate: 0.23, deduction: 63.6},
+    {limit: 1800, rate: 0.33, deduction: 153.6},
+    {limit: 4000, rate: 0.40, deduction: 279.6},
+    {limit: Infinity, rate: 0.45, deduction: 479.6}
+  ];
+  if (taxableIncome <= 0) return 0;
+  for (var i = 0; i < brackets.length; i++) {
+    if (taxableIncome <= brackets[i].limit) {
+      return taxableIncome * brackets[i].rate - brackets[i].deduction;
+    }
+  }
+  return 0;
+}
+
+function calcNetIncome() {
+  var fxProfit = num('fxProfit');
+  var salary = num('salary');
+  var withdrawAmt = num('withdrawAmount');
+  var deductions = num('deductions');
+  var method = $('withdrawMethod').value;
+  var broker = brokerMaster[selectedBroker];
+
+  var totalIncome = salary + fxProfit;
+  var taxableIncome = Math.max(totalIncome - deductions, 0);
+
+  // Income tax (共通)
+  var incomeTax = calcIncomeTax(taxableIncome);
+  var reconstructionTax = incomeTax * 0.021;
+  var residentTax = taxableIncome * 0.10;
+  var totalTax = incomeTax + reconstructionTax + residentTax;
+  var effectiveRate = totalIncome > 0 ? (totalTax / totalIncome * 100) : 0;
+
+  // Withdrawal fees (業者・方法別)
+  var fees = 0;
+  var feeNotes = '';
+  var methodObj = broker.withdrawal_methods.find(function(m){ return m.method === method; });
+  if (methodObj) {
+    fees = methodObj.fee;
+    feeNotes = methodObj.name + ' / ' + methodObj.note;
+
+    // 業者固有の条件を追加
+    if (selectedBroker === 'xm' && method === 'bank') {
+      fees = withdrawAmt >= 40 ? 0 : 0.25;
+      if (withdrawAmt > 0) fees += 0.3;
+      feeNotes = (withdrawAmt >= 40 ? 'XM無料' : 'XM 2,500円') + '＋中継銀行手数料（概算）';
+    } else if (selectedBroker === 'xs' && method === 'bank' && withdrawAmt > 0) {
+      // XS: 2回目以降3%、初回無料
+      fees = 0; // デフォルト無料、追加UI検討
+      feeNotes = '銀行送金（初回無料、2回目以降3%要確認）';
+    }
+  }
+  }
+
+  var netAfterTax = totalIncome - totalTax;
+  var netAfterFees = withdrawAmt - fees;
+
+  // Base income tax (salary only) for comparison
+  var baseTaxable = Math.max(salary - deductions, 0);
+  var baseTax = calcIncomeTax(baseTaxable) * 1.021 + baseTaxable * 0.10;
+  var additionalTax = totalTax - baseTax;
+
+  // Summary
+  $('simSummary').innerHTML =
+    '<div class="summary-box"><div class="lbl">総所得</div><div class="val">' + fmt(totalIncome) + '</div><div class="lbl">万円</div></div>' +
+    '<div class="summary-box"><div class="lbl">税金合計</div><div class="val" style="color:var(--ng)">' + fmt(totalTax) + '</div><div class="lbl">万円</div></div>' +
+    '<div class="summary-box"><div class="lbl">実効税率</div><div class="val">' + effectiveRate.toFixed(1) + '%</div><div class="lbl"></div></div>' +
+    '<div class="summary-box"><div class="lbl">出金手取り</div><div class="val" style="color:var(--ok)">' + fmt(netAfterFees) + '</div><div class="lbl">万円（手数料控除後）</div></div>';
+
+  // Table
+  var rows = [
+    ['給与所得', fmt(salary) + ' 万円', ''],
+    ['海外FX利益（雑所得）', fmt(fxProfit) + ' 万円', '総合課税・決済時に確定'],
+    ['所得控除', '-' + fmt(deductions) + ' 万円', '基礎控除48万＋社保＋iDeCo等'],
+    ['課税所得', fmt(taxableIncome) + ' 万円', ''],
+    ['─ 所得税', fmt(incomeTax) + ' 万円', '累進税率'],
+    ['─ 復興特別所得税', fmt(reconstructionTax) + ' 万円', '所得税×2.1%'],
+    ['─ 住民税', fmt(residentTax) + ' 万円', '一律10%'],
+    ['<strong>税金合計</strong>', '<strong>' + fmt(totalTax) + ' 万円</strong>', '実効税率 ' + effectiveRate.toFixed(1) + '%'],
+    ['FX利益にかかる追加税', fmt(additionalTax) + ' 万円', 'FXがなければ払わなかった税額'],
+    ['', '', ''],
+    ['出金額', fmt(withdrawAmt) + ' 万円', ''],
+    ['出金手数料', fmt(fees) + ' 万円', feeNotes],
+    ['<strong>出金後の手取り</strong>', '<strong>' + fmt(netAfterFees) + ' 万円</strong>', '']
+  ];
+
+  var html = '';
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i][0] === '') {
+      html += '<tr><td colspan="3" style="border-bottom:2px solid var(--accent);padding:2px"></td></tr>';
+    } else {
+      html += '<tr><td>' + rows[i][0] + '</td><td style="text-align:right">' + rows[i][1] + '</td><td class="small">' + rows[i][2] + '</td></tr>';
+    }
+  }
+  $('simBody').innerHTML = html;
+
+  // Alerts
+  var alerts = '';
+  if (withdrawAmt > 100) {
+    alerts += '<div class="note-danger"><strong>⚠ 国外送金等調書</strong>：出金額が100万円超のため、銀行経由の場合は税務署に自動通知されます。</div>';
+  }
+  if (method === 'bank') {
+    alerts += '<div class="note-danger"><strong>⚠ 口座凍結リスク</strong>：銀行送金ルートは改正資金決済法で凍結リスク上昇。出金専用口座を使用してください。</div>';
+  }
+  if (fxProfit > 0 && salary > 0) {
+    var furusatoLimit = Math.round((totalIncome * 0.3 - 20) / 10) * 10;
+    if (furusatoLimit > 0) {
+      alerts += '<div class="note-info"><strong>💡 ふるさと納税の上限目安</strong>：FX利益で総合課税所得が増えるため、ふるさと納税の上限が上がります（概算 ' + fmt(Math.max(furusatoLimit/10, 0)) + ' 万円程度）。正確な計算はtax_plannerにて。</div>';
+    }
+  }
+  $('simAlerts').innerHTML = alerts;
+  $('simResult').style.display = 'block';
+}
+
+function fmt(v) { return Math.round(v * 10) / 10; }
+
+/* ========== Module 4: Route tabs ========== */
+function showRoute(routeId, btn) {
+  document.querySelectorAll('.route-steps').forEach(function(el){ el.style.display='none'; });
+  document.querySelectorAll('.tab-bar button').forEach(function(el){ el.classList.remove('active'); });
+  $('route_' + routeId).style.display = 'block';
+  btn.classList.add('active');
+}
+
+/* ========== Checklist persistence ========== */
+function saveCk() {
+  var state = {};
+  document.querySelectorAll('#checklist input[type=checkbox]').forEach(function(cb) {
+    state[cb.getAttribute('data-ck')] = cb.checked;
+    var span = cb.nextElementSibling;
+    if (span) { cb.checked ? span.classList.add('done') : span.classList.remove('done'); }
+  });
+  localStorage.setItem('xmff_checklist', JSON.stringify(state));
+}
+
+function loadCk() {
+  try {
+    var state = JSON.parse(localStorage.getItem('xmff_checklist'));
+    if (!state) return;
+    document.querySelectorAll('#checklist input[type=checkbox]').forEach(function(cb) {
+      var key = cb.getAttribute('data-ck');
+      if (state[key]) {
+        cb.checked = true;
+        var span = cb.nextElementSibling;
+        if (span) span.classList.add('done');
+      }
+    });
+  } catch(e) {}
+}
+
+/* ========== Save / Load ========== */
+function collectAll() {
+  var data = {
+    version: 'xmff_v1',
+    timestamp: new Date().toISOString(),
+    inputs: {
+      fxProfit: num('fxProfit'),
+      salary: num('salary'),
+      withdrawMethod: $('withdrawMethod').value,
+      withdrawAmount: num('withdrawAmount'),
+      deductions: num('deductions')
+    },
+    checklist: {}
+  };
+  document.querySelectorAll('#checklist input[type=checkbox]').forEach(function(cb) {
+    data.checklist[cb.getAttribute('data-ck')] = cb.checked;
+  });
+  return data;
+}
+
+function restoreAll(data) {
+  if (!data || data.version !== 'xmff_v1') return;
+  if (data.inputs) {
+    $('fxProfit').value = data.inputs.fxProfit || 500;
+    $('salary').value = data.inputs.salary || 0;
+    $('withdrawMethod').value = data.inputs.withdrawMethod || 'crypto_card';
+    $('withdrawAmount').value = data.inputs.withdrawAmount || 300;
+    $('deductions').value = data.inputs.deductions || 100;
+  }
+  if (data.checklist) {
+    document.querySelectorAll('#checklist input[type=checkbox]').forEach(function(cb) {
+      var key = cb.getAttribute('data-ck');
+      if (data.checklist[key]) {
+        cb.checked = true;
+        var span = cb.nextElementSibling;
+        if (span) span.classList.add('done');
+      }
+    });
+  }
+}
+
+function doSave() {
+  var data = collectAll();
+  var json = JSON.stringify(data, null, 2);
+  var blob = new Blob([json], {type: 'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'xm_fund_flow_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function doLoad() {
+  var inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = '.json';
+  inp.onchange = function() {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var data = JSON.parse(e.target.result);
+        restoreAll(data);
+        alert('読み込みました');
+      } catch(err) {
+        alert('読み込みに失敗しました: ' + err.message);
+      }
+    };
+    reader.readAsText(inp.files[0]);
+  };
+  inp.click();
+}
+
+/* ========== Auto-save ========== */
+function autoSave() {
+  try {
+    localStorage.setItem('xmff_v1', JSON.stringify(collectAll()));
+  } catch(e) {}
+}
+
+function autoLoad() {
+  try {
+    var data = JSON.parse(localStorage.getItem('xmff_v1'));
+    if (data) restoreAll(data);
+  } catch(e) {}
+}
+
+/* ========== 出金ルート表の動的生成 ========== */
+function regenerateWithdrawalTable() {
+  var tbody = $('withdrawalTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  var broker = brokerMaster[selectedBroker];
+  var routes = broker.withdrawal_methods;
+
+  routes.forEach(function(route, idx) {
+    var tr = document.createElement('tr');
+    var riskColor = 'badge-low';
+    var riskIcon = '🟢 低';
+
+    // リスク評価（業者・方法別）
+    if (selectedBroker === 'xm') {
+      if (route.method === 'crypto_card') {
+        riskColor = 'badge-low'; riskIcon = '🟢 低';
+      } else if (route.method === 'crypto_exchange') {
+        riskColor = 'badge-mid'; riskIcon = '🟡 中';
+      } else { // bank
+        riskColor = 'badge-high'; riskIcon = '🔴 高';
+      }
+    } else if (selectedBroker === 'vantage') {
+      if (route.method === 'crypto') {
+        riskColor = 'badge-low'; riskIcon = '🟢 低';
+      } else if (route.method === 'bank') {
+        riskColor = 'badge-mid'; riskIcon = '🟡 中';
+      } else {
+        riskColor = 'badge-mid'; riskIcon = '🟡 中';
+      }
+    } else if (selectedBroker === 'xs') {
+      if (route.method === 'bank') {
+        riskColor = 'badge-high'; riskIcon = '🔴 高';
+      } else {
+        riskColor = 'badge-mid'; riskIcon = '🟡 中';
+      }
+    }
+
+    tr.innerHTML =
+      '<td><strong>' + route.name + '</strong></td>' +
+      '<td>' + route.fee + '%（' + route.note + '）</td>' +
+      '<td>' + (route.method === 'crypto' ? '24h程度' : '2〜5営業日') + '</td>' +
+      '<td>' + broker.settlement_risk + '</td>' +
+      '<td>FX決済益=雑所得（総合課税）</td>' +
+      '<td><span class="badge ' + riskColor + '">' + riskIcon + '</span></td>';
+    tbody.appendChild(tr);
+  });
+}
+
+/* ========== 全12社比較表の生成 ========== */
+var brokerGroups = {
+  xm: '保有口座', vantage: '保有口座', xs: '保有口座',
+  exness: '第1（定番）', titanfx: '第1（定番）', axiory: '第1（定番）',
+  fxgt: '第2（ボーナス）', bigboss: '第2（ボーナス）', hfm: '第2（ボーナス）',
+  fbs: '第3（高レバ）', is6fx: '第3（高レバ）', milton: '第3（高レバ）'
+};
+
+function generateBrokerComparison() {
+  var tbody = $('brokerComparisonBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  var keys = Object.keys(brokerMaster);
+  keys.forEach(function(key) {
+    var b = brokerMaster[key];
+    var tr = document.createElement('tr');
+    var isSelected = (key === selectedBroker);
+    if (isSelected) tr.style.background = '#1a2c40';
+
+    var cryptoBadge = b.crypto_support
+      ? '<span class="badge badge-low">◎ 対応</span>'
+      : '<span class="badge badge-high">✕ 非対応</span>';
+
+    var riskBadge;
+    if (key === 'xm' || key === 'exness' || key === 'hfm') {
+      riskBadge = '<span class="badge badge-low">◎ 高信頼</span>';
+    } else if (key === 'titanfx' || key === 'axiory' || key === 'vantage' || key === 'fxgt' || key === 'fbs') {
+      riskBadge = '<span class="badge badge-mid">○ 中程度</span>';
+    } else {
+      riskBadge = '<span class="badge badge-high">△ 要注意</span>';
+    }
+
+    tr.innerHTML =
+      '<td><strong>' + b.name + '</strong>' + (isSelected ? ' 🔵' : '') + '</td>' +
+      '<td>' + (brokerGroups[key] || '') + '</td>' +
+      '<td>' + b.leverage + '</td>' +
+      '<td>' + b.zerocut + '</td>' +
+      '<td style="font-size:11px">' + b.license + '</td>' +
+      '<td>' + cryptoBadge + '</td>' +
+      '<td style="font-size:11px">' + b.settlement_risk + '</td>' +
+      '<td>' + riskBadge + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function updateBrokerRiskNote() {
+  var el = $('brokerRiskNote');
+  if (!el) return;
+  var broker = brokerMaster[selectedBroker];
+  el.innerHTML = '<strong>📋 ' + broker.name + ' の特記事項</strong><br>' + broker.risk_note;
+}
+
+/* ========== Init ========== */
+window.addEventListener('DOMContentLoaded', function() {
+  autoLoad();
+  loadCk();
+  regenerateWithdrawalTable();
+  generateBrokerComparison();
+  updateBrokerRiskNote();
+  setInterval(autoSave, 5000);
+});
+</script>
+
+</body>
+</html>
