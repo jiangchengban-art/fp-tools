@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>海外移住 FX シミュレーター | FP チーム</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --primary: #1a56a0; --primary-light: #2563eb;
+  --green: #276749; --green-light: #38a169; --green-bg: #f0fff4;
+  --red: #c53030; --red-light: #e53e3e; --red-bg: #fff5f5;
+  --amber: #92400e; --amber-light: #d97706; --amber-bg: #fffbeb;
+  --blue: #2b6cb0; --blue-light: #4299e1; --blue-bg: #ebf8ff;
+  --bg: #f1f5f9; --card: #ffffff; --border: #e2e8f0;
+  --text: #1e293b; --muted: #64748b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Meiryo, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+/* Header */
+header {
+  background: linear-gradient(135deg, #1a3a6b, #2563eb);
+  color: white; padding: 14px 24px;
+  display: flex; justify-content: space-between; align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+header h1 { font-size: 17px; font-weight: 700; }
+.header-sub { font-size: 11px; opacity: 0.75; margin-top: 2px; }
+.header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* Layout */
+.wrap { max-width: 1440px; margin: 0 auto; padding: 16px; }
+.main-grid { display: grid; grid-template-columns: 300px 1fr; gap: 16px; align-items: start; }
+.sidebar { position: sticky; top: 16px; }
+
+/* Tabs */
+.tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 2px solid var(--border); }
+.tab { padding: 10px 18px; border: none; background: none; cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* Cards */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+.card-title { font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
+
+/* Form */
+.fg { margin-bottom: 10px; }
+label.fl { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.03em; }
+input[type=number], input[type=text], select {
+  width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 13px; color: var(--text); background: #f8fafc; transition: all 0.15s;
+}
+input[type=number]:focus, select:focus { outline: none; border-color: var(--primary-light); background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+.hint { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* Radio / Checkbox */
+.rg, .cg { display: flex; gap: 10px; flex-wrap: wrap; }
+.rl, .cl { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 13px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; transition: all 0.15s; }
+.rl:has(input:checked), .cl:has(input:checked) { background: var(--blue-bg); border-color: var(--blue-light); color: var(--blue); font-weight: 600; }
+
+/* Buttons */
+.btn { padding: 9px 18px; border: none; border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-success { background: #059669; color: white; font-size: 15px; padding: 12px; width: 100%; justify-content: center; border-radius: 8px; }
+.btn-success:hover { background: var(--green-light); }
+.btn-sm { padding: 6px 12px; font-size: 12px; background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; }
+.btn-sm:hover { background: rgba(255,255,255,0.25); }
+.btn-outline { background: white; color: var(--primary); border: 1px solid var(--primary); }
+.btn-outline:hover { background: var(--blue-bg); }
+
+/* Total assets display */
+.asset-total { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border-radius: 8px; padding: 14px; text-align: center; margin-bottom: 12px; }
+.asset-total-val { font-size: 26px; font-weight: 800; }
+.asset-total-lbl { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+
+/* KPI grid */
+.kpi-grid { display: grid; gap: 12px; }
+.kpi-grid-2 { grid-template-columns: 1fr 1fr; }
+.kpi-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.kpi-grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.kpi { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 14px; text-align: center; }
+.kpi-val { font-size: 22px; font-weight: 800; color: var(--primary); }
+.kpi-lbl { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.kpi-sub { font-size: 10px; color: var(--muted); }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f8fafc; padding: 9px 12px; text-align: left; font-size: 11px; font-weight: 700; color: var(--muted); border-bottom: 2px solid var(--border); white-space: nowrap; }
+td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafbfd; }
+.tbl-wrap { overflow-x: auto; }
+
+/* Badges */
+.badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+.badge-opt { background: var(--green-bg); color: var(--green); }
+.badge-real { background: var(--amber-bg); color: var(--amber); }
+.badge-pes { background: var(--red-bg); color: var(--red); }
+.badge-th { background: #fff5f5; color: #c53030; }
+.badge-my { background: #f0fff4; color: #276749; }
+.badge-sg { background: #ebf8ff; color: #2b6cb0; }
+
+/* Eligibility */
+.eli { padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 8px; }
+.eli-ok { background: var(--green-bg); border: 1px solid #9ae6b4; color: var(--green); }
+.eli-warn { background: var(--amber-bg); border: 1px solid #fcd34d; color: var(--amber); }
+.eli-ng { background: var(--red-bg); border: 1px solid #feb2b2; color: var(--red); }
+
+/* Heatmap */
+.hmap { display: grid; gap: 4px; }
+.hmap-cell { padding: 12px 8px; text-align: center; border-radius: 6px; font-weight: 700; font-size: 13px; }
+
+/* Spinner */
+.loading { display: none; text-align: center; padding: 60px 20px; color: var(--muted); }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 14px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Chart */
+.chart-box { position: relative; height: 320px; }
+
+/* Color borders */
+.bl-th { border-left: 4px solid #e53e3e; }
+.bl-my { border-left: 4px solid #38a169; }
+.bl-sg { border-left: 4px solid #4299e1; }
+
+/* Progress */
+.prog { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+.prog-bar { height: 100%; background: linear-gradient(90deg, var(--green-light), var(--primary)); border-radius: 3px; }
+
+/* Risk dots */
+.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+.dot-lo { background: var(--green-light); }
+.dot-md { background: var(--amber-light); }
+.dot-hi { background: var(--red-light); }
+
+/* Disclaimer */
+.disclaimer { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 12px 14px; font-size: 11px; color: var(--amber); margin-top: 14px; line-height: 1.6; }
+
+/* Highlight row */
+tr.hl td { background: #f0fff4; font-weight: 600; }
+
+/* Section header */
+.sec-head { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+@media (max-width: 900px) {
+  .main-grid { grid-template-columns: 1fr; }
+  .sidebar { position: static; }
+  .kpi-grid-4 { grid-template-columns: 1fr 1fr; }
+  .kpi-grid-3 { grid-template-columns: 1fr 1fr; }
+}
+@media print {
+  header .header-actions, .tabs, .btn-success { display: none !important; }
+  .tab-pane { display: block !important; page-break-before: always; }
+  .tab-pane:first-child { page-break-before: auto; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🌏 海外移住 FX シミュレーター</h1>
+    <div class="header-sub">FP チーム統合ツール — v1.0 (2026-05-10)　※ AI 参考情報。最終判断は専門家にご相談ください。</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-sm" onclick="saveJSON()">💾 設定保存</button>
+    <button class="btn btn-sm" onclick="document.getElementById('fi').click()">📂 設定読込</button>
+    <button class="btn btn-sm" onclick="window.print()">🖨️ 印刷/PDF</button>
+  </div>
+</header>
+<input type="file" id="fi" style="display:none" accept=".json" onchange="loadJSON(event)">
+
+<div class="wrap">
+  <div class="main-grid">
+
+    <!-- ========== SIDEBAR ========== -->
+    <div class="sidebar">
+
+      <div class="card">
+        <div class="card-title">👤 プロフィール</div>
+        <div class="fg">
+          <label class="fl">年齢</label>
+          <input type="number" id="age" value="35" min="20" max="70">
+        </div>
+        <div class="fg">
+          <label class="fl">家族構成</label>
+          <div class="rg">
+            <label class="rl"><input type="radio" name="hh" value="single" checked onchange="onInput()"> 単身</label>
+            <label class="rl"><input type="radio" name="hh" value="family3" onchange="onInput()"> 夫婦+子1人</label>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl">移住目標年</label>
+          <select id="myr" onchange="onInput()">
+            <option value="2027">2027年（最短）</option>
+            <option value="2028">2028年</option>
+            <option value="2029">2029年</option>
+            <option value="2030">2030年</option>
+            <option value="2031" selected>2031年（目標）</option>
+            <option value="2032">2032年</option>
+            <option value="2033">2033年</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">💰 資産（万円）</div>
+        <div class="asset-total">
+          <div class="asset-total-val" id="tot-disp">1,400</div>
+          <div class="asset-total-lbl">総資産</div>
+        </div>
+        <div class="fg"><label class="fl">現預金</label><input type="number" id="a1" value="500" min="0" oninput="onInput()"></div>
+        <div class="fg"><label class="fl">NISA 評価額</label><input type="number" id="a2" value="300" min="0" oninput="onInput()"></div>
+        <div class="fg"><label class="fl">iDeCo 評価額</label><input type="number" id="a3" value="100" min="0" oninput="onInput()"></div>
+        <div class="fg"><label class="fl">FX 口座残高</label><input type="number" id="a4" value="300" min="0" oninput="onInput()"></div>
+        <div class="fg"><label class="fl">その他</label><input type="number" id="a5" value="200" min="0" oninput="onInput()"></div>
+        <p class="hint">すべて万円単位で入力</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📊 FX 実績</div>
+        <div class="fg"><label class="fl">年間利益（万円）</label><input type="number" id="fxp" value="500" min="0" oninput="autoStd()"></div>
+        <div class="fg"><label class="fl">利益のばらつき／標準偏差（万円）</label><input type="number" id="fxsd" value="200" min="0"><p class="hint">不明な場合は年間利益の 40% が目安</p></div>
+        <div class="fg"><label class="fl">保守係数（0.5〜1.0）</label><input type="number" id="fxc" value="0.7" min="0.3" max="1.0" step="0.05"><p class="hint">コアルール推奨：0.7（30% 保守）</p></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🌏 移住先候補</div>
+        <div class="cg" style="flex-direction:column; gap:6px;">
+          <label class="cl"><input type="checkbox" id="ck-th" checked> 🇹🇭 タイ（LTR）</label>
+          <label class="cl"><input type="checkbox" id="ck-my" checked> 🇲🇾 マレーシア（MM2H）</label>
+          <label class="cl"><input type="checkbox" id="ck-sg" checked> 🇸🇬 シンガポール（GIP）</label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⚙️ シミュレーション設定</div>
+        <div class="fg"><label class="fl">試算期間（年）</label><input type="number" id="hor" value="20" min="10" max="40"></div>
+        <div class="fg"><label class="fl">インフレ率（%）</label><input type="number" id="inf" value="2.0" min="0" max="10" step="0.1"></div>
+        <div class="fg"><label class="fl">株式期待リターン（%）</label><input type="number" id="ret" value="5.5" min="0" max="15" step="0.1"></div>
+        <div class="fg"><label class="fl">コア資産比率（%）</label><input type="number" id="cor" value="60" min="30" max="90"><p class="hint">NISA・iDeCo・預貯金の比率</p></div>
+        <div class="fg">
+          <label class="fl">為替シナリオ</label>
+          <select id="fxs">
+            <option value="strong">円高 30%（105円）</option>
+            <option value="neutral" selected>現状維持（150円）</option>
+            <option value="weak">円安 20%（180円）</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">生活費レベル</label>
+          <select id="llv">
+            <option value="min">最小（慎ましい）</option>
+            <option value="mid" selected>中位（標準）</option>
+            <option value="max">最大（ゆとり）</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Monte Carlo 試行数</label>
+          <select id="mct">
+            <option value="500">500回（高速）</option>
+            <option value="1000" selected>1,000回（標準）</option>
+            <option value="2000">2,000回（精密）</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn btn-success" onclick="run()">▶ シミュレーション実行</button>
+    </div>
+
+    <!-- ========== MAIN ========== -->
+    <div>
+      <!-- Quick eligibility (always visible) -->
+      <div class="card" id="qeli-card">
+        <div class="card-title">✅ 現在資産でのビザ取得可能性（即時判定）</div>
+        <div id="qeli-content"><p style="color:var(--muted);font-size:13px">左の資産欄を入力すると自動更新されます。</p></div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" onclick="sw(this,'pane-sum')">📋 サマリー</button>
+        <button class="tab" onclick="sw(this,'pane-chart')">📈 グラフ</button>
+        <button class="tab" onclick="sw(this,'pane-sens')">🔍 感度分析</button>
+        <button class="tab" onclick="sw(this,'pane-eli')">🔖 要件詳細</button>
+      </div>
+
+      <div id="pane-sum" class="tab-pane active">
+        <div class="loading" id="ld"><div class="spinner"></div>Monte Carlo 計算中...</div>
+        <div id="sum-out">
+          <div class="card"><p style="color:var(--muted);font-size:13px">「シミュレーション実行」をクリックすると結果が表示されます。</p></div>
+        </div>
+      </div>
+      <div id="pane-chart" class="tab-pane">
+        <div id="chart-out"><div class="card"><p style="color:var(--muted);font-size:13px">シミュレーション実行後にグラフが表示されます。</p></div></div>
+      </div>
+      <div id="pane-sens" class="tab-pane">
+        <div id="sens-out"><div class="card"><p style="color:var(--muted);font-size:13px">シミュレーション実行後に感度分析が表示されます。</p></div></div>
+      </div>
+      <div id="pane-eli" class="tab-pane">
+        <div id="eli-out"><div class="card"><p style="color:var(--muted);font-size:13px">シミュレーション実行後に要件詳細が表示されます。</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// 国・シナリオ データ定義
+// ============================================================
+const C = {
+  thailand: {
+    id:'thailand', name:'タイ（LTR）', short:'タイ', flag:'🇹🇭', color:'#e53e3e',
+    tax: { optimistic:0.00, realistic:0.10, pessimistic:0.35 },
+    living: {
+      single:  { min:15, mid:22, max:34 },
+      family3: { min:27, mid:40, max:59 }
+    },
+    mcost: { single:{min:145,max:350}, family3:{min:250,max:500} },
+    req: {
+      globalJPY: 15000, thaiJPY: 7500,
+      desc: 'グローバル資産 USD 1M（1.5億円）+ タイ国内投資 USD 500K（7,500万円）',
+      url: 'https://ltr.boi.go.th/', fee: 22.5
+    }
+  },
+  malaysia: {
+    id:'malaysia', name:'マレーシア（MM2H）', short:'マレーシア', flag:'🇲🇾', color:'#38a169',
+    tax: { optimistic:0.00, realistic:0.10, pessimistic:0.30 },
+    living: {
+      single:  { min:16, mid:25, max:38 },
+      family3: { min:26, mid:39, max:58 }
+    },
+    mcost: { single:{min:615,max:1800}, family3:{min:900,max:2500} },
+    req: {
+      silverDepJPY: 525, silverPropJPY: 2100, silverTotalJPY: 2625,
+      goldDepJPY: 7500, goldPropJPY: 3500, goldTotalJPY: 11000,
+      desc: 'Silver: 固定預金 USD 150K＋不動産 MYR 600K（計 2,625万円〜）',
+      url: 'https://mm2h.gov.my/', fee: 10
+    }
+  },
+  singapore: {
+    id:'singapore', name:'シンガポール（GIP）', short:'シンガポール', flag:'🇸🇬', color:'#4299e1',
+    tax: { optimistic:0.00, realistic:0.15, pessimistic:0.24 },
+    living: {
+      single:  { min:38, mid:56, max:76 },
+      family3: { min:58, mid:82, max:111 }
+    },
+    mcost: { single:{min:145,max:520}, family3:{min:250,max:800} },
+    req: {
+      minJPY: 115000,
+      desc: 'Option A: 最低投資 SGD 10M（約 11.5億円）',
+      url: 'https://www.edb.gov.sg/en/how-we-help/global-investor-programme.html', fee: 5
+    }
+  }
+};
+
+const SC = {
+  optimistic:  { label:'楽観', cls:'badge-opt', color:'#38a169' },
+  realistic:   { label:'リアル', cls:'badge-real', color:'#d97706' },
+  pessimistic: { label:'悲観', cls:'badge-pes', color:'#e53e3e' }
+};
+
+let charts = {};
+let lastSim = null;
+
+// ============================================================
+// 入力ユーティリティ
+// ============================================================
+const $n = id => parseFloat(document.getElementById(id).value) || 0;
+const $v = id => document.getElementById(id).value;
+const $r = name => { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : 'single'; };
+
+function totalAssets() { return $n('a1') + $n('a2') + $n('a3') + $n('a4') + $n('a5'); }
+
+function autoStd() {
+  document.getElementById('fxsd').value = Math.round($n('fxp') * 0.4);
+  onInput();
+}
+
+function onInput() {
+  const t = totalAssets();
+  document.getElementById('tot-disp').textContent = fmtM(t);
+  renderQuickEli(t);
+  autosave();
+}
+
+function getSelectedCountries() {
+  const sel = [];
+  if (document.getElementById('ck-th').checked) sel.push('thailand');
+  if (document.getElementById('ck-my').checked) sel.push('malaysia');
+  if (document.getElementById('ck-sg').checked) sel.push('singapore');
+  return sel;
+}
+
+// ============================================================
+// 書式
+// ============================================================
+function fmtM(v) {
+  if (v === null || v === undefined) return '—';
+  const sign = v < 0 ? '−' : '';
+  const av = Math.abs(v);
+  if (av >= 10000) return sign + (av / 10000).toFixed(2) + '億円';
+  return sign + Math.round(av).toLocaleString('ja-JP') + '万円';
+}
+function pct(v) { return (v * 100).toFixed(1) + '%'; }
+function colorAmt(v, ref) { return v >= ref ? 'var(--green)' : 'var(--red)'; }
+
+// ============================================================
+// 乱数（Box-Muller）
+// ============================================================
+function nrand(mu, sigma) {
+  let u, v;
+  do { u = Math.random(); } while (!u);
+  do { v = Math.random(); } while (!v);
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v) * sigma + mu;
+}
+
+// ============================================================
+// 為替調整
+// ============================================================
+function fxAdj(sc) {
+  return sc === 'strong' ? 0.70 : sc === 'weak' ? 1.20 : 1.00;
+}
+
+// ============================================================
+// 決定論的 20年シミュレーション（1ケース）
+// ============================================================
+function simDet(p, cid, scenario, hh) {
+  const co = C[cid];
+  const tax = co.tax[scenario];
+  const liv = co.living[hh][$v('llv')] * 12;
+  const inf = p.inf / 100;
+  const ret = p.ret / 100;
+  const cor = p.cor / 100;
+  const fxNet = p.fxp * p.fxc * (1 - tax);
+  const mc = (co.mcost[hh].min + co.mcost[hh].max) / 2;
+  const adj = fxAdj(p.fxsc);
+  const hor = p.hor;
+
+  let assets = p.tot;
+  const yr = [assets];
+  assets -= mc;
+
+  for (let y = 1; y <= hor; y++) {
+    const livY = liv * Math.pow(1 + inf, y - 1);
+    const invR = assets * cor * ret * adj;
+    const fxY  = fxNet * adj;
+    assets += fxY + invR - livY;
+    yr.push(Math.max(0, assets));
+    if (assets <= 0) { while (yr.length <= hor) yr.push(0); break; }
+  }
+  return yr;
+}
+
+// ============================================================
+// Monte Carlo シミュレーション（N試行）
+// ============================================================
+function simMC(p, cid, scenario, hh, trials) {
+  const co = C[cid];
+  const tax = co.tax[scenario];
+  const liv = co.living[hh][$v('llv')] * 12;
+  const inf = p.inf / 100;
+  const retMu = p.ret / 100;
+  const cor = p.cor / 100;
+  const fxMu = p.fxp * p.fxc * (1 - tax);
+  const fxSd = p.fxsd * (1 - tax);
+  const mc = (co.mcost[hh].min + co.mcost[hh].max) / 2;
+  const adj = fxAdj(p.fxsc);
+  const hor = p.hor;
+
+  const finals = [];
+  const yrBuckets = Array.from({length: hor + 1}, () => []);
+  let depleted = 0;
+
+  for (let t = 0; t < trials; t++) {
+    let assets = p.tot - mc;
+    yrBuckets[0].push(p.tot);
+
+    for (let y = 1; y <= hor; y++) {
+      const livY = liv * Math.pow(1 + inf, y - 1);
+      const invR = assets * cor * nrand(retMu, 0.15) * adj;
+      const fxY  = nrand(fxMu, fxSd) * adj;
+      assets += fxY + invR - livY;
+      yrBuckets[y].push(Math.max(0, assets));
+      if (assets <= 0) {
+        depleted++;
+        while (yrBuckets.length <= hor || y < hor) { y++; if (y <= hor) yrBuckets[y].push(0); }
+        break;
+      }
+    }
+    finals.push(Math.max(0, assets));
+  }
+
+  finals.sort((a, b) => a - b);
+  const pct = (arr, q) => { arr.sort((a,b) => a-b); return arr[Math.floor(arr.length * q)] || 0; };
+  const yp = yrBuckets.map(b => ({ p5: pct([...b], 0.05), p50: pct([...b], 0.50), p95: pct([...b], 0.95) }));
+
+  return {
+    p5:  finals[Math.floor(trials * 0.05)] || 0,
+    p25: finals[Math.floor(trials * 0.25)] || 0,
+    p50: finals[Math.floor(trials * 0.50)] || 0,
+    p75: finals[Math.floor(trials * 0.75)] || 0,
+    p95: finals[Math.floor(trials * 0.95)] || 0,
+    depRate: (depleted / trials) * 100,
+    survRate: ((trials - depleted) / trials) * 100,
+    yp
+  };
+}
+
+// ============================================================
+// メイン実行
+// ============================================================
+function run() {
+  const sel = getSelectedCountries();
+  if (!sel.length) { alert('移住先を 1か国以上選択してください。'); return; }
+
+  document.getElementById('ld').style.display = 'block';
+  document.getElementById('sum-out').style.display = 'none';
+
+  sw(document.querySelector('.tab.active'), 'pane-sum');
+  document.querySelectorAll('.tab').forEach((b,i) => { if(i===0) b.classList.add('active'); else b.classList.remove('active'); });
+
+  setTimeout(() => {
+    const p = {
+      tot: totalAssets(),
+      fxp: $n('fxp'), fxsd: $n('fxsd'), fxc: $n('fxc'),
+      inf: $n('inf'), ret: $n('ret'), cor: $n('cor'),
+      fxsc: $v('fxs'), hor: $n('hor'),
+      age: $n('age'), myr: parseInt($v('myr')),
+      trials: parseInt($v('mct'))
+    };
+    const hh = $r('hh');
+    const res = {};
+
+    for (const cid of sel) {
+      res[cid] = {};
+      for (const sc of ['optimistic','realistic','pessimistic']) {
+        res[cid][sc] = {
+          det: simDet(p, cid, sc, hh),
+          mc:  simMC(p, cid, sc, hh, p.trials)
+        };
+      }
+    }
+
+    lastSim = { res, p, hh, sel };
+    renderSum(lastSim);
+    renderCharts(lastSim);
+    renderSens(lastSim);
+    renderEli(lastSim);
+
+    document.getElementById('ld').style.display = 'none';
+    document.getElementById('sum-out').style.display = 'block';
+  }, 30);
+}
+
+// ============================================================
+// サマリー描画
+// ============================================================
+function renderSum(sim) {
+  const { res, p, hh, sel } = sim;
+  const hhLabel = hh === 'single' ? '単身' : '夫婦+子1人';
+
+  // KPIs
+  let html = `<div class="kpi-grid kpi-grid-4" style="margin-bottom:14px">
+    <div class="kpi"><div class="kpi-val">${fmtM(p.tot)}</div><div class="kpi-lbl">現在の総資産</div></div>
+    <div class="kpi"><div class="kpi-val">${fmtM(p.fxp * p.fxc)}</div><div class="kpi-lbl">FX 年間利益（保守後）</div><div class="kpi-sub">係数 ${p.fxc}</div></div>
+    <div class="kpi"><div class="kpi-val">${p.hor}年</div><div class="kpi-lbl">試算期間</div></div>
+    <div class="kpi"><div class="kpi-val">${p.fxsc === 'strong' ? '円高30%' : p.fxsc === 'weak' ? '円安20%' : '現状維持'}</div><div class="kpi-lbl">為替シナリオ</div></div>
+  </div>`;
+
+  // Main table
+  html += `<div class="card"><div class="card-title">📊 国別・シナリオ別 ${p.hor}年後資産比較（${hhLabel}）</div>
+  <div class="tbl-wrap"><table>
+    <thead><tr>
+      <th>国・ビザ</th><th>シナリオ</th><th>税率</th><th>月額生活費</th>
+      <th>${p.hor}年後中央値</th><th>悲観 5%ライン</th><th>楽観 95%ライン</th>
+      <th>資金ショート率</th><th>判定</th>
+    </tr></thead><tbody>`;
+
+  let allMC = [];
+  for (const cid of sel)
+    for (const sc of ['optimistic','realistic','pessimistic'])
+      allMC.push({ cid, sc, mc: res[cid][sc].mc });
+
+  for (const cid of sel) {
+    const co = C[cid];
+    for (const sc of ['optimistic','realistic','pessimistic']) {
+      const mc = res[cid][sc].mc;
+      const tax = co.tax[sc];
+      const liv = co.living[hh][$v('llv')];
+      const dep = mc.depRate;
+      const dotCls = dep < 5 ? 'dot-lo' : dep < 20 ? 'dot-md' : 'dot-hi';
+      const judge = dep < 5 && mc.p50 > p.tot * 1.5 ? '⭐ 優良'
+                  : dep < 10 && mc.p50 > p.tot ? '✅ 良好'
+                  : dep < 20 ? '△ 許容' : '❌ 要注意';
+
+      html += `<tr>
+        <td><span style="font-size:15px">${co.flag}</span> <strong>${co.short}</strong></td>
+        <td><span class="badge ${SC[sc].cls}">${SC[sc].label}</span></td>
+        <td><strong style="color:${tax === 0 ? 'var(--green)' : tax > 0.2 ? 'var(--red)' : 'var(--amber-light)'}">${pct(tax)}</strong></td>
+        <td>${Math.round(liv).toLocaleString()}万円</td>
+        <td><strong style="color:${colorAmt(mc.p50, p.tot)}">${fmtM(mc.p50)}</strong></td>
+        <td style="color:var(--red)">${fmtM(mc.p5)}</td>
+        <td style="color:var(--green)">${fmtM(mc.p95)}</td>
+        <td><span class="dot ${dotCls}"></span>${dep.toFixed(1)}%</td>
+        <td>${judge}</td>
+      </tr>`;
+    }
+  }
+
+  html += `</tbody></table></div></div>`;
+
+  // 4% ルール
+  html += render4pct(sim);
+
+  // Heatmap
+  html += renderHmap(sim);
+
+  // Disclaimer
+  html += `<div class="disclaimer">⚠️ 本シミュレーションは AI による参考情報です。投資・税務・ビザの最終判断は、税理士・FP・行政書士等の有資格専門家にご相談ください。
+  FX 利益の継続を保証するものではありません。各国税制・ビザ要件・為替は変動するため、定期的に最新情報を確認してください。</div>`;
+
+  document.getElementById('sum-out').innerHTML = html;
+}
+
+function render4pct(sim) {
+  const { p, hh, sel } = sim;
+  const llv = $v('llv');
+  let html = `<div class="card"><div class="card-title">📐 4% ルール — FIRE 必要資産の試算</div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:10px">年間生活費 ÷ 4% = 資産が 30 年以上枯渇しない統計的に十分な初期資産額</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>国</th><th>月額生活費</th><th>年間生活費</th><th>FIRE 必要資産</th><th>現在資産との差</th><th>判定</th></tr></thead><tbody>`;
+
+  for (const cid of sel) {
+    const co = C[cid];
+    const liv = co.living[hh][llv];
+    const annLiv = liv * 12;
+    const target = annLiv / 0.04;
+    const diff = p.tot - target;
+    html += `<tr>
+      <td>${co.flag} ${co.short}</td>
+      <td>${Math.round(liv).toLocaleString()}万円</td>
+      <td>${Math.round(annLiv).toLocaleString()}万円</td>
+      <td><strong>${fmtM(target)}</strong></td>
+      <td style="color:${diff >= 0 ? 'var(--green)' : 'var(--red)'};font-weight:700">${diff >= 0 ? '+' : ''}${fmtM(diff)}</td>
+      <td>${diff >= 0 ? '✅ 達成' : `❌ あと ${fmtM(Math.abs(diff))}`}</td>
+    </tr>`;
+  }
+  html += `</tbody></table></div></div>`;
+  return html;
+}
+
+function renderHmap(sim) {
+  const { res, p, sel } = sim;
+  const allVals = [];
+  for (const cid of sel) for (const sc of ['optimistic','realistic','pessimistic']) allVals.push(res[cid][sc].mc.p50);
+  const maxV = Math.max(...allVals), minV = Math.min(...allVals);
+
+  let html = `<div class="card"><div class="card-title">🔥 ヒートマップ（${sim.p.hor}年後・中央値）</div>
+  <div class="hmap" style="grid-template-columns:110px repeat(3,1fr)">
+    <div></div>
+    ${['楽観','リアル','悲観'].map(l => `<div style="text-align:center;font-size:12px;font-weight:700;padding:6px">${l}</div>`).join('')}`;
+
+  for (const cid of sel) {
+    const co = C[cid];
+    html += `<div style="display:flex;align-items:center;font-size:13px;font-weight:600;gap:4px">${co.flag} ${co.short}</div>`;
+    for (const sc of ['optimistic','realistic','pessimistic']) {
+      const v = res[cid][sc].mc.p50;
+      const ratio = maxV === minV ? 0.5 : (v - minV) / (maxV - minV);
+      const r = Math.round(255 - ratio * 140), g = Math.round(100 + ratio * 155), b = 100;
+      const tc = ratio > 0.45 ? 'var(--green)' : 'var(--red)';
+      html += `<div class="hmap-cell" style="background:rgba(${r},${g},${b},0.25);color:${tc}">
+        ${fmtM(v)}<br><span style="font-size:10px;font-weight:400;opacity:0.7">枯渇 ${res[cid][sc].mc.depRate.toFixed(0)}%</span>
+      </div>`;
+    }
+  }
+  html += `</div></div>`;
+  return html;
+}
+
+// ============================================================
+// グラフ描画
+// ============================================================
+function renderCharts(sim) {
+  const { res, p, hh, sel } = sim;
+  const yrs = Array.from({length: p.hor + 1}, (_, i) => i + '年');
+  const firstC = sel[0];
+  const co0 = C[firstC];
+
+  let html = `
+    <div class="card"><div class="card-title">📈 国別 資産推移（リアルシナリオ）</div><div class="chart-box"><canvas id="ch1"></canvas></div></div>
+    <div class="card"><div class="card-title">📊 Monte Carlo パーセンタイル帯 — ${co0.name}（リアルシナリオ）</div>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:8px">中央値（太線）と 5%〜95% の範囲（帯）を表示。1,000 試行の結果。</p>
+      <div class="chart-box"><canvas id="ch2"></canvas></div></div>
+    <div class="card"><div class="card-title">🛡️ 資金存続率 — ${p.hor}年間</div><div class="chart-box" style="height:260px"><canvas id="ch3"></canvas></div></div>
+  `;
+  document.getElementById('chart-out').innerHTML = html;
+
+  // Chart 1: deterministic comparison
+  const cc = { thailand:'#e53e3e', malaysia:'#38a169', singapore:'#4299e1' };
+  const ds1 = [];
+  for (const cid of sel) {
+    ds1.push({ label: C[cid].flag + ' ' + C[cid].short + '（リアル）', data: res[cid].realistic.det, borderColor: cc[cid], borderWidth: 3, pointRadius: 0, tension: 0.3, fill: false });
+    ds1.push({ label: C[cid].short + '（楽観）', data: res[cid].optimistic.det, borderColor: cc[cid] + '70', borderWidth: 1.5, borderDash: [5,4], pointRadius: 0, tension: 0.3, fill: false });
+    ds1.push({ label: C[cid].short + '（悲観）', data: res[cid].pessimistic.det, borderColor: cc[cid] + '90', borderWidth: 1, borderDash: [2,3], pointRadius: 0, tension: 0.3, fill: false });
+  }
+  mkChart('ch1', 'line', yrs, ds1);
+
+  // Chart 2: MC percentiles for first country
+  const mc0 = res[firstC].realistic.mc;
+  const p5d = yrs.map((_,i) => mc0.yp[i]?.p5 || 0);
+  const p50d = yrs.map((_,i) => mc0.yp[i]?.p50 || 0);
+  const p95d = yrs.map((_,i) => mc0.yp[i]?.p95 || 0);
+  mkChart('ch2', 'line', yrs, [
+    { label:'95%ライン', data: p95d, borderColor:'rgba(56,161,105,0.5)', backgroundColor:'rgba(56,161,105,0.08)', fill:'+1', borderWidth:1, pointRadius:0, tension:0.3 },
+    { label:'中央値（50%）', data: p50d, borderColor: cc[firstC], backgroundColor:'transparent', borderWidth:3, pointRadius:0, tension:0.3, fill:false },
+    { label:'5%ライン', data: p5d, borderColor:'rgba(229,62,62,0.5)', backgroundColor:'rgba(229,62,62,0.08)', fill:'-1', borderWidth:1, pointRadius:0, tension:0.3 }
+  ]);
+
+  // Chart 3: survival bars
+  const labs3 = [], vals3 = [], cols3 = [];
+  const bg3 = { thailand:['#fc8181','#e53e3e','#c53030'], malaysia:['#68d391','#38a169','#276749'], singapore:['#90cdf4','#4299e1','#2b6cb0'] };
+  for (const cid of sel) for (const [i, sc] of ['optimistic','realistic','pessimistic'].entries()) {
+    labs3.push(C[cid].flag + ' ' + SC[sc].label);
+    vals3.push(res[cid][sc].mc.survRate);
+    cols3.push(bg3[cid][i]);
+  }
+  mkBarChart('ch3', labs3, vals3, cols3);
+}
+
+function mkChart(id, type, labels, datasets) {
+  if (charts[id]) { charts[id].destroy(); }
+  charts[id] = new Chart(document.getElementById(id).getContext('2d'), {
+    type, data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      plugins: { legend: { position:'bottom', labels:{ font:{size:11}, boxWidth:12 }},
+        tooltip: { callbacks: { label: c => c.dataset.label + ': ' + fmtM(c.raw) }}},
+      scales: {
+        y: { ticks: { callback: v => fmtM(v), font:{size:11} }},
+        x: { ticks: { font:{size:11}, maxTicksLimit:10 }}
+      }
+    }
+  });
+}
+
+function mkBarChart(id, labels, data, bgColors) {
+  if (charts[id]) { charts[id].destroy(); }
+  charts[id] = new Chart(document.getElementById(id).getContext('2d'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: bgColors, borderRadius: 5 }]},
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      plugins: { legend:{display:false}, tooltip:{callbacks:{label:c=>c.raw.toFixed(1)+'% 存続'}}},
+      scales: {
+        y: { min:0, max:100, ticks: { callback: v => v+'%', font:{size:11} }},
+        x: { ticks: { font:{size:11} }}
+      }
+    }
+  });
+}
+
+// ============================================================
+// 感度分析描画
+// ============================================================
+function renderSens(sim) {
+  const { res, p, hh, sel } = sim;
+  const firstC = sel[0];
+  const co = C[firstC];
+
+  let html = `<div class="card"><div class="card-title">🔍 感度分析①：FX 年間利益の変化 — ${co.name}（リアル税率 ${pct(co.tax.realistic)}）</div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>FX 年間利益</th><th>比較</th><th>20年後（楽観）</th><th>20年後（リアル）</th><th>20年後（悲観）</th></tr></thead><tbody>`;
+
+  for (const factor of [0.3, 0.5, 0.7, 1.0, 1.3, 1.5, 2.0]) {
+    const mp = { ...p, fxp: p.fxp * factor };
+    const isCur = Math.abs(factor * p.fxc - p.fxp * p.fxc) < 1;
+    const note = factor === 0.7 ? ' ← 保守係数適用後' : factor === 1.0 ? '（目標）' : '';
+    html += `<tr ${factor === 0.7 ? 'class="hl"' : ''}>
+      <td>${Math.round(mp.fxp).toLocaleString()}万円${note}</td>
+      <td style="font-size:12px;color:var(--muted)">${factor >= 1 ? '+' : ''}${Math.round((factor-1)*100)}%</td>`;
+    for (const sc of ['optimistic','realistic','pessimistic']) {
+      const d = simDet(mp, firstC, sc, hh);
+      const v = d[d.length - 1];
+      html += `<td style="color:${colorAmt(v, p.tot)};font-weight:${factor===0.7?'700':'400'}">${fmtM(v)}</td>`;
+    }
+    html += `</tr>`;
+  }
+  html += `</tbody></table></div></div>`;
+
+  // Sensitivity 2: exchange rate
+  html += `<div class="card"><div class="card-title">🔍 感度分析②：為替シナリオ比較 — ${co.name}（リアル税率）</div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>シナリオ</th><th>USD/JPY</th><th>10年後資産</th><th>${p.hor}年後資産</th><th>資金ショート率</th></tr></thead><tbody>`;
+
+  for (const [scId, label, usd] of [['strong','円高 30%',105],['neutral','現状維持',150],['weak','円安 20%',180]]) {
+    const mp = { ...p, fxsc: scId };
+    const d = simDet(mp, firstC, 'realistic', hh);
+    const mc = simMC(mp, firstC, 'realistic', hh, 500);
+    const isCur = scId === p.fxsc;
+    html += `<tr ${isCur ? 'class="hl"' : ''}>
+      <td>${label}${isCur ? ' ← 現在設定' : ''}</td>
+      <td>¥${usd}</td>
+      <td style="color:${colorAmt(d[10]||0, p.tot)}">${fmtM(d[10]||0)}</td>
+      <td style="color:${colorAmt(d[d.length-1], p.tot)};font-weight:700">${fmtM(d[d.length-1])}</td>
+      <td><span class="dot ${mc.depRate<5?'dot-lo':mc.depRate<20?'dot-md':'dot-hi'}"></span>${mc.depRate.toFixed(1)}%</td>
+    </tr>`;
+  }
+  html += `</tbody></table></div></div>`;
+
+  // Sensitivity 3: living cost level
+  html += `<div class="card"><div class="card-title">🔍 感度分析③：生活費レベル比較 — ${co.name}（リアル税率）</div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>生活費レベル</th><th>月額</th><th>年額</th><th>FIRE 必要資産</th><th>${p.hor}年後資産</th></tr></thead><tbody>`;
+
+  for (const [lvl, label] of [['min','最小'],['mid','中位'],['max','最大']]) {
+    const liv = co.living[hh][lvl];
+    const target = liv * 12 / 0.04;
+    const fakeEl = document.getElementById('llv');
+    const origVal = fakeEl.value;
+    fakeEl.value = lvl;
+    const d = simDet({ ...p }, firstC, 'realistic', hh);
+    fakeEl.value = origVal;
+    const isCur = lvl === $v('llv');
+    html += `<tr ${isCur ? 'class="hl"' : ''}>
+      <td>${label}${isCur ? ' ← 現在設定' : ''}</td>
+      <td>${Math.round(liv).toLocaleString()}万円</td>
+      <td>${Math.round(liv*12).toLocaleString()}万円</td>
+      <td>${fmtM(target)}</td>
+      <td style="color:${colorAmt(d[d.length-1],p.tot)}">${fmtM(d[d.length-1])}</td>
+    </tr>`;
+  }
+  html += `</tbody></table></div></div>`;
+
+  document.getElementById('sens-out').innerHTML = html;
+}
+
+// ============================================================
+// 要件詳細描画
+// ============================================================
+function renderEli(sim) {
+  const { p, hh, sel } = sim;
+  const tot = p.tot;
+
+  let html = `<div class="card"><div class="card-title">⚠️ FX 利益の課税分類リスク（全国共通の重要論点）</div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:10px">
+    FX トレーディング利益が「投資所得」か「事業所得」かで税率が大きく変わります。移住前に Big 4 の書面確認（Ruling）が必須です。
+  </p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>国</th><th>楽観（投資所得）</th><th>リアル（部分的事業認定）</th><th>悲観（全額事業所得）</th><th>公式ガイダンス</th></tr></thead><tbody>
+    <tr><td>🇹🇭 タイ</td><td class="badge-opt">0%</td><td class="badge-real">10%</td><td class="badge-pes">35%（最高税率）</td><td style="font-size:12px">❌ 未整備（Royal Decree 743 の適用範囲が不明確）</td></tr>
+    <tr><td>🇲🇾 マレーシア</td><td class="badge-opt">0%</td><td class="badge-real">10%</td><td class="badge-pes">30%（累進最高）</td><td style="font-size:12px">⚠️ FSI 免除は投資判定前提。FX は要個別確認</td></tr>
+    <tr><td>🇸🇬 シンガポール</td><td class="badge-opt">0%</td><td class="badge-real">15%</td><td class="badge-pes">24%（最高税率）</td><td style="font-size:12px">⚠️ Badges of Trade テストで個別判定</td></tr>
+  </tbody></table></div>
+  <p style="font-size:12px;color:var(--red);margin-top:10px;font-weight:600">
+    ▶ 移住実行前に KPMG・PwC・EY・Deloitte の現地オフィスへ書面確認（Ruling）を依頼してください。費用：USD 2,000〜10,000 程度。
+  </p></div>`;
+
+  // Thailand
+  const th = C.thailand;
+  const thGlob = tot >= th.req.globalJPY;
+  const thThai = tot >= th.req.thaiJPY;
+  html += `<div class="card bl-th"><div class="card-title">🇹🇭 タイ — LTR Wealthy Global Citizen ビザ要件</div>
+    <div class="eli ${thGlob ? 'eli-ok' : 'eli-ng'}">${thGlob ? '✅' : '❌'} グローバル資産 USD 1M（${fmtM(th.req.globalJPY)}）— ${thGlob ? '達成' : `不足 ${fmtM(th.req.globalJPY - tot)}`}</div>
+    <div class="eli ${thThai ? 'eli-ok' : 'eli-warn'}">${thThai ? '✅' : '⚠️'} タイ国内投資 USD 500K（${fmtM(th.req.thaiJPY)}）— ${thThai ? '達成（資産内から充当可能）' : 'タイ国内に別途投資が必要'}</div>
+    <div class="eli eli-ok">✅ 年間所得要件 — 2025年2月に撤廃（USD 80K 要件なし）</div>
+    <table style="margin-top:10px;font-size:12px"><tbody>
+      <tr><td style="color:var(--muted);padding:4px 8px">適格投資先</td><td>タイ国債（5年以上）・タイ企業直接投資・タイ不動産（登記）</td></tr>
+      <tr><td style="color:var(--muted);padding:4px 8px">不適格</td><td>暗号資産・商品先物・美術品・宝飾品</td></tr>
+      <tr><td style="color:var(--muted);padding:4px 8px">申請費</td><td>THB 50,000/人（約 22.5万円）</td></tr>
+      <tr><td style="color:var(--muted);padding:4px 8px">処理期間</td><td>60営業日（約 3か月）</td></tr>
+      <tr><td style="color:var(--muted);padding:4px 8px">ビザ期間</td><td>10年（5+5年更新）、家族同伴可</td></tr>
+      <tr><td style="color:var(--muted);padding:4px 8px">公式サイト</td><td><a href="https://ltr.boi.go.th/" target="_blank">https://ltr.boi.go.th/</a></td></tr>
+    </tbody></table></div>`;
+
+  // Malaysia
+  const my = C.malaysia;
+  const mySilv = tot >= my.req.silverTotalJPY;
+  const myGold = tot >= my.req.goldTotalJPY;
+  html += `<div class="card bl-my"><div class="card-title">🇲🇾 マレーシア — MM2H ビザ要件（2024年6月改正・3ティア制）</div>
+    <div class="eli ${mySilv ? 'eli-ok' : 'eli-warn'}">${mySilv ? '✅' : '⚠️'} Silver ティア：固定預金 USD 150K（${fmtM(my.req.silverDepJPY)}）+ 不動産 MYR 600K（${fmtM(my.req.silverPropJPY)}）合計 ${fmtM(my.req.silverTotalJPY)} — ${mySilv ? '達成' : `不足 ${fmtM(my.req.silverTotalJPY - tot)}`}</div>
+    <div class="eli ${myGold ? 'eli-ok' : 'eli-ng'}">${myGold ? '✅' : '❌'} Gold ティア：固定預金 USD 500K + 不動産 MYR 1M — 合計 ${fmtM(my.req.goldTotalJPY)} — ${myGold ? '達成' : `不足 ${fmtM(my.req.goldTotalJPY - tot)}`}</div>
+    <table style="margin-top:10px;font-size:12px"><tbody>
+      <tr><td style="color:var(--muted);padding:4px 8px">FSI 免除</td><td>個人は 2036年末まで延長確定（Budget 2026）</td></tr>
+      <tr><td style="color:var(--muted);padding:4px 8px">注意点</td><td>FX 利益が「事業所得」認定の場合、FSI 免除対象外のリスクあり</td></tr>
+      <tr><td style="color:var(--muted);padding:4px 8px">固定預金</td><td>承認後 50% まで引出可（教育・医療・観光等）</td></tr>
+      <tr><td style="color:var(--muted);padding:4px 8px">公式サイト</td><td><a href="https://mm2h.gov.my/" target="_blank">https://mm2h.gov.my/</a></td></tr>
+    </tbody></table></div>`;
+
+  // Singapore
+  const sg = C.singapore;
+  const sgOK = tot >= sg.req.minJPY;
+  html += `<div class="card bl-sg"><div class="card-title">🇸🇬 シンガポール — GIP（Global Investor Programme）</div>
+    <div class="eli ${sgOK ? 'eli-ok' : 'eli-ng'}">${sgOK ? '✅' : '❌'} Option A：最低投資 SGD 10M（${fmtM(sg.req.minJPY)}）— ${sgOK ? '達成' : `不足 ${fmtM(sg.req.minJPY - tot)}`}</div>
+    ${!sgOK ? `<div class="eli eli-ng">❌ 現在の資産規模では GIP は現実的でない可能性が高い（あと ${fmtM(sg.req.minJPY - tot)} 必要）</div>` : ''}
+    <table style="margin-top:10px;font-size:12px"><tbody>
+      <tr><td style="color:var(--muted);padding:4px 8px">税制</td><td>キャピタルゲイン非課税・所得税最高 24%</td></tr>
+      <tr><td style="color:var(--muted);padding:4px 8px">FX リスク</td><td>IRAS の Badges of Trade テストで「事業所得」認定リスク（個別判定）</td></tr>
+      <tr><td style="color:var(--muted);padding:4px 8px">公式サイト</td><td><a href="${sg.req.url}" target="_blank">EDB GIP 公式ページ</a></td></tr>
+    </tbody></table></div>`;
+
+  document.getElementById('eli-out').innerHTML = html;
+}
+
+// ============================================================
+// クイックビザ判定（サイドバー上部）
+// ============================================================
+function renderQuickEli(tot) {
+  const th = C.thailand, my = C.malaysia, sg = C.singapore;
+  let html = '';
+
+  const row = (flag, name, ok, label, gap) => `
+    <div class="eli ${ok ? 'eli-ok' : 'eli-ng'}" style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;margin-bottom:6px">
+      <span>${flag} <strong>${name}</strong></span>
+      <span style="font-size:11px;text-align:right">${ok ? '✅ 達成' : `❌ あと ${fmtM(gap)}`}</span>
+    </div>`;
+
+  html += row('🇹🇭', 'タイ LTR', tot >= th.req.globalJPY, '', th.req.globalJPY - tot);
+  html += row('🇲🇾', 'マレーシア MM2H Silver', tot >= my.req.silverTotalJPY, '', my.req.silverTotalJPY - tot);
+  html += row('🇸🇬', 'シンガポール GIP', tot >= sg.req.minJPY, '', sg.req.minJPY - tot);
+
+  document.getElementById('qeli-content').innerHTML = html;
+}
+
+// ============================================================
+// タブ切替
+// ============================================================
+function sw(btn, paneId) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById(paneId).classList.add('active');
+}
+
+// ============================================================
+// JSON 保存・読込
+// ============================================================
+function saveJSON() {
+  const d = {
+    ver: '1.0', savedAt: new Date().toISOString(),
+    inputs: {
+      age: $n('age'), household: $r('hh'), myr: $v('myr'),
+      a1: $n('a1'), a2: $n('a2'), a3: $n('a3'), a4: $n('a4'), a5: $n('a5'),
+      fxp: $n('fxp'), fxsd: $n('fxsd'), fxc: $n('fxc'),
+      hor: $n('hor'), inf: $n('inf'), ret: $n('ret'), cor: $n('cor'),
+      fxs: $v('fxs'), llv: $v('llv'), mct: $v('mct'),
+      th: document.getElementById('ck-th').checked,
+      my: document.getElementById('ck-my').checked,
+      sg: document.getElementById('ck-sg').checked
+    }
+  };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(d, null, 2)], {type:'application/json'}));
+  a.download = 'sim_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function loadJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const { inputs: i } = JSON.parse(ev.target.result);
+      if (i.age)       document.getElementById('age').value = i.age;
+      if (i.household) document.querySelector(`input[name="hh"][value="${i.household}"]`).checked = true;
+      if (i.myr)       document.getElementById('myr').value = i.myr;
+      ['a1','a2','a3','a4','a5','fxp','fxsd','fxc','hor','inf','ret','cor'].forEach(k => { if (i[k] !== undefined) document.getElementById(k).value = i[k]; });
+      if (i.fxs) document.getElementById('fxs').value = i.fxs;
+      if (i.llv) document.getElementById('llv').value = i.llv;
+      if (i.mct) document.getElementById('mct').value = i.mct;
+      if (i.th !== undefined) document.getElementById('ck-th').checked = i.th;
+      if (i.my !== undefined) document.getElementById('ck-my').checked = i.my;
+      if (i.sg !== undefined) document.getElementById('ck-sg').checked = i.sg;
+      onInput();
+      alert('設定を読み込みました');
+    } catch(err) { alert('読み込み失敗: ' + err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ============================================================
+// LocalStorage 自動保存
+// ============================================================
+function autosave() {
+  try {
+    const d = { a1:$n('a1'),a2:$n('a2'),a3:$n('a3'),a4:$n('a4'),a5:$n('a5'),fxp:$n('fxp'),fxc:$n('fxc'),age:$n('age') };
+    localStorage.setItem('fp_sim_v1', JSON.stringify(d));
+  } catch(e) {}
+}
+
+(function autoload() {
+  try {
+    const s = localStorage.getItem('fp_sim_v1');
+    if (!s) return;
+    const d = JSON.parse(s);
+    ['a1','a2','a3','a4','a5','fxp','fxc','age'].forEach(k => { if (d[k] !== undefined) document.getElementById(k).value = d[k]; });
+    onInput();
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>
