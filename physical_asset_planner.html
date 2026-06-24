@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>現物資産プランナー（車・時計・金）</title>
+<style>
+  :root {
+    --bg: #14161f; --card: #1d2030; --card2: #252939; --border: #2a2e42;
+    --text: #d8dee9; --muted: #8b95a7; --label: #aab2c0;
+    --accent: #5dade2; --accent2: #f5b041; --ok: #58d68d; --ng: #ec7063;
+    --warn: #e67e22; --head: #f0f3f7;
+    --risk-high: #ec7063; --risk-mid: #f5b041; --risk-low: #58d68d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    background: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.55;
+  }
+  header {
+    background: linear-gradient(135deg, #15324f, #1d2030);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 22px; display: flex; align-items: center;
+    justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  header h1 { font-size: 19px; margin: 0; color: var(--head); }
+  header .tagline { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .header-actions button {
+    padding: 6px 12px; border: 1px solid var(--border); background: var(--card2);
+    color: var(--text); border-radius: 4px; cursor: pointer; font-size: 12px;
+  }
+  .header-actions button:hover { background: #303651; }
+  .layout { display: flex; max-width: 1180px; margin: 0 auto; gap: 18px; padding: 18px; align-items: flex-start; }
+  .nav {
+    flex: 0 0 220px; background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px; position: sticky; top: 78px;
+  }
+  .nav .nav-item {
+    display: flex; gap: 10px; align-items: flex-start; padding: 10px;
+    border-radius: 6px; cursor: pointer; margin-bottom: 4px; border: 1px solid transparent;
+  }
+  .nav .nav-item:hover { background: var(--card2); }
+  .nav .nav-item.active { background: #1a2c40; border-color: var(--accent); }
+  .nav .nav-num {
+    flex: 0 0 24px; height: 24px; border-radius: 50%; background: var(--card2);
+    color: var(--muted); text-align: center; line-height: 24px; font-size: 13px; font-weight: bold;
+  }
+  .nav .nav-item.active .nav-num { background: var(--accent); color: var(--bg); }
+  .nav .nav-label { font-size: 13px; padding-top: 3px; }
+  .nav .nav-sub { font-size: 11px; color: var(--muted); }
+  .main { flex: 1 1 auto; min-width: 0; }
+  .mod { display: none; }
+  .mod.active { display: block; }
+  .card {
+    background: var(--card); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    padding: 18px 20px; margin-bottom: 16px; border: 1px solid var(--border);
+  }
+  .card h2 { font-size: 16px; margin: 0 0 12px 0; border-left: 4px solid var(--accent); padding-left: 8px; color: var(--head); }
+  .card h3 { font-size: 14px; margin: 14px 0 8px 0; color: var(--accent2); }
+  label { font-size: 13px; color: var(--label); }
+  .row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 10px; }
+  .field { display: flex; flex-direction: column; gap: 3px; }
+  input[type=number], input[type=text], select {
+    background: var(--card2); color: #e6e9ef; border: 1px solid #3a3f55; border-radius: 4px;
+    padding: 6px 8px; font-size: 14px; width: 180px;
+  }
+  select { cursor: pointer; }
+  .run-btn {
+    padding: 10px 24px; border: none; border-radius: 4px; cursor: pointer;
+    font-size: 15px; font-weight: bold; background: var(--accent); color: var(--bg);
+  }
+  .run-btn:hover { filter: brightness(1.1); }
+  .secondary-btn {
+    padding: 8px 18px; border: 1px solid var(--accent); border-radius: 4px; cursor: pointer;
+    font-size: 13px; background: var(--card); color: var(--accent);
+  }
+  .secondary-btn:hover { background: var(--card2); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+  th, td { padding: 7px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+  th { color: var(--muted); font-weight: normal; font-size: 12px; background: var(--card2); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  th.num { text-align: right; }
+  .risk-high { color: var(--risk-high); font-weight: bold; }
+  .risk-mid { color: var(--risk-mid); font-weight: bold; }
+  .risk-low { color: var(--risk-low); font-weight: bold; }
+  .badge {
+    display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: bold;
+  }
+  .badge-high { background: rgba(236,112,99,0.2); color: var(--risk-high); border: 1px solid var(--risk-high); }
+  .badge-mid { background: rgba(245,176,65,0.2); color: var(--risk-mid); border: 1px solid var(--risk-mid); }
+  .badge-low { background: rgba(88,214,141,0.2); color: var(--risk-low); border: 1px solid var(--risk-low); }
+  .note {
+    font-size: 12px; color: var(--label); line-height: 1.6; background: #2a2517;
+    border-left: 4px solid var(--warn); padding: 12px 14px; border-radius: 4px; margin: 12px 0;
+  }
+  .note-info {
+    font-size: 12px; color: var(--label); line-height: 1.6; background: #172a3a;
+    border-left: 4px solid var(--accent); padding: 12px 14px; border-radius: 4px; margin: 12px 0;
+  }
+  .note-danger {
+    font-size: 12px; color: #f5b7b1; line-height: 1.6; background: #2d1a1a;
+    border-left: 4px solid var(--ng); padding: 12px 14px; border-radius: 4px; margin: 12px 0;
+  }
+  .small { font-size: 12px; color: var(--muted); }
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin: 12px 0;
+  }
+  .summary-box {
+    background: var(--card2); border-radius: 6px; padding: 14px;
+    border: 1px solid var(--border); text-align: center;
+  }
+  .summary-box .val { font-size: 22px; font-weight: bold; color: var(--head); margin: 6px 0 2px; }
+  .summary-box .lbl { font-size: 11px; color: var(--muted); }
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tab-bar button {
+    padding: 6px 14px; border: 1px solid var(--border); background: var(--card2);
+    color: var(--muted); border-radius: 4px 4px 0 0; cursor: pointer; font-size: 12px;
+  }
+  .tab-bar button.active { background: var(--card); color: var(--accent); border-bottom-color: var(--card); }
+  .result-bar {
+    display: flex; align-items: center; gap: 8px; margin: 6px 0;
+    background: var(--card2); border-radius: 4px; padding: 6px 10px; overflow: hidden;
+  }
+  .result-bar .bar-label { font-size: 12px; color: var(--label); flex: 0 0 120px; }
+  .result-bar .bar-track { flex: 1; height: 18px; background: #1a1d2b; border-radius: 3px; position: relative; overflow: hidden; }
+  .result-bar .bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+  .result-bar .bar-val { font-size: 13px; font-weight: bold; flex: 0 0 110px; text-align: right; }
+  .checklist label {
+    display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px;
+    border-radius: 4px; cursor: pointer; font-size: 13px; color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+  .checklist label:hover { background: var(--card2); }
+  .checklist input[type=checkbox] { margin-top: 2px; accent-color: var(--accent); flex-shrink: 0; }
+  .checklist .done { text-decoration: line-through; color: var(--muted); }
+  .disclaimer {
+    font-size: 11px; color: var(--muted); background: var(--card2);
+    padding: 12px 14px; border-radius: 4px; margin-top: 16px; line-height: 1.6;
+    border: 1px solid var(--border);
+  }
+  .alloc-input { width: 80px !important; text-align: right; }
+  .pie-container { display: flex; justify-content: center; margin: 16px 0; }
+  .compare-table th, .compare-table td { text-align: center; }
+  .compare-table td:first-child, .compare-table th:first-child { text-align: left; }
+  @media print {
+    header { position: static; }
+    .nav { display: none; }
+    .mod { display: block !important; page-break-inside: avoid; }
+    .header-actions { display: none; }
+    body { background: #fff; color: #222; }
+    .card { border-color: #ccc; box-shadow: none; background: #fff; }
+    .disclaimer { background: #f5f5f5; }
+  }
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; }
+    .nav { flex: none; width: 100%; position: static; display: flex; overflow-x: auto; gap: 4px; padding: 6px; }
+    .nav .nav-item { flex: 0 0 auto; margin-bottom: 0; }
+    .nav .nav-sub { display: none; }
+    input[type=number], input[type=text], select { width: 140px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>現物資産プランナー</h1>
+    <div class="tagline">車・時計・金 ── 趣味兼・資産保全のための総合シミュレーション</div>
+  </div>
+  <div class="header-actions">
+    <button onclick="saveData()">保存</button>
+    <button onclick="loadData()">読込</button>
+    <button onclick="exportJSON()">JSON出力</button>
+    <button onclick="window.print()">印刷 / PDF</button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="navPanel">
+    <div class="nav-item active" data-mod="mod1" onclick="switchMod('mod1')">
+      <div class="nav-num">1</div>
+      <div><div class="nav-label">必要資金・維持コスト</div><div class="nav-sub">TCO 計算機</div></div>
+    </div>
+    <div class="nav-item" data-mod="mod2" onclick="switchMod('mod2')">
+      <div class="nav-num">2</div>
+      <div><div class="nav-label">3資産 比較</div><div class="nav-sub">ダッシュボード</div></div>
+    </div>
+    <div class="nav-item" data-mod="mod3" onclick="switchMod('mod3')">
+      <div class="nav-num">3</div>
+      <div><div class="nav-label">税金シミュレーター</div><div class="nav-sub">譲渡所得・概算</div></div>
+    </div>
+    <div class="nav-item" data-mod="mod4" onclick="switchMod('mod4')">
+      <div class="nav-num">4</div>
+      <div><div class="nav-label">注意点・チェック</div><div class="nav-sub">購入前リスト</div></div>
+    </div>
+  </nav>
+
+  <div class="main">
+
+    <!-- ====== モジュール1: 必要資金・維持コスト計算機 ====== -->
+    <div class="mod active" id="mod1">
+      <div class="card">
+        <h2>必要資金・維持コスト計算機（TCO）</h2>
+        <p class="small">資産別に購入価格を入力すると、初期費用＋年間維持費＋保有N年の総保有コスト（TCO）を試算します。</p>
+
+        <div class="tab-bar" id="tcoTabs">
+          <button class="active" onclick="switchTcoTab('car')">車</button>
+          <button onclick="switchTcoTab('watch')">時計</button>
+          <button onclick="switchTcoTab('gold')">金</button>
+        </div>
+
+        <!-- 車 -->
+        <div class="tco-panel" id="tco-car">
+          <h3>車</h3>
+          <div class="row">
+            <div class="field"><label>車両本体価格（円）</label><input type="number" id="carPrice" value="5000000" min="0" step="100000"></div>
+            <div class="field"><label>排気量（cc）</label>
+              <select id="carCC">
+                <option value="660">軽自動車（660cc以下）</option>
+                <option value="1000">～1,000cc</option>
+                <option value="1500" selected>～1,500cc</option>
+                <option value="2000">～2,000cc</option>
+                <option value="2500">～2,500cc</option>
+                <option value="3000">～3,000cc</option>
+                <option value="3500">～3,500cc</option>
+                <option value="4000">～4,000cc</option>
+                <option value="4500">～4,500cc</option>
+                <option value="6000">～6,000cc</option>
+                <option value="6001">6,000cc超</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field"><label>新車 / 中古</label>
+              <select id="carCondition"><option value="new">新車</option><option value="used">中古</option></select>
+            </div>
+            <div class="field"><label>月極駐車場（円/月）</label><input type="number" id="carParking" value="15000" min="0" step="1000"></div>
+            <div class="field"><label>任意保険（円/年）</label><input type="number" id="carInsurance" value="80000" min="0" step="5000"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>年間走行距離（km）</label><input type="number" id="carKm" value="5000" min="0" step="1000"></div>
+            <div class="field"><label>燃費（km/L）</label><input type="number" id="carFuel" value="12" min="1" step="1"></div>
+            <div class="field"><label>ガソリン単価（円/L）</label><input type="number" id="carGasPrice" value="175" min="0" step="5"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>保有予定年数</label>
+              <select id="carYears"><option value="1">1年</option><option value="3" selected>3年</option><option value="5">5年</option><option value="7">7年</option><option value="10">10年</option></select>
+            </div>
+            <div class="field"><label>動産保険（円/年・任意）</label><input type="number" id="carDosan" value="0" min="0" step="5000"></div>
+          </div>
+          <button class="run-btn" onclick="calcCar()" style="margin-top:12px">試算する</button>
+          <div id="carResult"></div>
+        </div>
+
+        <!-- 時計 -->
+        <div class="tco-panel" id="tco-watch" style="display:none">
+          <h3>時計</h3>
+          <div class="row">
+            <div class="field"><label>購入価格（円）</label><input type="number" id="watchPrice" value="1500000" min="0" step="100000"></div>
+            <div class="field"><label>購入ルート</label>
+              <select id="watchRoute"><option value="ad">正規店（AD）</option><option value="parallel">並行輸入</option><option value="secondary">中古・2次市場</option></select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field"><label>オーバーホール周期（年）</label>
+              <select id="watchOH"><option value="3">3年</option><option value="4">4年</option><option value="5" selected>5年</option><option value="7">7年</option></select>
+            </div>
+            <div class="field"><label>OH費用（円/回）</label><input type="number" id="watchOHCost" value="80000" min="0" step="10000"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>動産保険（円/年）</label><input type="number" id="watchInsurance" value="15000" min="0" step="1000"></div>
+            <div class="field"><label>保管費（貸金庫等・円/年）</label><input type="number" id="watchStorage" value="0" min="0" step="5000"></div>
+            <div class="field"><label>保有予定年数</label>
+              <select id="watchYears"><option value="1">1年</option><option value="3">3年</option><option value="5" selected>5年</option><option value="7">7年</option><option value="10">10年</option></select>
+            </div>
+          </div>
+          <button class="run-btn" onclick="calcWatch()" style="margin-top:12px">試算する</button>
+          <div id="watchResult"></div>
+        </div>
+
+        <!-- 金 -->
+        <div class="tco-panel" id="tco-gold" style="display:none">
+          <h3>金（ゴールド）</h3>
+          <div class="row">
+            <div class="field"><label>購入形態</label>
+              <select id="goldType" onchange="toggleGoldFields()">
+                <option value="bar">金地金（バー）</option>
+                <option value="coin">金貨（コイン）</option>
+                <option value="tsumitate">純金積立</option>
+              </select>
+            </div>
+            <div class="field"><label>金価格（円/g）</label><input type="number" id="goldGramPrice" value="15000" min="0" step="100"></div>
+          </div>
+          <div class="row" id="goldBarFields">
+            <div class="field"><label>重量（g）</label>
+              <select id="goldWeight">
+                <option value="5">5g</option><option value="10">10g</option><option value="20">20g</option>
+                <option value="50">50g</option><option value="100" selected>100g</option><option value="200">200g</option>
+                <option value="500">500g</option><option value="1000">1kg</option>
+              </select>
+            </div>
+            <div class="field"><label>バーチャージ（円）</label><input type="number" id="goldBarCharge" value="16500" min="0" step="500">
+              <span class="small">※500g未満で発生</span>
+            </div>
+          </div>
+          <div class="row" id="goldTsumitateFields" style="display:none">
+            <div class="field"><label>月額積立額（円）</label><input type="number" id="goldMonthly" value="10000" min="1000" step="1000"></div>
+            <div class="field"><label>積立手数料率（%）</label><input type="number" id="goldTsumitateFee" value="1.5" min="0" max="5" step="0.1"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>保管方法</label>
+              <select id="goldStorage"><option value="home">自宅金庫</option><option value="bank">貸金庫</option><option value="custody">業者預かり（特定保管）</option></select>
+            </div>
+            <div class="field"><label>保管費（円/年）</label><input type="number" id="goldStorageCost" value="0" min="0" step="5000">
+              <span class="small">※自宅保管なら0</span>
+            </div>
+            <div class="field"><label>保有予定年数</label>
+              <select id="goldYears"><option value="1">1年</option><option value="3">3年</option><option value="5" selected>5年</option><option value="10">10年</option><option value="20">20年</option></select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field"><label>売却時スプレッド（円/g）</label><input type="number" id="goldSpread" value="100" min="0" step="10">
+              <span class="small">※買値と売値の差（片道）</span>
+            </div>
+          </div>
+          <button class="run-btn" onclick="calcGold()" style="margin-top:12px">試算する</button>
+          <div id="goldResult"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== モジュール2: 3資産 比較ダッシュボード ====== -->
+    <div class="mod" id="mod2">
+      <div class="card">
+        <h2>3資産 比較ダッシュボード</h2>
+        <p class="small">車・時計・金の特性を一覧比較。総予算を入力して配分シミュレーションも可能です。</p>
+
+        <table class="compare-table">
+          <thead>
+            <tr><th>比較項目</th><th>車</th><th>時計</th><th>金</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>最低投資額目安</td><td>50万円〜</td><td>30万円〜</td><td>5万円〜</td></tr>
+            <tr><td>流動性</td><td><span class="badge badge-high">低</span><br><span class="small">売却に1〜4週間</span></td>
+                <td><span class="badge badge-mid">中</span><br><span class="small">人気モデルは即日〜</span></td>
+                <td><span class="badge badge-low">高</span><br><span class="small">地金商で即日換金</span></td></tr>
+            <tr><td>年間維持費率</td><td><span class="risk-high">5〜15%</span><br><span class="small">税・保険・車検・駐車場</span></td>
+                <td><span class="risk-low">1〜3%</span><br><span class="small">OH年割＋保険</span></td>
+                <td><span class="risk-low">0〜1%</span><br><span class="small">保管費のみ</span></td></tr>
+            <tr><td>偽物リスク</td><td><span class="badge badge-mid">中</span><br><span class="small">修復歴・メーター巻戻し</span></td>
+                <td><span class="badge badge-high">高</span><br><span class="small">スーパーコピー精巧化</span></td>
+                <td><span class="badge badge-mid">中</span><br><span class="small">タングステン偽造等</span></td></tr>
+            <tr><td>値上がり期待</td><td><span class="small">限定車・ネオクラシックのみ。大半は減価償却資産</span></td>
+                <td><span class="small">人気モデルはプレミア化。ブランド・Ref依存が大きい</span></td>
+                <td><span class="small">長期でインフレヘッジ。円建ては為替影響大</span></td></tr>
+            <tr><td>ボラティリティ</td><td><span class="badge badge-mid">中</span></td><td><span class="badge badge-high">高</span><br><span class="small">2022年バブル崩壊例あり</span></td><td><span class="badge badge-mid">中</span></td></tr>
+            <tr><td>税制（売却時）</td>
+                <td><span class="small">生活用動産→非課税<br>投資用→譲渡所得</span></td>
+                <td><span class="small">30万超→譲渡所得<br>（生活用動産30万以下非課税）</span></td>
+                <td><span class="small">譲渡所得（総合課税）<br>200万超で支払調書</span></td></tr>
+            <tr><td>保管の手間</td><td><span class="risk-high">高</span><br><span class="small">ガレージ・定期始動</span></td>
+                <td><span class="risk-low">低</span><br><span class="small">金庫 or 着用</span></td>
+                <td><span class="risk-mid">中</span><br><span class="small">盗難対策必須</span></td></tr>
+            <tr><td>楽しみ（趣味性）</td><td><span class="risk-low">★★★★★</span></td><td><span class="risk-low">★★★★</span></td><td><span class="risk-mid">★★</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>配分シミュレーション</h2>
+        <div class="row">
+          <div class="field"><label>総予算（円）</label><input type="number" id="totalBudget" value="10000000" min="0" step="1000000"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>車（%）</label><input type="number" class="alloc-input" id="allocCar" value="50" min="0" max="100" step="5"></div>
+          <div class="field"><label>時計（%）</label><input type="number" class="alloc-input" id="allocWatch" value="20" min="0" max="100" step="5"></div>
+          <div class="field"><label>金（%）</label><input type="number" class="alloc-input" id="allocGold" value="30" min="0" max="100" step="5"></div>
+          <span id="allocStatus" class="small"></span>
+        </div>
+        <button class="run-btn" onclick="calcAlloc()">配分を試算</button>
+        <div id="allocResult"></div>
+      </div>
+
+      <div class="note">
+        <strong>コア・サテライト比率の確認：</strong>現物資産はすべて「サテライト資産（攻め）」に分類されます。コア資産（NISA・iDeCo・預貯金）比率が総資産の50%を下回らないよう注意してください。
+      </div>
+    </div>
+
+    <!-- ====== モジュール3: 税金シミュレーター ====== -->
+    <div class="mod" id="mod3">
+      <div class="card">
+        <h2>譲渡所得・税金シミュレーター（概算）</h2>
+        <p class="small">現物資産の売却時にかかる譲渡所得税を概算します。実際の申告は税理士にご相談ください。</p>
+
+        <div class="note-info">
+          <strong>現物資産の課税ルール（概要）：</strong><br>
+          ・譲渡益 =（売却価格）−（取得費＋譲渡費用）<br>
+          ・特別控除 <strong>50万円</strong>（年間・短期＋長期合計で1回）<br>
+          ・保有5年超 → <strong>長期譲渡所得</strong>：課税対象が <strong>1/2</strong> に<br>
+          ・保有5年以下 → <strong>短期譲渡所得</strong>：全額が課税対象<br>
+          ・総合課税（他の所得と合算、累進税率 5〜45% ＋ 住民税10%）
+        </div>
+
+        <h3>売却する資産の情報</h3>
+        <div class="row">
+          <div class="field"><label>資産の種類</label>
+            <select id="taxAssetType" onchange="updateTaxNotes()">
+              <option value="car_invest">車（投資用・趣味車）</option>
+              <option value="car_life">車（通勤用＝生活用動産）</option>
+              <option value="watch_over30">時計（30万円超）</option>
+              <option value="watch_under30">時計（30万円以下＝生活用動産）</option>
+              <option value="gold">金</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field"><label>取得費（購入価格＋手数料等・円）</label><input type="number" id="taxAcqCost" value="3000000" min="0" step="100000"></div>
+          <div class="field"><label>売却価格（円）</label><input type="number" id="taxSellPrice" value="4000000" min="0" step="100000"></div>
+          <div class="field"><label>譲渡費用（仲介手数料等・円）</label><input type="number" id="taxSellCost" value="50000" min="0" step="10000"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>保有期間</label>
+            <select id="taxHoldPeriod"><option value="short">5年以下（短期）</option><option value="long">5年超（長期）</option></select>
+          </div>
+        </div>
+
+        <h3>他の所得（税率計算用）</h3>
+        <div class="row">
+          <div class="field"><label>給与所得（円・課税所得）</label><input type="number" id="taxSalary" value="5000000" min="0" step="100000"></div>
+          <div class="field"><label>海外FX利益（円・雑所得）</label><input type="number" id="taxFX" value="3000000" min="0" step="100000"></div>
+          <div class="field"><label>その他総合課税所得（円）</label><input type="number" id="taxOther" value="0" min="0" step="100000"></div>
+        </div>
+
+        <div id="taxNotes"></div>
+
+        <button class="run-btn" onclick="calcTax()" style="margin-top:12px">税金を概算する</button>
+        <div id="taxResult"></div>
+
+        <div class="note-danger" style="margin-top:16px">
+          <strong>注意：</strong>本シミュレーターの結果は概算であり、正確な税額を保証するものではありません。各種控除（基礎控除・配偶者控除等）は簡略化しています。確定申告の際は必ず税理士にご相談ください。<br>
+          <strong>金の支払調書：</strong>金地金等を200万円超で売却した場合、買取業者から税務署に支払調書が提出されます。
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== モジュール4: 注意点・チェックリスト ====== -->
+    <div class="mod" id="mod4">
+      <div class="card">
+        <h2>購入前チェックリスト</h2>
+        <p class="small">資産別の注意点と確認事項。チェックを入れると進捗を追跡できます（localStorage保存）。</p>
+
+        <div class="tab-bar" id="checkTabs">
+          <button class="active" onclick="switchCheckTab('chk-car')">車</button>
+          <button onclick="switchCheckTab('chk-watch')">時計</button>
+          <button onclick="switchCheckTab('chk-gold')">金</button>
+        </div>
+
+        <!-- 車チェックリスト -->
+        <div class="check-panel" id="chk-car">
+          <h3>車 ── 購入前チェックリスト</h3>
+          <div class="checklist" id="checklistCar">
+            <label><input type="checkbox" data-key="car-1"><span>修復歴（事故歴）を確認した（車検証・Goo鑑定・第三者検査）</span></label>
+            <label><input type="checkbox" data-key="car-2"><span>走行距離の整合性を確認した（車検証の距離推移）</span></label>
+            <label><input type="checkbox" data-key="car-3"><span>整備記録簿（点検整備記録）が残っている</span></label>
+            <label><input type="checkbox" data-key="car-4"><span>塗装の色ムラ・板金跡を目視・磁石チェックした</span></label>
+            <label><input type="checkbox" data-key="car-5"><span>エンジン始動・異音・排気色を確認した</span></label>
+            <label><input type="checkbox" data-key="car-6"><span>タイヤ残溝・ブレーキパッド残量を確認した</span></label>
+            <label><input type="checkbox" data-key="car-7"><span>保管場所（ガレージ・屋外）を確保した</span></label>
+            <label><input type="checkbox" data-key="car-8"><span>維持費（自動車税・車検・保険・駐車場）を年間で試算した</span></label>
+            <label><input type="checkbox" data-key="car-9"><span>将来の売却ルート（買取専門店・オークション）を調査した</span></label>
+            <label><input type="checkbox" data-key="car-10"><span>EV シフト・環境規制による将来の価値への影響を検討した</span></label>
+            <label><input type="checkbox" data-key="car-11"><span>投資目的の場合：生活用動産にならないため譲渡所得が発生することを理解した</span></label>
+          </div>
+          <div class="note" style="margin-top:12px">
+            <strong>特に注意：</strong>投資用車両（クラシックカー・限定車等を保管目的で所有）は「生活用動産」に該当せず、売却益に譲渡所得税がかかります。通勤用は非課税ですが、高額車の場合は税務署の判断が分かれることがあります。
+          </div>
+        </div>
+
+        <!-- 時計チェックリスト -->
+        <div class="check-panel" id="chk-watch" style="display:none">
+          <h3>時計 ── 購入前チェックリスト</h3>
+          <div class="checklist" id="checklistWatch">
+            <label><input type="checkbox" data-key="watch-1"><span>正規品であることを確認した（シリアル・ギャランティカード）</span></label>
+            <label><input type="checkbox" data-key="watch-2"><span>付属品が揃っている（箱・保証書・コマ・タグ）</span></label>
+            <label><input type="checkbox" data-key="watch-3"><span>研磨歴（ケース痩せ）を確認した</span></label>
+            <label><input type="checkbox" data-key="watch-4"><span>ムーブメントの精度（日差）を確認した</span></label>
+            <label><input type="checkbox" data-key="watch-5"><span>防水性能テストの有無を確認した</span></label>
+            <label><input type="checkbox" data-key="watch-6"><span>並行輸入品の場合：メーカー保証の適用範囲を確認した</span></label>
+            <label><input type="checkbox" data-key="watch-7"><span>オーバーホール費用と周期を調査した（メーカー正規 vs 民間時計師）</span></label>
+            <label><input type="checkbox" data-key="watch-8"><span>動産保険への加入を検討した</span></label>
+            <label><input type="checkbox" data-key="watch-9"><span>相場推移（Chrono24・WatchCharts等）を過去3〜5年分確認した</span></label>
+            <label><input type="checkbox" data-key="watch-10"><span>正規店購入の場合：購入履歴（マラソン）の現実的な期間を理解した</span></label>
+            <label><input type="checkbox" data-key="watch-11"><span>30万円超の場合：売却時に譲渡所得が発生することを理解した</span></label>
+          </div>
+          <div class="note" style="margin-top:12px">
+            <strong>特に注意：</strong>2022年にロレックス等の高級時計相場が大幅に下落した事例があります（一部モデルで-30〜50%）。「必ず値上がりする」という前提は危険です。また、偽物（スーパーコピー）は年々精巧化しており、信頼できる販売店からの購入が最重要です。
+          </div>
+        </div>
+
+        <!-- 金チェックリスト -->
+        <div class="check-panel" id="chk-gold" style="display:none">
+          <h3>金 ── 購入前チェックリスト</h3>
+          <div class="checklist" id="checklistGold">
+            <label><input type="checkbox" data-key="gold-1"><span>購入先が信頼できる地金商・貴金属店であることを確認した</span></label>
+            <label><input type="checkbox" data-key="gold-2"><span>品位（純度）を確認した（K24 / 999.9 / LBMA認定刻印）</span></label>
+            <label><input type="checkbox" data-key="gold-3"><span>バーチャージ（500g未満の加工手数料）を確認した</span></label>
+            <label><input type="checkbox" data-key="gold-4"><span>売買スプレッド（買値と売値の差）を複数店で比較した</span></label>
+            <label><input type="checkbox" data-key="gold-5"><span>保管方法を決めた（自宅金庫・銀行貸金庫・業者預かり）</span></label>
+            <label><input type="checkbox" data-key="gold-6"><span>盗難対策（金庫・保険）を講じた</span></label>
+            <label><input type="checkbox" data-key="gold-7"><span>200万円超売却で支払調書が税務署に提出されることを理解した</span></label>
+            <label><input type="checkbox" data-key="gold-8"><span>取得時の領収書・計算書を保管する体制を整えた</span></label>
+            <label><input type="checkbox" data-key="gold-9"><span>純金積立の場合：手数料率（1.5〜3%）と特定保管 vs 消費寄託の違いを理解した</span></label>
+            <label><input type="checkbox" data-key="gold-10"><span>円建て金価格は為替（USD/JPY）の影響を強く受けることを理解した</span></label>
+          </div>
+          <div class="note" style="margin-top:12px">
+            <strong>特に注意：</strong>金は配当・利息を生まない「ゼロイールド資産」です。値上がり益と円安ヘッジが主な期待リターン。小さなバー（5g〜100g）はバーチャージが割高（数千〜1.6万円/本）になるため、TCO に大きく影響します。<br>
+            <strong>消費寄託 vs 特定保管：</strong>消費寄託は業者破綻時に全額返還されないリスクがあります。特定保管は分別管理のため安全ですが手数料が高い傾向です。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 免責 -->
+    <div class="disclaimer">
+      <strong>免責事項：</strong>本ツールは AI による参考情報です。投資・税務の最終判断は、ユーザー自身が税理士・FP等の有資格専門家と相談のうえ行ってください。相場や税制は変動しうるため、本ツールの前提が将来も妥当である保証はありません。特定の商品・ブランド・販売店の推奨は行っておりません。
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== ナビ・タブ切替 ==========
+function switchMod(id) {
+  document.querySelectorAll('.mod').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.nav .nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelector(`.nav-item[data-mod="${id}"]`).classList.add('active');
+}
+function switchTcoTab(key) {
+  document.querySelectorAll('.tco-panel').forEach(p => p.style.display = 'none');
+  document.getElementById('tco-' + key).style.display = '';
+  document.querySelectorAll('#tcoTabs button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function switchCheckTab(key) {
+  document.querySelectorAll('.check-panel').forEach(p => p.style.display = 'none');
+  document.getElementById(key).style.display = '';
+  document.querySelectorAll('#checkTabs button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function toggleGoldFields() {
+  const t = document.getElementById('goldType').value;
+  document.getElementById('goldBarFields').style.display = t === 'tsumitate' ? 'none' : '';
+  document.getElementById('goldTsumitateFields').style.display = t === 'tsumitate' ? '' : 'none';
+}
+
+// ========== ユーティリティ ==========
+const yen = v => v.toLocaleString('ja-JP') + '円';
+const pct = v => (v * 100).toFixed(1) + '%';
+const v = id => parseFloat(document.getElementById(id).value) || 0;
+const sv = id => document.getElementById(id).value;
+
+// ========== モジュール1: TCO 計算 ==========
+function getAutoTax(cc) {
+  cc = parseInt(cc);
+  if (cc <= 660) return 10800;
+  if (cc <= 1000) return 25000;
+  if (cc <= 1500) return 30500;
+  if (cc <= 2000) return 36000;
+  if (cc <= 2500) return 43500;
+  if (cc <= 3000) return 50000;
+  if (cc <= 3500) return 57000;
+  if (cc <= 4000) return 65500;
+  if (cc <= 4500) return 75500;
+  if (cc <= 6000) return 87000;
+  return 110000;
+}
+
+function calcCar() {
+  const price = v('carPrice');
+  const cc = sv('carCC');
+  const cond = sv('carCondition');
+  const parking = v('carParking');
+  const insurance = v('carInsurance');
+  const km = v('carKm');
+  const fuel = v('carFuel');
+  const gasPrice = v('carGasPrice');
+  const years = parseInt(sv('carYears'));
+  const dosan = v('carDosan');
+
+  const envTaxRate = cond === 'new' ? 0.03 : 0.02;
+  const envTax = Math.round(price * envTaxRate);
+  const regFees = 50000;
+  const recycleDeposit = cc <= 660 ? 10000 : 15000;
+  const jibaiseki = cond === 'new' ? 27180 : 17540;
+  const initialTotal = price + envTax + regFees + recycleDeposit + jibaiseki;
+
+  const autoTax = getAutoTax(cc);
+  const shakenPerYear = Math.round((cond === 'new' && years <= 3 ? 0 : 100000) * (cond === 'new' ? 0.8 : 1));
+  const fuelCostYear = fuel > 0 ? Math.round(km / fuel * gasPrice) : 0;
+  const yearlyTotal = autoTax + insurance + parking * 12 + shakenPerYear + fuelCostYear + dosan + 30000;
+  const tco = initialTotal + yearlyTotal * years;
+
+  let html = `<div class="summary-grid" style="margin-top:16px">
+    <div class="summary-box"><div class="lbl">初期費用合計</div><div class="val">${yen(initialTotal)}</div></div>
+    <div class="summary-box"><div class="lbl">年間維持費</div><div class="val">${yen(yearlyTotal)}</div></div>
+    <div class="summary-box"><div class="lbl">${years}年間TCO</div><div class="val" style="color:var(--accent)">${yen(tco)}</div></div>
+    <div class="summary-box"><div class="lbl">維持費率（対車両価格）</div><div class="val">${price > 0 ? pct(yearlyTotal / price) : '-'}</div></div>
+  </div>`;
+  html += `<table><thead><tr><th>項目</th><th class="num">金額</th><th>備考</th></tr></thead><tbody>`;
+  html += `<tr><td colspan="3" style="color:var(--accent2);font-weight:bold">▼ 初期費用</td></tr>`;
+  html += `<tr><td>車両本体</td><td class="num">${yen(price)}</td><td>${cond === 'new' ? '新車' : '中古'}</td></tr>`;
+  html += `<tr><td>環境性能割</td><td class="num">${yen(envTax)}</td><td>${(envTaxRate * 100)}%</td></tr>`;
+  html += `<tr><td>登録諸費用</td><td class="num">${yen(regFees)}</td><td>概算</td></tr>`;
+  html += `<tr><td>リサイクル預託金</td><td class="num">${yen(recycleDeposit)}</td><td>概算</td></tr>`;
+  html += `<tr><td>自賠責保険</td><td class="num">${yen(jibaiseki)}</td><td>${cond === 'new' ? '37ヶ月' : '24ヶ月'}</td></tr>`;
+  html += `<tr style="font-weight:bold;border-top:2px solid var(--border)"><td>初期費用 合計</td><td class="num">${yen(initialTotal)}</td><td></td></tr>`;
+  html += `<tr><td colspan="3" style="color:var(--accent2);font-weight:bold;padding-top:12px">▼ 年間維持費</td></tr>`;
+  html += `<tr><td>自動車税</td><td class="num">${yen(autoTax)}</td><td>${cc}cc</td></tr>`;
+  html += `<tr><td>任意保険</td><td class="num">${yen(insurance)}</td><td></td></tr>`;
+  html += `<tr><td>駐車場</td><td class="num">${yen(parking * 12)}</td><td>${yen(parking)}/月</td></tr>`;
+  html += `<tr><td>車検（年割）</td><td class="num">${yen(shakenPerYear)}</td><td>概算</td></tr>`;
+  html += `<tr><td>燃料費</td><td class="num">${yen(fuelCostYear)}</td><td>${km.toLocaleString()}km/${fuel}km/L</td></tr>`;
+  html += `<tr><td>動産保険</td><td class="num">${yen(dosan)}</td><td></td></tr>`;
+  html += `<tr><td>メンテナンス</td><td class="num">${yen(30000)}</td><td>オイル交換等概算</td></tr>`;
+  html += `<tr style="font-weight:bold;border-top:2px solid var(--border)"><td>年間維持費 合計</td><td class="num">${yen(yearlyTotal)}</td><td></td></tr>`;
+  html += `</tbody></table>`;
+  document.getElementById('carResult').innerHTML = html;
+}
+
+function calcWatch() {
+  const price = v('watchPrice');
+  const route = sv('watchRoute');
+  const ohCycle = parseInt(sv('watchOH'));
+  const ohCost = v('watchOHCost');
+  const ins = v('watchInsurance');
+  const storage = v('watchStorage');
+  const years = parseInt(sv('watchYears'));
+
+  const routeMarkup = route === 'ad' ? 0 : route === 'parallel' ? Math.round(price * -0.1) : 0;
+  const initialTotal = price;
+  const ohPerYear = Math.round(ohCost / ohCycle);
+  const yearlyTotal = ohPerYear + ins + storage;
+  const tco = initialTotal + yearlyTotal * years;
+
+  let html = `<div class="summary-grid" style="margin-top:16px">
+    <div class="summary-box"><div class="lbl">購入価格</div><div class="val">${yen(initialTotal)}</div></div>
+    <div class="summary-box"><div class="lbl">年間維持費</div><div class="val">${yen(yearlyTotal)}</div></div>
+    <div class="summary-box"><div class="lbl">${years}年間TCO</div><div class="val" style="color:var(--accent)">${yen(tco)}</div></div>
+    <div class="summary-box"><div class="lbl">維持費率（対購入価格）</div><div class="val">${price > 0 ? pct(yearlyTotal / price) : '-'}</div></div>
+  </div>`;
+  html += `<table><thead><tr><th>項目</th><th class="num">金額</th><th>備考</th></tr></thead><tbody>`;
+  html += `<tr><td colspan="3" style="color:var(--accent2);font-weight:bold">▼ 初期費用</td></tr>`;
+  html += `<tr><td>購入価格</td><td class="num">${yen(price)}</td><td>${route === 'ad' ? '正規店' : route === 'parallel' ? '並行輸入' : '中古'}</td></tr>`;
+  html += `<tr><td colspan="3" style="color:var(--accent2);font-weight:bold;padding-top:12px">▼ 年間維持費</td></tr>`;
+  html += `<tr><td>オーバーホール（年割）</td><td class="num">${yen(ohPerYear)}</td><td>${yen(ohCost)}/${ohCycle}年</td></tr>`;
+  html += `<tr><td>動産保険</td><td class="num">${yen(ins)}</td><td></td></tr>`;
+  html += `<tr><td>保管費</td><td class="num">${yen(storage)}</td><td>貸金庫等</td></tr>`;
+  html += `<tr style="font-weight:bold;border-top:2px solid var(--border)"><td>年間維持費 合計</td><td class="num">${yen(yearlyTotal)}</td><td></td></tr>`;
+  html += `</tbody></table>`;
+  if (route === 'parallel') {
+    html += `<div class="note" style="margin-top:10px"><strong>並行輸入品の注意：</strong>メーカー正規保証が適用されない場合があります。購入前に保証条件を必ず確認してください。</div>`;
+  }
+  document.getElementById('watchResult').innerHTML = html;
+}
+
+function calcGold() {
+  const type = sv('goldType');
+  const gramPrice = v('goldGramPrice');
+  const years = parseInt(sv('goldYears'));
+  const storageCost = v('goldStorageCost');
+  const spread = v('goldSpread');
+
+  let initialTotal, weight, yearlyTotal, tco;
+
+  if (type === 'tsumitate') {
+    const monthly = v('goldMonthly');
+    const feeRate = v('goldTsumitateFee') / 100;
+    const yearlyInvest = monthly * 12;
+    const yearlyFee = Math.round(yearlyInvest * feeRate);
+    yearlyTotal = yearlyFee + storageCost;
+    initialTotal = 0;
+    weight = gramPrice > 0 ? (yearlyInvest * years / gramPrice) : 0;
+    tco = yearlyTotal * years;
+
+    let html = `<div class="summary-grid" style="margin-top:16px">
+      <div class="summary-box"><div class="lbl">積立総額（${years}年）</div><div class="val">${yen(yearlyInvest * years)}</div></div>
+      <div class="summary-box"><div class="lbl">年間手数料</div><div class="val">${yen(yearlyFee)}</div></div>
+      <div class="summary-box"><div class="lbl">取得量目安</div><div class="val">${weight.toFixed(1)}g</div></div>
+      <div class="summary-box"><div class="lbl">${years}年間コスト</div><div class="val" style="color:var(--accent)">${yen(tco)}</div></div>
+    </div>`;
+    document.getElementById('goldResult').innerHTML = html;
+    return;
+  }
+
+  weight = parseFloat(sv('goldWeight'));
+  const barCharge = v('goldBarCharge');
+  const totalGoldPrice = gramPrice * weight;
+  initialTotal = totalGoldPrice + (weight < 500 ? barCharge : 0);
+  yearlyTotal = storageCost;
+  tco = initialTotal + yearlyTotal * years;
+  const spreadTotal = spread * weight;
+
+  let html = `<div class="summary-grid" style="margin-top:16px">
+    <div class="summary-box"><div class="lbl">購入価格</div><div class="val">${yen(initialTotal)}</div></div>
+    <div class="summary-box"><div class="lbl">年間維持費</div><div class="val">${yen(yearlyTotal)}</div></div>
+    <div class="summary-box"><div class="lbl">${years}年間TCO</div><div class="val" style="color:var(--accent)">${yen(tco)}</div></div>
+    <div class="summary-box"><div class="lbl">売却時スプレッド</div><div class="val">${yen(spreadTotal)}</div></div>
+  </div>`;
+  html += `<table><thead><tr><th>項目</th><th class="num">金額</th><th>備考</th></tr></thead><tbody>`;
+  html += `<tr><td colspan="3" style="color:var(--accent2);font-weight:bold">▼ 初期費用</td></tr>`;
+  html += `<tr><td>金地金（${weight}g × ${yen(gramPrice)}/g）</td><td class="num">${yen(totalGoldPrice)}</td><td></td></tr>`;
+  if (weight < 500) {
+    html += `<tr><td>バーチャージ</td><td class="num">${yen(barCharge)}</td><td>500g未満のため発生</td></tr>`;
+  }
+  html += `<tr style="font-weight:bold;border-top:2px solid var(--border)"><td>初期費用 合計</td><td class="num">${yen(initialTotal)}</td><td></td></tr>`;
+  html += `<tr><td colspan="3" style="color:var(--accent2);font-weight:bold;padding-top:12px">▼ 年間維持費</td></tr>`;
+  html += `<tr><td>保管費</td><td class="num">${yen(storageCost)}</td><td>${sv('goldStorage') === 'home' ? '自宅金庫' : sv('goldStorage') === 'bank' ? '貸金庫' : '業者預かり'}</td></tr>`;
+  html += `<tr><td colspan="3" style="color:var(--accent2);font-weight:bold;padding-top:12px">▼ 売却時コスト</td></tr>`;
+  html += `<tr><td>スプレッド（${weight}g × ${yen(spread)}/g）</td><td class="num">${yen(spreadTotal)}</td><td>片道</td></tr>`;
+  html += `</tbody></table>`;
+
+  if (weight < 500) {
+    const barChargePerGram = barCharge / weight;
+    html += `<div class="note" style="margin-top:10px"><strong>バーチャージの影響：</strong>1gあたり ${yen(Math.round(barChargePerGram))} の追加コスト。500g以上でバーチャージが不要になるため、まとまった資金がある場合は大きなバーが有利です。</div>`;
+  }
+  document.getElementById('goldResult').innerHTML = html;
+}
+
+// ========== モジュール2: 配分 ==========
+function calcAlloc() {
+  const budget = v('totalBudget');
+  const ac = v('allocCar'), aw = v('allocWatch'), ag = v('allocGold');
+  const total = ac + aw + ag;
+  if (Math.abs(total - 100) > 0.1) {
+    document.getElementById('allocStatus').innerHTML = `<span class="risk-high">合計 ${total}%（100%にしてください）</span>`;
+    document.getElementById('allocResult').innerHTML = '';
+    return;
+  }
+  document.getElementById('allocStatus').innerHTML = `<span style="color:var(--ok)">合計 100% OK</span>`;
+
+  const carAmt = Math.round(budget * ac / 100);
+  const watchAmt = Math.round(budget * aw / 100);
+  const goldAmt = Math.round(budget * ag / 100);
+
+  const carMaint = Math.round(carAmt * 0.10);
+  const watchMaint = Math.round(watchAmt * 0.02);
+  const goldMaint = Math.round(goldAmt * 0.005);
+
+  let html = `<div class="summary-grid" style="margin-top:16px">
+    <div class="summary-box"><div class="lbl">車（${ac}%）</div><div class="val">${yen(carAmt)}</div><div class="small">年間維持費目安 ${yen(carMaint)}</div></div>
+    <div class="summary-box"><div class="lbl">時計（${aw}%）</div><div class="val">${yen(watchAmt)}</div><div class="small">年間維持費目安 ${yen(watchMaint)}</div></div>
+    <div class="summary-box"><div class="lbl">金（${ag}%）</div><div class="val">${yen(goldAmt)}</div><div class="small">年間維持費目安 ${yen(goldMaint)}</div></div>
+  </div>`;
+  html += `<div class="result-bar"><div class="bar-label">年間維持費合計</div><div class="bar-track"><div class="bar-fill" style="width:${Math.min((carMaint + watchMaint + goldMaint) / budget * 100 * 10, 100)}%;background:var(--accent2)"></div></div><div class="bar-val">${yen(carMaint + watchMaint + goldMaint)}</div></div>`;
+  html += `<div class="result-bar"><div class="bar-label">維持費率（対総予算）</div><div class="bar-track"><div class="bar-fill" style="width:${Math.min((carMaint + watchMaint + goldMaint) / budget * 100 * 5, 100)}%;background:var(--accent)"></div></div><div class="bar-val">${budget > 0 ? pct((carMaint + watchMaint + goldMaint) / budget) : '-'}</div></div>`;
+  document.getElementById('allocResult').innerHTML = html;
+}
+
+// ========== モジュール3: 税金 ==========
+function getIncomeTaxRate(taxableIncome) {
+  if (taxableIncome <= 1950000) return { rate: 0.05, deduction: 0 };
+  if (taxableIncome <= 3300000) return { rate: 0.10, deduction: 97500 };
+  if (taxableIncome <= 6950000) return { rate: 0.20, deduction: 427500 };
+  if (taxableIncome <= 9000000) return { rate: 0.23, deduction: 636000 };
+  if (taxableIncome <= 18000000) return { rate: 0.33, deduction: 1536000 };
+  if (taxableIncome <= 40000000) return { rate: 0.40, deduction: 2796000 };
+  return { rate: 0.45, deduction: 4796000 };
+}
+
+function updateTaxNotes() {
+  const type = sv('taxAssetType');
+  let note = '';
+  if (type === 'car_life') {
+    note = `<div class="note-info" style="margin-top:10px"><strong>生活用動産（通勤用車）：</strong>通勤・通学・日常生活に使用する自動車の売却益は非課税です。ただし、高額車や趣味目的の保有と判断された場合は課税される可能性があります。</div>`;
+  } else if (type === 'watch_under30') {
+    note = `<div class="note-info" style="margin-top:10px"><strong>生活用動産（30万円以下の時計）：</strong>1個（1組）30万円以下の貴金属・宝石・時計は生活用動産として非課税です。</div>`;
+  } else if (type === 'gold') {
+    note = `<div class="note" style="margin-top:10px"><strong>金の支払調書：</strong>金地金等を1回200万円超で売却した場合、買取業者から税務署に「金地金等の譲渡の対価の支払調書」が提出されます。分割売却で回避を狙う行為は脱税になりえます。</div>`;
+  }
+  document.getElementById('taxNotes').innerHTML = note;
+}
+
+function calcTax() {
+  const type = sv('taxAssetType');
+  const acq = v('taxAcqCost');
+  const sell = v('taxSellPrice');
+  const sellCost = v('taxSellCost');
+  const period = sv('taxHoldPeriod');
+  const salary = v('taxSalary');
+  const fx = v('taxFX');
+  const other = v('taxOther');
+
+  if (type === 'car_life' || type === 'watch_under30') {
+    document.getElementById('taxResult').innerHTML = `
+      <div class="summary-grid" style="margin-top:16px">
+        <div class="summary-box"><div class="lbl">課税区分</div><div class="val" style="color:var(--ok)">非課税</div><div class="small">生活用動産のため譲渡所得税はかかりません</div></div>
+      </div>`;
+    return;
+  }
+
+  const gain = sell - acq - sellCost;
+  if (gain <= 0) {
+    document.getElementById('taxResult').innerHTML = `
+      <div class="summary-grid" style="margin-top:16px">
+        <div class="summary-box"><div class="lbl">譲渡損益</div><div class="val" style="color:var(--ok)">${yen(gain)}</div><div class="small">損失のため課税なし（他の総合課税の譲渡所得と通算可）</div></div>
+      </div>`;
+    return;
+  }
+
+  const afterDeduction = Math.max(gain - 500000, 0);
+  const taxableGain = period === 'long' ? Math.round(afterDeduction / 2) : afterDeduction;
+
+  const totalIncome = salary + fx + other + taxableGain;
+  const basicDeduction = 480000;
+  const taxableIncome = Math.max(totalIncome - basicDeduction, 0);
+  const { rate, deduction } = getIncomeTaxRate(taxableIncome);
+  const incomeTax = Math.round(taxableIncome * rate - deduction);
+  const residentTax = Math.round(taxableIncome * 0.10);
+  const recoveryTax = Math.round(incomeTax * 0.021);
+
+  const incomeWithout = Math.max(salary + fx + other - basicDeduction, 0);
+  const { rate: rateW, deduction: dedW } = getIncomeTaxRate(incomeWithout);
+  const taxWithout = Math.round(incomeWithout * rateW - dedW) + Math.round(incomeWithout * 0.10) + Math.round(Math.round(incomeWithout * rateW - dedW) * 0.021);
+  const taxWith = incomeTax + residentTax + recoveryTax;
+  const marginalTax = taxWith - taxWithout;
+
+  let html = `<div class="summary-grid" style="margin-top:16px">
+    <div class="summary-box"><div class="lbl">譲渡益</div><div class="val">${yen(gain)}</div></div>
+    <div class="summary-box"><div class="lbl">特別控除後</div><div class="val">${yen(afterDeduction)}</div><div class="small">−50万円控除</div></div>
+    <div class="summary-box"><div class="lbl">課税対象額</div><div class="val">${yen(taxableGain)}</div><div class="small">${period === 'long' ? '長期（1/2適用）' : '短期（全額）'}</div></div>
+    <div class="summary-box"><div class="lbl">この売却による増税額</div><div class="val" style="color:var(--ng)">${yen(Math.max(marginalTax, 0))}</div><div class="small">所得税+住民税+復興税</div></div>
+  </div>`;
+
+  html += `<h3 style="color:var(--accent2);margin-top:16px">税額内訳（全所得合算後）</h3>`;
+  html += `<table><thead><tr><th>項目</th><th class="num">金額</th></tr></thead><tbody>`;
+  html += `<tr><td>総合課税所得（譲渡益含む）</td><td class="num">${yen(totalIncome)}</td></tr>`;
+  html += `<tr><td>基礎控除</td><td class="num">−${yen(basicDeduction)}</td></tr>`;
+  html += `<tr><td>課税所得</td><td class="num">${yen(taxableIncome)}</td></tr>`;
+  html += `<tr><td>適用税率</td><td class="num">${(rate * 100)}%（控除${yen(deduction)}）</td></tr>`;
+  html += `<tr><td>所得税</td><td class="num">${yen(incomeTax)}</td></tr>`;
+  html += `<tr><td>住民税（10%）</td><td class="num">${yen(residentTax)}</td></tr>`;
+  html += `<tr><td>復興特別所得税（2.1%）</td><td class="num">${yen(recoveryTax)}</td></tr>`;
+  html += `<tr style="font-weight:bold;border-top:2px solid var(--border)"><td>税額合計</td><td class="num">${yen(taxWith)}</td></tr>`;
+  html += `<tr><td>うち、この売却がなかった場合の税額</td><td class="num">${yen(taxWithout)}</td></tr>`;
+  html += `<tr style="color:var(--ng);font-weight:bold"><td>この売却による増税額（実質負担）</td><td class="num">${yen(Math.max(marginalTax, 0))}</td></tr>`;
+  html += `<tr><td>実効税率（増税額÷譲渡益）</td><td class="num">${gain > 0 ? pct(Math.max(marginalTax, 0) / gain) : '-'}</td></tr>`;
+  html += `</tbody></table>`;
+
+  document.getElementById('taxResult').innerHTML = html;
+}
+
+// ========== 保存・読込・JSON ==========
+const STORAGE_KEY = 'physicalAssetPlanner_v1';
+
+function collectAllInputs() {
+  const data = {};
+  document.querySelectorAll('input[type=number], select').forEach(el => {
+    if (el.id) data[el.id] = el.value;
+  });
+  document.querySelectorAll('.checklist input[type=checkbox]').forEach(el => {
+    data['chk_' + el.dataset.key] = el.checked;
+  });
+  return data;
+}
+
+function applyData(data) {
+  Object.entries(data).forEach(([k, val]) => {
+    if (k.startsWith('chk_')) {
+      const cb = document.querySelector(`input[data-key="${k.replace('chk_', '')}"]`);
+      if (cb) { cb.checked = val; toggleCheckStyle(cb); }
+    } else {
+      const el = document.getElementById(k);
+      if (el) el.value = val;
+    }
+  });
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(collectAllInputs()));
+  alert('保存しました');
+}
+
+function loadData() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) { alert('保存データがありません'); return; }
+  applyData(JSON.parse(raw));
+  alert('読み込みました');
+}
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(collectAllInputs(), null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'physical_asset_planner_' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+}
+
+function toggleCheckStyle(cb) {
+  const span = cb.parentElement.querySelector('span');
+  if (cb.checked) span.classList.add('done');
+  else span.classList.remove('done');
+}
+
+// チェックボックス状態の復元とイベント
+document.addEventListener('DOMContentLoaded', () => {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try { applyData(JSON.parse(raw)); } catch (e) {}
+  }
+  document.querySelectorAll('.checklist input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      toggleCheckStyle(cb);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(collectAllInputs()));
+    });
+  });
+  updateTaxNotes();
+});
+</script>
+</body>
+</html>
