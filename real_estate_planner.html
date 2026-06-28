@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>不動産プランナー</title>
+<style>
+  :root {
+    --bg: #14161f; --card: #1d2030; --card2: #252939; --border: #2a2e42;
+    --text: #d8dee9; --muted: #8b95a7; --label: #aab2c0;
+    --accent: #5dade2; --accent2: #f5b041; --ok: #58d68d; --ng: #ec7063;
+    --warn: #e67e22; --head: #f0f3f7;
+    --risk-high: #ec7063; --risk-mid: #f5b041; --risk-low: #58d68d;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: "Hiragino Kaku Gothic ProN","Meiryo",sans-serif; background: var(--bg); color: var(--text); margin:0; padding:0; line-height:1.55; }
+  header { background: linear-gradient(135deg,#15324f,#1d2030); border-bottom:1px solid var(--border); padding:14px 22px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; position:sticky; top:0; z-index:50; }
+  header h1 { font-size:19px; margin:0; color:var(--head); }
+  header .tagline { font-size:12px; color:var(--muted); margin-top:2px; }
+  .header-actions { display:flex; gap:6px; flex-wrap:wrap; }
+  .header-actions button { padding:6px 12px; border:1px solid var(--border); background:var(--card2); color:var(--text); border-radius:4px; cursor:pointer; font-size:12px; }
+  .header-actions button:hover { background:#303651; }
+  .layout { display:flex; max-width:1220px; margin:0 auto; gap:18px; padding:18px; align-items:flex-start; }
+  .nav { flex:0 0 220px; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:10px; position:sticky; top:78px; }
+  .nav .nav-item { display:flex; gap:10px; align-items:flex-start; padding:10px; border-radius:6px; cursor:pointer; margin-bottom:4px; border:1px solid transparent; }
+  .nav .nav-item:hover { background:var(--card2); }
+  .nav .nav-item.active { background:#1a2c40; border-color:var(--accent); }
+  .nav .nav-num { flex:0 0 24px; height:24px; border-radius:50%; background:var(--card2); color:var(--muted); text-align:center; line-height:24px; font-size:13px; font-weight:bold; }
+  .nav .nav-item.active .nav-num { background:var(--accent); color:var(--bg); }
+  .nav .nav-label { font-size:13px; padding-top:3px; }
+  .nav .nav-sub { font-size:11px; color:var(--muted); }
+  .main { flex:1 1 auto; min-width:0; }
+  .mod { display:none; }
+  .mod.active { display:block; }
+  .card { background:var(--card); border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.4); padding:18px 20px; margin-bottom:16px; border:1px solid var(--border); }
+  .card h2 { font-size:16px; margin:0 0 12px; border-left:4px solid var(--accent); padding-left:8px; color:var(--head); }
+  .card h3 { font-size:14px; margin:14px 0 8px; color:var(--accent2); }
+  label { font-size:13px; color:var(--label); }
+  .row { display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin-bottom:10px; }
+  .field { display:flex; flex-direction:column; gap:3px; }
+  input[type=number],input[type=text],select { background:var(--card2); color:#e6e9ef; border:1px solid #3a3f55; border-radius:4px; padding:6px 8px; font-size:14px; width:180px; }
+  select { cursor:pointer; }
+  .run-btn { padding:10px 24px; border:none; border-radius:4px; cursor:pointer; font-size:15px; font-weight:bold; background:var(--accent); color:var(--bg); }
+  .run-btn:hover { filter:brightness(1.1); }
+  .secondary-btn { padding:8px 18px; border:1px solid var(--accent); border-radius:4px; cursor:pointer; font-size:13px; background:var(--card); color:var(--accent); }
+  .secondary-btn:hover { background:var(--card2); }
+  table { width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; }
+  th,td { padding:7px 10px; border-bottom:1px solid var(--border); text-align:left; }
+  th { color:var(--muted); font-weight:normal; font-size:12px; background:var(--card2); }
+  td.num { text-align:right; font-variant-numeric:tabular-nums; }
+  th.num { text-align:right; }
+  .risk-high { color:var(--risk-high); font-weight:bold; }
+  .risk-mid { color:var(--risk-mid); font-weight:bold; }
+  .risk-low { color:var(--risk-low); font-weight:bold; }
+  .badge { display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px; font-weight:bold; }
+  .badge-high { background:rgba(236,112,99,0.2); color:var(--risk-high); border:1px solid var(--risk-high); }
+  .badge-mid { background:rgba(245,176,65,0.2); color:var(--risk-mid); border:1px solid var(--risk-mid); }
+  .badge-low { background:rgba(88,214,141,0.2); color:var(--risk-low); border:1px solid var(--risk-low); }
+  .note { font-size:12px; color:var(--label); line-height:1.6; background:#2a2517; border-left:4px solid var(--warn); padding:12px 14px; border-radius:4px; margin:12px 0; }
+  .note-info { font-size:12px; color:var(--label); line-height:1.6; background:#172a3a; border-left:4px solid var(--accent); padding:12px 14px; border-radius:4px; margin:12px 0; }
+  .note-danger { font-size:12px; color:#f5b7b1; line-height:1.6; background:#2d1a1a; border-left:4px solid var(--ng); padding:12px 14px; border-radius:4px; margin:12px 0; }
+  .small { font-size:12px; color:var(--muted); }
+  .summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin:12px 0; }
+  .summary-box { background:var(--card2); border-radius:6px; padding:14px; border:1px solid var(--border); text-align:center; }
+  .summary-box .val { font-size:22px; font-weight:bold; color:var(--head); margin:6px 0 2px; }
+  .summary-box .lbl { font-size:11px; color:var(--muted); }
+  .tab-bar { display:flex; gap:4px; margin-bottom:14px; flex-wrap:wrap; }
+  .tab-bar button { padding:6px 14px; border:1px solid var(--border); background:var(--card2); color:var(--muted); border-radius:4px 4px 0 0; cursor:pointer; font-size:12px; }
+  .tab-bar button.active { background:var(--card); color:var(--accent); border-bottom-color:var(--card); }
+  .result-bar { display:flex; align-items:center; gap:8px; margin:6px 0; background:var(--card2); border-radius:4px; padding:6px 10px; overflow:hidden; }
+  .result-bar .bar-label { font-size:12px; color:var(--label); flex:0 0 140px; }
+  .result-bar .bar-track { flex:1; height:18px; background:#1a1d2b; border-radius:3px; position:relative; overflow:hidden; }
+  .result-bar .bar-fill { height:100%; border-radius:3px; transition:width 0.4s; }
+  .result-bar .bar-val { font-size:13px; font-weight:bold; flex:0 0 130px; text-align:right; }
+  .compare-table th,.compare-table td { text-align:center; }
+  .compare-table td:first-child,.compare-table th:first-child { text-align:left; }
+  .checklist label { display:flex; align-items:flex-start; gap:8px; padding:8px 10px; border-radius:4px; cursor:pointer; font-size:13px; color:var(--text); border-bottom:1px solid var(--border); }
+  .checklist label:hover { background:var(--card2); }
+  .checklist input[type=checkbox] { margin-top:2px; accent-color:var(--accent); flex-shrink:0; }
+  .checklist .done { text-decoration:line-through; color:var(--muted); }
+  .disclaimer { font-size:11px; color:var(--muted); background:var(--card2); padding:12px 14px; border-radius:4px; margin-top:16px; line-height:1.6; border:1px solid var(--border); }
+  .amort-scroll { max-height:400px; overflow-y:auto; }
+  .amort-scroll table { font-size:12px; }
+  @media print {
+    header { position:static; } .nav { display:none; } .mod { display:block !important; page-break-inside:avoid; }
+    .header-actions { display:none; } body { background:#fff; color:#222; }
+    .card { border-color:#ccc; box-shadow:none; background:#fff; } .disclaimer { background:#f5f5f5; }
+  }
+  @media (max-width:900px) {
+    .layout { flex-direction:column; }
+    .nav { flex:none; width:100%; position:static; display:flex; overflow-x:auto; gap:4px; padding:6px; }
+    .nav .nav-item { flex:0 0 auto; margin-bottom:0; } .nav .nav-sub { display:none; }
+    input[type=number],input[type=text],select { width:140px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>不動産プランナー</h1>
+    <div class="tagline">住宅ローン・購入コスト・賃貸比較・ローン控除・投資分析・物件ガイド</div>
+  </div>
+  <div class="header-actions">
+    <button onclick="saveData()">保存</button>
+    <button onclick="loadData()">読込</button>
+    <button onclick="exportJSON()">JSON出力</button>
+    <button onclick="window.print()">印刷 / PDF</button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="navPanel">
+    <div class="nav-item active" data-mod="mod1" onclick="switchMod('mod1')">
+      <div class="nav-num">1</div>
+      <div><div class="nav-label">住宅ローン</div><div class="nav-sub">返済シミュレーション</div></div>
+    </div>
+    <div class="nav-item" data-mod="mod2" onclick="switchMod('mod2')">
+      <div class="nav-num">2</div>
+      <div><div class="nav-label">購入コスト総額</div><div class="nav-sub">初期費用・維持費</div></div>
+    </div>
+    <div class="nav-item" data-mod="mod3" onclick="switchMod('mod3')">
+      <div class="nav-num">3</div>
+      <div><div class="nav-label">購入 vs 賃貸</div><div class="nav-sub">長期比較</div></div>
+    </div>
+    <div class="nav-item" data-mod="mod4" onclick="switchMod('mod4')">
+      <div class="nav-num">4</div>
+      <div><div class="nav-label">住宅ローン控除</div><div class="nav-sub">税制シミュレーション</div></div>
+    </div>
+    <div class="nav-item" data-mod="mod5" onclick="switchMod('mod5')">
+      <div class="nav-num">5</div>
+      <div><div class="nav-label">不動産投資</div><div class="nav-sub">利回り・CF分析</div></div>
+    </div>
+    <div class="nav-item" data-mod="mod6" onclick="switchMod('mod6')">
+      <div class="nav-num">6</div>
+      <div><div class="nav-label">物件・買い方ガイド</div><div class="nav-sub">種類・購入ルート</div></div>
+    </div>
+  </nav>
+
+  <div class="main">
+
+    <!-- ====== モジュール1: 住宅ローンシミュレーター ====== -->
+    <div class="mod active" id="mod1">
+      <div class="card">
+        <h2>住宅ローン返済シミュレーター</h2>
+        <p class="small">元利均等・元金均等の両方式で月々返済額・総返済額・利息総額を試算します。繰上げ返済の効果も確認できます。</p>
+
+        <h3>ローン条件</h3>
+        <div class="row">
+          <div class="field"><label>借入額（万円）</label><input type="number" id="loanAmt" value="4000" min="0" step="100"></div>
+          <div class="field"><label>金利（年・%）</label><input type="number" id="loanRate" value="0.5" min="0" max="15" step="0.05"></div>
+          <div class="field"><label>返済期間（年）</label>
+            <select id="loanYears">
+              <option value="10">10年</option><option value="15">15年</option><option value="20">20年</option>
+              <option value="25">25年</option><option value="30">30年</option><option value="35" selected>35年</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field"><label>返済方式</label>
+            <select id="loanMethod">
+              <option value="equal_payment">元利均等（毎月同額）</option>
+              <option value="equal_principal">元金均等（元金一定）</option>
+            </select>
+          </div>
+          <div class="field"><label>ボーナス返済（万円/回・年2回）</label><input type="number" id="loanBonus" value="0" min="0" step="10"></div>
+        </div>
+
+        <h3>繰上げ返済（任意）</h3>
+        <div class="row">
+          <div class="field"><label>繰上げ返済額（万円）</label><input type="number" id="prepayAmt" value="0" min="0" step="50"></div>
+          <div class="field"><label>実行時期（年目）</label><input type="number" id="prepayYear" value="5" min="1" max="35" step="1"></div>
+          <div class="field"><label>方式</label>
+            <select id="prepayType">
+              <option value="shorten">期間短縮型</option>
+              <option value="reduce">返済額軽減型</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="run-btn" onclick="calcLoan()" style="margin-top:12px">試算する</button>
+        <div id="loanResult"></div>
+      </div>
+    </div>
+
+    <!-- ====== モジュール2: 購入コスト総額試算 ====== -->
+    <div class="mod" id="mod2">
+      <div class="card">
+        <h2>購入コスト総額試算</h2>
+        <p class="small">物件価格に加えて発生する諸費用（初期費用）と年間維持費を網羅的に算出します。</p>
+
+        <h3>物件情報</h3>
+        <div class="row">
+          <div class="field"><label>物件価格（万円）</label><input type="number" id="propPrice" value="5000" min="0" step="100"></div>
+          <div class="field"><label>物件タイプ</label>
+            <select id="propType" onchange="togglePropFields()">
+              <option value="new_mansion">新築マンション</option>
+              <option value="used_mansion">中古マンション</option>
+              <option value="new_house">新築一戸建て</option>
+              <option value="used_house">中古一戸建て</option>
+              <option value="custom_house">注文住宅（土地＋建物）</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field"><label>土地価格（万円）</label><input type="number" id="landPrice" value="2000" min="0" step="100">
+            <span class="small">※注文住宅の場合のみ</span>
+          </div>
+          <div class="field"><label>建物価格（万円）</label><input type="number" id="buildPrice" value="3000" min="0" step="100">
+            <span class="small">※注文住宅の場合のみ</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field"><label>頭金（万円）</label><input type="number" id="downPayment" value="500" min="0" step="50"></div>
+          <div class="field"><label>専有面積（㎡）</label><input type="number" id="propArea" value="70" min="1" step="5"></div>
+          <div class="field"><label>築年数</label><input type="number" id="propAge" value="0" min="0" max="60" step="1"></div>
+        </div>
+
+        <h3>年間維持費（マンションの場合）</h3>
+        <div class="row">
+          <div class="field"><label>管理費（円/月）</label><input type="number" id="kanrihi" value="15000" min="0" step="1000"></div>
+          <div class="field"><label>修繕積立金（円/月）</label><input type="number" id="shuzenhi" value="12000" min="0" step="1000"></div>
+          <div class="field"><label>駐車場（円/月）</label><input type="number" id="parkingCost" value="0" min="0" step="1000"></div>
+        </div>
+
+        <button class="run-btn" onclick="calcPurchaseCost()" style="margin-top:12px">試算する</button>
+        <div id="purchaseResult"></div>
+      </div>
+    </div>
+
+    <!-- ====== モジュール3: 購入 vs 賃貸 比較 ====== -->
+    <div class="mod" id="mod3">
+      <div class="card">
+        <h2>購入 vs 賃貸 長期比較</h2>
+        <p class="small">同じ期間で「購入した場合の総コスト」と「賃貸し続けた場合の総コスト」を比較します。頭金の運用機会損失も考慮。</p>
+
+        <h3>購入の前提</h3>
+        <div class="row">
+          <div class="field"><label>物件価格（万円）</label><input type="number" id="bvr_price" value="5000" min="0" step="100"></div>
+          <div class="field"><label>頭金（万円）</label><input type="number" id="bvr_down" value="500" min="0" step="50"></div>
+          <div class="field"><label>ローン金利（%）</label><input type="number" id="bvr_rate" value="0.5" min="0" max="10" step="0.05"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>返済期間（年）</label>
+            <select id="bvr_loanYears"><option value="25">25年</option><option value="30">30年</option><option value="35" selected>35年</option></select>
+          </div>
+          <div class="field"><label>管理費＋修繕積立金（円/月）</label><input type="number" id="bvr_maint" value="27000" min="0" step="1000"></div>
+          <div class="field"><label>固定資産税（万円/年）</label><input type="number" id="bvr_tax" value="15" min="0" step="1"></div>
+        </div>
+
+        <h3>賃貸の前提</h3>
+        <div class="row">
+          <div class="field"><label>家賃（万円/月）</label><input type="number" id="bvr_rent" value="15" min="0" step="0.5"></div>
+          <div class="field"><label>更新料（ヶ月分/2年毎）</label><input type="number" id="bvr_renewal" value="1" min="0" max="2" step="0.5"></div>
+          <div class="field"><label>家賃上昇率（%/年）</label><input type="number" id="bvr_rentUp" value="0.5" min="0" max="5" step="0.1"></div>
+        </div>
+
+        <h3>共通前提</h3>
+        <div class="row">
+          <div class="field"><label>比較期間（年）</label>
+            <select id="bvr_years"><option value="20">20年</option><option value="25">25年</option><option value="30" selected>30年</option><option value="35">35年</option><option value="40">40年</option><option value="50">50年</option></select>
+          </div>
+          <div class="field"><label>頭金の運用利回り（%/年）</label><input type="number" id="bvr_oppRate" value="3" min="0" max="10" step="0.5">
+            <span class="small">※賃貸の場合の頭金運用</span>
+          </div>
+          <div class="field"><label>売却時の物件残価率（%）</label><input type="number" id="bvr_resale" value="30" min="0" max="100" step="5">
+            <span class="small">※購入の場合の売却想定</span>
+          </div>
+        </div>
+
+        <button class="run-btn" onclick="calcBuyVsRent()">比較する</button>
+        <div id="bvrResult"></div>
+      </div>
+    </div>
+
+    <!-- ====== モジュール4: 住宅ローン控除 ====== -->
+    <div class="mod" id="mod4">
+      <div class="card">
+        <h2>住宅ローン控除シミュレーター</h2>
+        <p class="small">住宅ローン控除（住宅借入金等特別控除）の年間控除額と控除総額を概算します。2024年以降の新制度に対応。</p>
+
+        <div class="note-info">
+          <strong>住宅ローン控除の概要（2024年〜）：</strong><br>
+          ・控除率：年末ローン残高 × <strong>0.7%</strong><br>
+          ・控除期間：新築 <strong>13年</strong> ／ 既存住宅 <strong>10年</strong><br>
+          ・合計所得金額 <strong>2,000万円以下</strong> が条件（海外FX利益含む注意）<br>
+          ・省エネ基準適合が原則必要（2024年以降の新築）
+        </div>
+
+        <h3>物件・ローン情報</h3>
+        <div class="row">
+          <div class="field"><label>物件区分</label>
+            <select id="tc_propType" onchange="updateTcLimit()">
+              <option value="new_energy">新築・認定住宅（長期優良/低炭素）</option>
+              <option value="new_zeh">新築・ZEH水準省エネ</option>
+              <option value="new_energy_std">新築・省エネ基準適合</option>
+              <option value="new_other">新築・その他（2023年までに建築確認）</option>
+              <option value="used_energy">既存住宅・省エネ基準適合</option>
+              <option value="used_other">既存住宅・その他</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field"><label>借入額（万円）</label><input type="number" id="tc_loan" value="4000" min="0" step="100"></div>
+          <div class="field"><label>金利（年・%）</label><input type="number" id="tc_rate" value="0.5" min="0" max="10" step="0.05"></div>
+          <div class="field"><label>返済期間（年）</label>
+            <select id="tc_loanYears"><option value="25">25年</option><option value="30">30年</option><option value="35" selected>35年</option></select>
+          </div>
+        </div>
+
+        <h3>所得情報（控除上限判定用）</h3>
+        <div class="row">
+          <div class="field"><label>給与所得（万円・課税所得）</label><input type="number" id="tc_salary" value="500" min="0" step="50"></div>
+          <div class="field"><label>海外FX利益（万円）</label><input type="number" id="tc_fx" value="300" min="0" step="50"></div>
+          <div class="field"><label>その他所得（万円）</label><input type="number" id="tc_other" value="0" min="0" step="50"></div>
+        </div>
+
+        <div id="tcLimitInfo"></div>
+
+        <button class="run-btn" onclick="calcTaxCredit()" style="margin-top:12px">控除額を試算する</button>
+        <div id="tcResult"></div>
+
+        <div class="note-danger" style="margin-top:16px">
+          <strong>海外FX利益がある年の注意：</strong>海外FX利益（雑所得）は合計所得金額に含まれるため、給与所得＋FX利益で2,000万円を超えるとその年は住宅ローン控除が<strong>適用されません</strong>。年によって控除の有無が変わる可能性があります。
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== モジュール5: 不動産投資シミュレーター ====== -->
+    <div class="mod" id="mod5">
+      <div class="card">
+        <h2>不動産投資シミュレーター</h2>
+        <p class="small">表面利回り・実質利回り・年間キャッシュフローを試算します。レバレッジ効果の確認にも対応。</p>
+
+        <div class="note">
+          <strong>FPチームからの注意：</strong>不動産投資はサテライト資産に分類されます。コア資産比率が総資産の50%を下回らないよう注意してください。本ツールは一般論を提供するもので、特定物件の推奨は行いません。
+        </div>
+
+        <h3>投資物件の情報</h3>
+        <div class="row">
+          <div class="field"><label>物件価格（万円）</label><input type="number" id="inv_price" value="2000" min="0" step="100"></div>
+          <div class="field"><label>物件タイプ</label>
+            <select id="inv_type">
+              <option value="1r">ワンルーム</option><option value="1k">1K/1DK</option>
+              <option value="family">ファミリータイプ</option><option value="1bldg">一棟アパート</option>
+              <option value="1bldg_m">一棟マンション</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field"><label>想定月額家賃（円）</label><input type="number" id="inv_rent" value="80000" min="0" step="5000"></div>
+          <div class="field"><label>空室率（%）</label><input type="number" id="inv_vacancy" value="5" min="0" max="50" step="1"></div>
+          <div class="field"><label>戸数（一棟の場合）</label><input type="number" id="inv_units" value="1" min="1" max="100" step="1"></div>
+        </div>
+
+        <h3>費用</h3>
+        <div class="row">
+          <div class="field"><label>管理委託費（%・家賃比）</label><input type="number" id="inv_mgmt" value="5" min="0" max="20" step="0.5"></div>
+          <div class="field"><label>修繕積立金（円/月・戸）</label><input type="number" id="inv_repair" value="8000" min="0" step="1000"></div>
+          <div class="field"><label>固定資産税（万円/年）</label><input type="number" id="inv_tax" value="10" min="0" step="1"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>火災・地震保険（万円/年）</label><input type="number" id="inv_ins" value="3" min="0" step="0.5"></div>
+          <div class="field"><label>その他経費（万円/年）</label><input type="number" id="inv_misc" value="5" min="0" step="1">
+            <span class="small">※広告費・原状回復等</span>
+          </div>
+        </div>
+
+        <h3>ローン（レバレッジ）</h3>
+        <div class="row">
+          <div class="field"><label>自己資金（万円）</label><input type="number" id="inv_equity" value="400" min="0" step="50"></div>
+          <div class="field"><label>ローン金利（%）</label><input type="number" id="inv_rate" value="2.0" min="0" max="10" step="0.1"></div>
+          <div class="field"><label>ローン期間（年）</label>
+            <select id="inv_loanYears"><option value="15">15年</option><option value="20">20年</option><option value="25" selected>25年</option><option value="30">30年</option></select>
+          </div>
+        </div>
+
+        <button class="run-btn" onclick="calcInvestment()" style="margin-top:12px">試算する</button>
+        <div id="invResult"></div>
+      </div>
+    </div>
+
+    <!-- ====== モジュール6: 物件タイプ・買い方ガイド ====== -->
+    <div class="mod" id="mod6">
+      <div class="card">
+        <h2>物件タイプ・買い方ガイド</h2>
+        <p class="small">住宅の種類と購入ルートを網羅的に比較します。</p>
+
+        <div class="tab-bar" id="guideTabs">
+          <button class="active" onclick="switchGuideTab('guide-types')">物件タイプ</button>
+          <button onclick="switchGuideTab('guide-mansion')">マンション詳細</button>
+          <button onclick="switchGuideTab('guide-house')">一戸建て詳細</button>
+          <button onclick="switchGuideTab('guide-buy')">買い方・ローン</button>
+          <button onclick="switchGuideTab('guide-invest')">投資用物件</button>
+        </div>
+
+        <!-- 物件タイプ総合比較 -->
+        <div class="guide-panel" id="guide-types">
+          <h3>住宅タイプ総合比較</h3>
+          <table>
+            <thead><tr><th>タイプ</th><th>特徴</th><th>価格帯（首都圏）</th><th>維持費</th><th>資産性</th></tr></thead>
+            <tbody>
+              <tr><td><strong>新築マンション</strong></td><td>最新設備・保証充実。修繕積立金は段階増額</td><td>4,000〜8,000万+</td><td class="risk-mid">管理費+修繕+駐車場</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>中古マンション</strong></td><td>立地選びやすい。リノベ可。管理状態要確認</td><td>2,000〜6,000万</td><td class="risk-mid">同上（築年で増額）</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>新築建売一戸建て</strong></td><td>即入居可。価格明確。間取り自由度低</td><td>3,000〜7,000万</td><td class="risk-low">固定資産税+修繕自己管理</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>中古一戸建て</strong></td><td>価格安。リフォーム前提。土地の価値重視</td><td>1,500〜5,000万</td><td class="risk-mid">修繕費が読みにくい</td><td><span class="badge badge-mid">中（土地次第）</span></td></tr>
+              <tr><td><strong>注文住宅</strong></td><td>完全自由設計。こだわり実現。工期長い</td><td>土地+建物で4,000〜1億+</td><td class="risk-low">修繕自己管理</td><td><span class="badge badge-high">低〜中</span></td></tr>
+              <tr><td><strong>タワーマンション</strong></td><td>眺望・共用施設充実。修繕費高騰リスク</td><td>5,000〜2億+</td><td class="risk-high">管理費高・大規模修繕リスク</td><td><span class="badge badge-mid">中〜高（立地次第）</span></td></tr>
+              <tr><td><strong>リノベーション済み</strong></td><td>中古+改装済み。デザイン性。保証は業者次第</td><td>2,500〜6,000万</td><td class="risk-mid">中</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>二世帯住宅</strong></td><td>親世帯と同居。相続対策にも。設計が重要</td><td>4,000〜9,000万</td><td class="risk-mid">中</td><td><span class="badge badge-high">低（売却しにくい）</span></td></tr>
+              <tr><td><strong>土地のみ</strong></td><td>将来の建築用。更地は固定資産税高い</td><td>坪単価×面積</td><td class="risk-low">固定資産税のみ</td><td><span class="badge badge-low">高（都市部）</span></td></tr>
+            </tbody>
+          </table>
+
+          <h3>エリア別の価格目安（2026年時点・70㎡マンション）</h3>
+          <table>
+            <thead><tr><th>エリア</th><th>新築</th><th>中古</th><th>坪単価目安</th><th>将来性</th></tr></thead>
+            <tbody>
+              <tr><td><strong>東京23区</strong></td><td>6,000〜1.5億+</td><td>4,000〜9,000万</td><td>300〜800万+/坪</td><td><span class="badge badge-low">高</span></td></tr>
+              <tr><td><strong>東京市部</strong></td><td>4,000〜7,000万</td><td>2,500〜5,000万</td><td>150〜300万/坪</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>神奈川（横浜・川崎）</strong></td><td>4,500〜8,000万</td><td>3,000〜6,000万</td><td>200〜400万/坪</td><td><span class="badge badge-mid">中〜高</span></td></tr>
+              <tr><td><strong>大阪市内</strong></td><td>4,000〜7,000万</td><td>2,500〜5,000万</td><td>200〜400万/坪</td><td><span class="badge badge-mid">中〜高</span></td></tr>
+              <tr><td><strong>名古屋市内</strong></td><td>3,500〜6,000万</td><td>2,000〜4,000万</td><td>150〜300万/坪</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>福岡市内</strong></td><td>3,500〜6,000万</td><td>2,000〜4,000万</td><td>150〜300万/坪</td><td><span class="badge badge-low">高</span></td></tr>
+              <tr><td><strong>地方都市</strong></td><td>2,000〜4,000万</td><td>1,000〜3,000万</td><td>50〜150万/坪</td><td><span class="badge badge-high">低〜中</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- マンション詳細 -->
+        <div class="guide-panel" id="guide-mansion" style="display:none">
+          <h3>マンションの種類</h3>
+          <table>
+            <thead><tr><th>分類</th><th>特徴</th><th>管理費目安（月）</th><th>メリット</th><th>デメリット</th></tr></thead>
+            <tbody>
+              <tr><td><strong>大規模（200戸+）</strong></td><td>共用施設充実。スケールメリットで管理費安</td><td>1.0〜1.5万</td><td>コンシェルジュ・ジム等</td><td>合意形成に時間</td></tr>
+              <tr><td><strong>中規模（50〜200戸）</strong></td><td>バランス型。管理組合運営しやすい</td><td>1.2〜2.0万</td><td>適度な共用施設</td><td>—</td></tr>
+              <tr><td><strong>小規模（〜50戸）</strong></td><td>静かな環境。住民の顔が見える</td><td>1.5〜3.0万</td><td>プライバシー</td><td>管理費割高・積立不足リスク</td></tr>
+              <tr><td><strong>タワー（20階+）</strong></td><td>眺望・ステータス。共用施設豪華</td><td>2.0〜5.0万</td><td>眺望・防災性能</td><td>修繕費高騰・エレベーター待ち</td></tr>
+              <tr><td><strong>低層（3〜5階）</strong></td><td>閑静な住宅街。容積率低い＝贅沢な造り</td><td>1.5〜3.0万</td><td>住環境良好</td><td>エレベーターなしの場合あり</td></tr>
+              <tr><td><strong>団地・公団</strong></td><td>広い敷地。築古多い。リノベ人気上昇中</td><td>0.5〜1.5万</td><td>価格安・敷地ゆとり</td><td>設備老朽化・EV未設置</td></tr>
+              <tr><td><strong>リゾートマンション</strong></td><td>別荘利用。温泉・プール付きも</td><td>2.0〜5.0万+</td><td>レジャー</td><td>管理費高・資産性低・売却困難</td></tr>
+            </tbody>
+          </table>
+
+          <h3>マンション購入時のチェックポイント</h3>
+          <div class="checklist" id="checklistMansion">
+            <label><input type="checkbox" data-key="m-1"><span>管理組合の議事録を確認した（修繕計画・滞納状況）</span></label>
+            <label><input type="checkbox" data-key="m-2"><span>長期修繕計画書と修繕積立金の残高を確認した</span></label>
+            <label><input type="checkbox" data-key="m-3"><span>管理費・修繕積立金の値上げ予定を確認した</span></label>
+            <label><input type="checkbox" data-key="m-4"><span>大規模修繕の実施履歴と次回予定を確認した</span></label>
+            <label><input type="checkbox" data-key="m-5"><span>管理会社の評判・対応品質を調査した</span></label>
+            <label><input type="checkbox" data-key="m-6"><span>駐車場の空き状況と機械式の場合の維持費を確認した</span></label>
+            <label><input type="checkbox" data-key="m-7"><span>管理規約（ペット・リフォーム・民泊制限等）を確認した</span></label>
+            <label><input type="checkbox" data-key="m-8"><span>耐震基準（新耐震1981年6月〜 or 旧耐震）を確認した</span></label>
+            <label><input type="checkbox" data-key="m-9"><span>ハザードマップで浸水・土砂災害リスクを確認した</span></label>
+            <label><input type="checkbox" data-key="m-10"><span>周辺環境（日当たり・騒音・嫌悪施設）を現地で確認した</span></label>
+          </div>
+
+          <div class="note">
+            <strong>修繕積立金の落とし穴：</strong>新築時は「段階増額方式」で低めに設定されていることが多い。築10〜15年で2〜3倍に増額されるケースが一般的。国交省ガイドライン（2021年）の目安は㎡あたり月額200〜300円（70㎡で月1.4〜2.1万円）。
+          </div>
+        </div>
+
+        <!-- 一戸建て詳細 -->
+        <div class="guide-panel" id="guide-house" style="display:none">
+          <h3>一戸建ての種類</h3>
+          <table>
+            <thead><tr><th>分類</th><th>特徴</th><th>建築費目安</th><th>工期</th><th>自由度</th></tr></thead>
+            <tbody>
+              <tr><td><strong>建売住宅</strong></td><td>完成済み or 建築中。仕様確定。即入居可</td><td>建物1,200〜2,500万</td><td>—（完成済み）</td><td><span class="badge badge-high">低</span></td></tr>
+              <tr><td><strong>注文住宅（HM）</strong></td><td>ハウスメーカー。品質安定。保証充実。坪単価高め</td><td>坪70〜120万</td><td>6〜12ヶ月</td><td><span class="badge badge-low">高</span></td></tr>
+              <tr><td><strong>注文住宅（工務店）</strong></td><td>地域密着。コスパ良。設計自由度高い</td><td>坪50〜80万</td><td>6〜10ヶ月</td><td><span class="badge badge-low">高</span></td></tr>
+              <tr><td><strong>注文住宅（建築家）</strong></td><td>設計事務所。デザイン性最高。設計料別途10〜15%</td><td>坪60〜100万+設計料</td><td>8〜18ヶ月</td><td><span class="badge badge-low">最高</span></td></tr>
+              <tr><td><strong>ローコスト住宅</strong></td><td>規格化で低コスト。シンプルな設計</td><td>坪30〜50万</td><td>3〜6ヶ月</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>中古+リノベ</strong></td><td>立地重視＋自由設計。構造体の見極めが重要</td><td>リノベ500〜1,500万</td><td>3〜6ヶ月</td><td><span class="badge badge-mid">中〜高</span></td></tr>
+              <tr><td><strong>平屋</strong></td><td>バリアフリー。老後安心。広い土地が必要</td><td>坪60〜100万</td><td>5〜10ヶ月</td><td><span class="badge badge-low">高</span></td></tr>
+            </tbody>
+          </table>
+
+          <h3>構造別の比較</h3>
+          <table>
+            <thead><tr><th>構造</th><th>特徴</th><th>耐用年数</th><th>坪単価目安</th><th>メリット</th><th>デメリット</th></tr></thead>
+            <tbody>
+              <tr><td><strong>木造（在来工法）</strong></td><td>日本で最も一般的。増改築しやすい</td><td>22年（税務）</td><td>50〜80万</td><td>コスト安・間取り自由</td><td>遮音性・耐火性が低い</td></tr>
+              <tr><td><strong>木造（2×4）</strong></td><td>面で支える。耐震・気密◎</td><td>22年</td><td>50〜80万</td><td>気密断熱◎・工期短</td><td>間取り変更しにくい</td></tr>
+              <tr><td><strong>鉄骨造（軽量）</strong></td><td>HMに多い。工場生産で品質安定</td><td>27年</td><td>60〜100万</td><td>大空間・品質安定</td><td>断熱に注意・結露</td></tr>
+              <tr><td><strong>鉄骨造（重量）</strong></td><td>大規模建築向き。3階建て以上</td><td>34年</td><td>70〜120万</td><td>耐久性◎・大空間</td><td>高コスト</td></tr>
+              <tr><td><strong>RC造</strong></td><td>コンクリート。マンション主流。遮音◎</td><td>47年</td><td>80〜150万</td><td>耐火・遮音・耐久◎</td><td>最高コスト・重い</td></tr>
+            </tbody>
+          </table>
+
+          <h3>一戸建て購入時のチェックポイント</h3>
+          <div class="checklist" id="checklistHouse">
+            <label><input type="checkbox" data-key="h-1"><span>用途地域・建ぺい率・容積率を確認した</span></label>
+            <label><input type="checkbox" data-key="h-2"><span>接道義務（幅員4m以上の道路に2m以上接面）を確認した</span></label>
+            <label><input type="checkbox" data-key="h-3"><span>地盤調査の結果を確認した（軟弱地盤→杭基礎で+100〜300万）</span></label>
+            <label><input type="checkbox" data-key="h-4"><span>ハザードマップ（洪水・土砂・液状化）を確認した</span></label>
+            <label><input type="checkbox" data-key="h-5"><span>境界確定（確定測量図）の有無を確認した</span></label>
+            <label><input type="checkbox" data-key="h-6"><span>中古の場合：インスペクション（建物状況調査）を実施した</span></label>
+            <label><input type="checkbox" data-key="h-7"><span>中古の場合：シロアリ・雨漏り・傾きを確認した</span></label>
+            <label><input type="checkbox" data-key="h-8"><span>上下水道・ガスの引込み状況を確認した</span></label>
+            <label><input type="checkbox" data-key="h-9"><span>近隣トラブル（騒音・日照・越境）の有無を調査した</span></label>
+            <label><input type="checkbox" data-key="h-10"><span>将来の修繕費（外壁・屋根：10〜15年毎に100〜200万）を把握した</span></label>
+          </div>
+        </div>
+
+        <!-- 買い方・ローンガイド -->
+        <div class="guide-panel" id="guide-buy" style="display:none">
+          <h3>購入ルート比較</h3>
+          <table>
+            <thead><tr><th>購入方法</th><th>特徴</th><th>仲介手数料</th><th>メリット</th><th>デメリット</th></tr></thead>
+            <tbody>
+              <tr><td><strong>仲介（大手）</strong><br><span class="small">三井・住友・野村等</span></td><td>幅広い物件情報。両手仲介に注意</td><td>物件価格×3%+6万+税</td><td>情報量・安心感</td><td>手数料満額・囲い込みリスク</td></tr>
+              <tr><td><strong>仲介（地場）</strong></td><td>地域密着。掘り出し物あり</td><td>物件価格×3%+6万+税</td><td>地域情報に詳しい</td><td>情報量が限定的</td></tr>
+              <tr><td><strong>売主直売</strong><br><span class="small">デベロッパー等</span></td><td>新築マンション・建売で多い</td><td>なし（0円）</td><td>手数料不要</td><td>交渉力の非対称</td></tr>
+              <tr><td><strong>競売（裁判所）</strong></td><td>市場価格の5〜7割。瑕疵担保なし</td><td>なし</td><td>最安値</td><td>内覧不可・占有者リスク・瑕疵自己責任</td></tr>
+              <tr><td><strong>任意売却</strong></td><td>ローン破綻物件。競売より割安</td><td>通常の仲介手数料</td><td>競売より安心</td><td>瑕疵担保免責多い</td></tr>
+              <tr><td><strong>不動産オークション</strong></td><td>入札方式。人気物件は高騰</td><td>業者による</td><td>公正な価格形成</td><td>想定外の高値リスク</td></tr>
+            </tbody>
+          </table>
+
+          <h3>住宅ローンの種類</h3>
+          <table>
+            <thead><tr><th>ローン種別</th><th>金利目安（2026年）</th><th>特徴</th><th>向いている人</th></tr></thead>
+            <tbody>
+              <tr><td><strong>変動金利</strong></td><td>0.3〜0.7%</td><td>半年毎に金利見直し。5年ルール・125%ルールで急騰抑制</td><td>金利上昇リスクを許容でき、繰上返済を計画する人</td></tr>
+              <tr><td><strong>固定金利（期間選択型）</strong></td><td>0.8〜1.5%</td><td>2・3・5・10年等の固定期間。終了後は変動 or 再固定</td><td>一定期間の安定を求める人</td></tr>
+              <tr><td><strong>全期間固定（フラット35）</strong></td><td>1.5〜2.2%</td><td>返済終了まで金利不変。住宅金融支援機構</td><td>金利上昇リスクをゼロにしたい人</td></tr>
+              <tr><td><strong>フラット35S</strong></td><td>当初5〜10年▲0.25%</td><td>省エネ・耐震・バリアフリー住宅で金利引下げ</td><td>高性能住宅を建てる人</td></tr>
+              <tr><td><strong>ペアローン</strong></td><td>各ローンの金利</td><td>夫婦それぞれが借入。住宅ローン控除が2人分使える</td><td>共働きで控除枠を最大化したい人</td></tr>
+              <tr><td><strong>収入合算</strong></td><td>主債務者の金利</td><td>配偶者の収入を合算して借入額を増やす</td><td>1人の年収では借入額が足りない人</td></tr>
+            </tbody>
+          </table>
+
+          <h3>金利タイプ選択フローチャート</h3>
+          <div class="note-info">
+            <strong>変動 vs 固定の判断基準：</strong><br>
+            ・金利差（変動0.5% vs 固定1.8%）× 借入額 × 年数 = 変動の金利メリット<br>
+            ・このメリットが「金利が○%まで上昇しても耐えられるか」で判断<br>
+            ・<strong>目安</strong>：変動金利が2.5%を超えても返済可能なら変動OK。余裕がなければ固定<br>
+            ・FX収入のように変動性が高い収入がある場合は、ローンは固定にしてリスクを分散する考え方も有効
+          </div>
+
+          <h3>諸費用の内訳（物件価格5,000万円の場合の目安）</h3>
+          <table>
+            <thead><tr><th>費用項目</th><th>新築マンション</th><th>中古マンション</th><th>新築一戸建て</th><th>備考</th></tr></thead>
+            <tbody>
+              <tr><td>仲介手数料</td><td>0円（売主直売）</td><td>約171万円</td><td>約171万円</td><td>3%+6万+税</td></tr>
+              <tr><td>印紙税</td><td>1〜3万</td><td>1〜3万</td><td>1〜3万</td><td>売買契約書</td></tr>
+              <tr><td>登録免許税</td><td>約15〜30万</td><td>約15〜30万</td><td>約15〜30万</td><td>所有権移転・保存</td></tr>
+              <tr><td>司法書士報酬</td><td>約10〜15万</td><td>約10〜15万</td><td>約10〜15万</td><td></td></tr>
+              <tr><td>不動産取得税</td><td>0〜30万</td><td>0〜30万</td><td>0〜30万</td><td>軽減措置あり</td></tr>
+              <tr><td>ローン事務手数料</td><td>約2〜110万</td><td>約2〜110万</td><td>約2〜110万</td><td>定率型2.2%or定額3〜5万</td></tr>
+              <tr><td>ローン保証料</td><td>0〜100万</td><td>0〜100万</td><td>0〜100万</td><td>保証料型の場合</td></tr>
+              <tr><td>火災・地震保険</td><td>約20〜50万</td><td>約20〜50万</td><td>約20〜50万</td><td>5〜10年一括</td></tr>
+              <tr><td>修繕積立基金</td><td>約30〜80万</td><td>—</td><td>—</td><td>新築マンションのみ</td></tr>
+              <tr><td>管理準備金</td><td>約2〜5万</td><td>—</td><td>—</td><td>新築マンションのみ</td></tr>
+              <tr style="font-weight:bold;border-top:2px solid var(--border)"><td>諸費用合計目安</td><td>100〜350万</td><td>250〜450万</td><td>250〜450万</td><td>物件価格の2〜9%</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 投資用物件ガイド -->
+        <div class="guide-panel" id="guide-invest" style="display:none">
+          <h3>投資用不動産の種類</h3>
+          <table>
+            <thead><tr><th>物件タイプ</th><th>価格帯</th><th>表面利回り目安</th><th>空室リスク</th><th>管理の手間</th><th>流動性</th></tr></thead>
+            <tbody>
+              <tr><td><strong>区分ワンルーム（新築）</strong></td><td>2,000〜4,000万</td><td>3〜4%</td><td><span class="badge badge-low">低</span></td><td class="risk-low">低</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>区分ワンルーム（中古）</strong></td><td>800〜2,500万</td><td>4〜7%</td><td><span class="badge badge-mid">中</span></td><td class="risk-low">低</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>区分ファミリー</strong></td><td>2,000〜6,000万</td><td>3〜5%</td><td><span class="badge badge-low">低</span></td><td class="risk-low">低</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>一棟アパート（木造）</strong></td><td>3,000万〜1.5億</td><td>6〜10%</td><td><span class="badge badge-mid">中</span></td><td class="risk-mid">中</td><td><span class="badge badge-high">低</span></td></tr>
+              <tr><td><strong>一棟マンション（RC）</strong></td><td>1億〜10億+</td><td>4〜7%</td><td><span class="badge badge-mid">中</span></td><td class="risk-high">高</td><td><span class="badge badge-high">低</span></td></tr>
+              <tr><td><strong>戸建て賃貸</strong></td><td>500〜3,000万</td><td>6〜12%</td><td><span class="badge badge-mid">中</span></td><td class="risk-low">低</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>商業ビル・テナント</strong></td><td>5,000万〜数十億</td><td>4〜8%</td><td><span class="badge badge-high">高</span></td><td class="risk-high">高</td><td><span class="badge badge-high">低</span></td></tr>
+              <tr><td><strong>駐車場</strong></td><td>土地代のみ</td><td>3〜8%</td><td><span class="badge badge-mid">中</span></td><td class="risk-low">最低</td><td><span class="badge badge-low">高</span></td></tr>
+              <tr><td><strong>民泊・簡易宿所</strong></td><td>1,000〜5,000万</td><td>8〜15%（稼働次第）</td><td><span class="badge badge-high">高</span></td><td class="risk-high">最高</td><td><span class="badge badge-high">低</span></td></tr>
+              <tr><td><strong>REIT（不動産投信）</strong></td><td>数万円〜</td><td>3〜5%（分配金）</td><td>—</td><td class="risk-low">なし</td><td><span class="badge badge-low">最高</span></td></tr>
+            </tbody>
+          </table>
+
+          <h3>不動産投資のリスク一覧</h3>
+          <table>
+            <thead><tr><th>リスク</th><th>内容</th><th>対策</th></tr></thead>
+            <tbody>
+              <tr><td class="risk-high">空室リスク</td><td>入居者が見つからない。収入ゼロでもローン返済は続く</td><td>立地重視（駅徒歩10分以内）。サブリースは手取り-10〜20%</td></tr>
+              <tr><td class="risk-high">金利上昇リスク</td><td>変動金利ローンで返済額増加。CF悪化</td><td>固定金利選択。金利2〜3%でもCF黒字になる物件を選ぶ</td></tr>
+              <tr><td class="risk-mid">家賃下落リスク</td><td>築年数経過・競合増で家賃低下。築10年で-5〜15%</td><td>需要の底堅いエリア選択。設備更新で競争力維持</td></tr>
+              <tr><td class="risk-mid">修繕リスク</td><td>大規模修繕・設備故障で想定外の出費</td><td>修繕積立金を月額家賃の5〜10%確保</td></tr>
+              <tr><td class="risk-mid">流動性リスク</td><td>売りたい時に売れない。一棟物件は特に</td><td>出口戦略を購入前に設計</td></tr>
+              <tr><td class="risk-high">天災リスク</td><td>地震・水害で物件損壊</td><td>火災・地震保険加入。ハザードマップ確認</td></tr>
+              <tr><td class="risk-mid">法規制リスク</td><td>建築基準法改正・民泊規制強化等</td><td>最新法規確認。余裕のあるCF設計</td></tr>
+              <tr><td class="risk-mid">税制変更リスク</td><td>減価償却ルール変更・譲渡所得課税変更</td><td>税理士と定期相談</td></tr>
+            </tbody>
+          </table>
+
+          <div class="note-danger">
+            <strong>新築ワンルーム投資の注意：</strong>「節税になる」「年金代わり」のセールストークで購入を勧められるケースが多いですが、表面利回り3〜4%で実質利回りは1%未満、または赤字になることが大半です。サブリース契約は家賃の見直し条項に注意。「35年家賃保証」は法的に保証されません（借地借家法32条で家賃減額請求が可能）。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 免責 -->
+    <div class="disclaimer">
+      <strong>免責事項：</strong>本ツールは AI による参考情報です。投資・税務の最終判断は、ユーザー自身が税理士・FP・不動産の専門家と相談のうえ行ってください。不動産価格・金利・税制は変動しうるため、本ツールの前提が将来も妥当である保証はありません。特定の物件・金融機関・不動産会社の推奨は行っておりません。
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== ナビ・タブ切替 ==========
+function switchMod(id) {
+  document.querySelectorAll('.mod').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.nav .nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelector(`.nav-item[data-mod="${id}"]`).classList.add('active');
+}
+function switchGuideTab(key) {
+  document.querySelectorAll('.guide-panel').forEach(p => p.style.display = 'none');
+  document.getElementById(key).style.display = '';
+  document.querySelectorAll('#guideTabs button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function togglePropFields() {
+  // optional: show/hide fields based on prop type
+}
+
+// ========== ユーティリティ ==========
+const yen = v => v.toLocaleString('ja-JP') + '円';
+const man = v => v.toLocaleString('ja-JP') + '万円';
+const pct = v => (v * 100).toFixed(2) + '%';
+const V = id => parseFloat(document.getElementById(id).value) || 0;
+const SV = id => document.getElementById(id).value;
+
+// ========== モジュール1: 住宅ローン ==========
+function calcLoan() {
+  const principal = V('loanAmt') * 10000;
+  const annualRate = V('loanRate') / 100;
+  const months = parseInt(SV('loanYears')) * 12;
+  const method = SV('loanMethod');
+  const bonusAmt = V('loanBonus') * 10000;
+  const prepay = V('prepayAmt') * 10000;
+  const prepayYr = V('prepayYear');
+  const prepayType = SV('prepayType');
+
+  const bonusPrincipal = bonusAmt > 0 ? Math.min(bonusAmt * 2 * parseInt(SV('loanYears')), principal * 0.5) : 0;
+  const regularPrincipal = principal - bonusPrincipal;
+
+  const monthlyRate = annualRate / 12;
+
+  let monthlyPayment, totalPayment, totalInterest;
+  let schedule = [];
+
+  if (method === 'equal_payment') {
+    // 元利均等
+    if (monthlyRate === 0) {
+      monthlyPayment = Math.round(regularPrincipal / months);
+    } else {
+      monthlyPayment = Math.round(regularPrincipal * monthlyRate * Math.pow(1 + monthlyRate, months) / (Math.pow(1 + monthlyRate, months) - 1));
+    }
+
+    let balance = regularPrincipal;
+    totalPayment = 0;
+    totalInterest = 0;
+    let prepayDone = false;
+    let effectiveMonths = months;
+
+    for (let m = 1; m <= months && balance > 0; m++) {
+      const interest = Math.round(balance * monthlyRate);
+      let principalPart = Math.min(monthlyPayment - interest, balance);
+      balance -= principalPart;
+      totalInterest += interest;
+      totalPayment += monthlyPayment;
+
+      if (!prepayDone && m === prepayYr * 12 && prepay > 0) {
+        const actualPrepay = Math.min(prepay, balance);
+        balance -= actualPrepay;
+        totalPayment += actualPrepay;
+        prepayDone = true;
+        if (prepayType === 'shorten') {
+          // recalculate remaining months
+        } else {
+          if (balance > 0 && monthlyRate > 0) {
+            const remainMonths = months - m;
+            monthlyPayment = Math.round(balance * monthlyRate * Math.pow(1 + monthlyRate, remainMonths) / (Math.pow(1 + monthlyRate, remainMonths) - 1));
+          }
+        }
+      }
+
+      if (m <= 12 || m % 12 === 0 || balance <= 0) {
+        schedule.push({ month: m, payment: monthlyPayment, interest, principal: principalPart, balance: Math.max(balance, 0) });
+      }
+    }
+    if (balance > 0) { totalPayment += balance; balance = 0; }
+    totalPayment += bonusPrincipal;
+
+  } else {
+    // 元金均等
+    const monthlyPrincipal = Math.round(regularPrincipal / months);
+    let balance = regularPrincipal;
+    totalPayment = 0;
+    totalInterest = 0;
+    let firstPayment = 0, lastPayment = 0;
+
+    for (let m = 1; m <= months && balance > 0; m++) {
+      const interest = Math.round(balance * monthlyRate);
+      const mp = Math.min(monthlyPrincipal, balance);
+      const payment = mp + interest;
+      balance -= mp;
+      totalInterest += interest;
+      totalPayment += payment;
+      if (m === 1) firstPayment = payment;
+      if (balance <= 0) lastPayment = payment;
+
+      if (m <= 12 || m % 12 === 0 || balance <= 0) {
+        schedule.push({ month: m, payment, interest, principal: mp, balance: Math.max(balance, 0) });
+      }
+    }
+    monthlyPayment = firstPayment;
+    totalPayment += bonusPrincipal;
+    lastPayment = lastPayment || monthlyPrincipal;
+  }
+
+  let html = `<div class="summary-grid" style="margin-top:16px">
+    <div class="summary-box"><div class="lbl">月々返済額${method === 'equal_principal' ? '（初回）' : ''}</div><div class="val">${yen(monthlyPayment)}</div></div>
+    <div class="summary-box"><div class="lbl">総返済額</div><div class="val">${yen(totalPayment)}</div></div>
+    <div class="summary-box"><div class="lbl">利息総額</div><div class="val" style="color:var(--ng)">${yen(totalInterest)}</div></div>
+    <div class="summary-box"><div class="lbl">利息の割合</div><div class="val">${principal > 0 ? pct(totalInterest / principal) : '-'}</div></div>
+  </div>`;
+
+  if (bonusPrincipal > 0) {
+    const bonusPerTime = Math.round(bonusPrincipal / (parseInt(SV('loanYears')) * 2));
+    html += `<div class="note-info">ボーナス返済：${man(Math.round(bonusPrincipal / 10000))}分を年2回（1回あたり約${yen(bonusPerTime)}）で返済</div>`;
+  }
+
+  if (prepay > 0) {
+    html += `<div class="note-info">繰上げ返済：${prepayYr}年目に${man(Math.round(prepay / 10000))}を${prepayType === 'shorten' ? '期間短縮型' : '返済額軽減型'}で実行</div>`;
+  }
+
+  html += `<h3 style="color:var(--accent2);margin-top:16px">返済スケジュール（抜粋）</h3>`;
+  html += `<div class="amort-scroll"><table><thead><tr><th>回</th><th class="num">返済額</th><th class="num">利息</th><th class="num">元金</th><th class="num">残高</th></tr></thead><tbody>`;
+  schedule.forEach(s => {
+    html += `<tr><td>${s.month}回目（${Math.ceil(s.month/12)}年目）</td><td class="num">${yen(s.payment)}</td><td class="num">${yen(s.interest)}</td><td class="num">${yen(s.principal)}</td><td class="num">${yen(s.balance)}</td></tr>`;
+  });
+  html += `</tbody></table></div>`;
+
+  document.getElementById('loanResult').innerHTML = html;
+}
+
+// ========== モジュール2: 購入コスト ==========
+function calcPurchaseCost() {
+  const price = V('propPrice') * 10000;
+  const type = SV('propType');
+  const down = V('downPayment') * 10000;
+  const area = V('propArea');
+  const age = V('propAge');
+  const kanri = V('kanrihi');
+  const shuzen = V('shuzenhi');
+  const parking = V('parkingCost');
+
+  const isUsed = type.startsWith('used');
+  const isMansion = type.includes('mansion');
+  const isCustom = type === 'custom_house';
+
+  // 仲介手数料（売主直売なら0、中古は発生）
+  const brokerage = (type === 'new_mansion' || isCustom) ? 0 : Math.round(price * 0.033 + 66000);
+  // 登録免許税（概算）
+  const regTax = Math.round(price * (isUsed ? 0.005 : 0.003));
+  // 司法書士
+  const judicial = 120000;
+  // 印紙税
+  const stamp = price > 50000000 ? 30000 : price > 10000000 ? 10000 : 5000;
+  // 不動産取得税（軽減後概算）
+  const acqTax = Math.round(Math.max(price * 0.003 - 450000, 0));
+  // ローン関連（融資事務手数料を定率2.2%概算）
+  const loanAmt = price - down;
+  const loanFee = Math.round(loanAmt * 0.022);
+  // 火災・地震保険（5年一括概算）
+  const fireIns = isMansion ? 150000 : 300000;
+  // 修繕積立基金（新築マンションのみ）
+  const repairFund = (type === 'new_mansion') ? Math.round(area * 7000) : 0;
+  // 管理準備金
+  const mgmtPrep = (type === 'new_mansion') ? 30000 : 0;
+
+  const initialCosts = brokerage + regTax + judicial + stamp + acqTax + loanFee + fireIns + repairFund + mgmtPrep;
+  const totalInitial = price + initialCosts;
+
+  // 年間維持費
+  const fixedTax = Math.round(price * 0.01 * 0.7); // 固定資産税（評価額70%×1.4%≒1%×0.7）
+  const cityTax = Math.round(price * 0.003 * 0.7); // 都市計画税
+  const yearlyMansion = isMansion ? (kanri + shuzen + parking) * 12 : 0;
+  const yearlyRepairHouse = (!isMansion) ? 150000 : 0; // 一戸建ての修繕積立目安
+  const yearlyTotal = fixedTax + cityTax + yearlyMansion + yearlyRepairHouse;
+
+  let html = `<div class="summary-grid" style="margin-top:16px">
+    <div class="summary-box"><div class="lbl">物件価格</div><div class="val">${yen(price)}</div></div>
+    <div class="summary-box"><div class="lbl">諸費用合計</div><div class="val">${yen(initialCosts)}</div><div class="small">物件価格の${(initialCosts/price*100).toFixed(1)}%</div></div>
+    <div class="summary-box"><div class="lbl">必要総額（頭金+諸費用）</div><div class="val" style="color:var(--accent)">${yen(down + initialCosts)}</div></div>
+    <div class="summary-box"><div class="lbl">年間維持費</div><div class="val">${yen(yearlyTotal)}</div><div class="small">月あたり${yen(Math.round(yearlyTotal/12))}</div></div>
+  </div>`;
+
+  html += `<table><thead><tr><th>項目</th><th class="num">金額</th><th>備考</th></tr></thead><tbody>`;
+  html += `<tr><td colspan="3" style="color:var(--accent2);font-weight:bold">▼ 初期費用（諸費用）</td></tr>`;
+  html += `<tr><td>仲介手数料</td><td class="num">${yen(brokerage)}</td><td>${brokerage === 0 ? '売主直売のため不要' : '3%+6万+税'}</td></tr>`;
+  html += `<tr><td>登録免許税</td><td class="num">${yen(regTax)}</td><td>概算</td></tr>`;
+  html += `<tr><td>司法書士報酬</td><td class="num">${yen(judicial)}</td><td>概算</td></tr>`;
+  html += `<tr><td>印紙税</td><td class="num">${yen(stamp)}</td><td>売買契約書</td></tr>`;
+  html += `<tr><td>不動産取得税</td><td class="num">${yen(acqTax)}</td><td>軽減後概算</td></tr>`;
+  html += `<tr><td>ローン事務手数料</td><td class="num">${yen(loanFee)}</td><td>定率2.2%概算</td></tr>`;
+  html += `<tr><td>火災・地震保険</td><td class="num">${yen(fireIns)}</td><td>5年一括概算</td></tr>`;
+  if (repairFund > 0) html += `<tr><td>修繕積立基金</td><td class="num">${yen(repairFund)}</td><td>新築マンション</td></tr>`;
+  if (mgmtPrep > 0) html += `<tr><td>管理準備金</td><td class="num">${yen(mgmtPrep)}</td><td>新築マンション</td></tr>`;
+  html += `<tr style="font-weight:bold;border-top:2px solid var(--border)"><td>諸費用 合計</td><td class="num">${yen(initialCosts)}</td><td></td></tr>`;
+
+  html += `<tr><td colspan="3" style="color:var(--accent2);font-weight:bold;padding-top:12px">▼ 年間維持費</td></tr>`;
+  html += `<tr><td>固定資産税</td><td class="num">${yen(fixedTax)}</td><td>概算（評価額×1.4%×0.7）</td></tr>`;
+  html += `<tr><td>都市計画税</td><td class="num">${yen(cityTax)}</td><td>概算（評価額×0.3%×0.7）</td></tr>`;
+  if (isMansion) {
+    html += `<tr><td>管理費</td><td class="num">${yen(kanri * 12)}</td><td>${yen(kanri)}/月</td></tr>`;
+    html += `<tr><td>修繕積立金</td><td class="num">${yen(shuzen * 12)}</td><td>${yen(shuzen)}/月</td></tr>`;
+    if (parking > 0) html += `<tr><td>駐車場</td><td class="num">${yen(parking * 12)}</td><td>${yen(parking)}/月</td></tr>`;
+  } else {
+    html += `<tr><td>修繕積立（自己管理目安）</td><td class="num">${yen(yearlyRepairHouse)}</td><td>外壁・屋根等</td></tr>`;
+  }
+  html += `<tr style="font-weight:bold;border-top:2px solid var(--border)"><td>年間維持費 合計</td><td class="num">${yen(yearlyTotal)}</td><td></td></tr>`;
+  html += `</tbody></table>`;
+
+  document.getElementById('purchaseResult').innerHTML = html;
+}
+
+// ========== モジュール3: 購入 vs 賃貸 ==========
+function calcBuyVsRent() {
+  const price = V('bvr_price') * 10000;
+  const down = V('bvr_down') * 10000;
+  const rate = V('bvr_rate') / 100;
+  const loanYears = parseInt(SV('bvr_loanYears'));
+  const maint = V('bvr_maint');
+  const tax = V('bvr_tax') * 10000;
+  const rent = V('bvr_rent') * 10000;
+  const renewal = V('bvr_renewal');
+  const rentUp = V('bvr_rentUp') / 100;
+  const years = parseInt(SV('bvr_years'));
+  const oppRate = V('bvr_oppRate') / 100;
+  const resaleRate = V('bvr_resale') / 100;
+
+  const loanAmt = price - down;
+  const monthlyRate = rate / 12;
+  const loanMonths = loanYears * 12;
+
+  // 月々返済額（元利均等）
+  let monthlyPayment;
+  if (monthlyRate === 0) {
+    monthlyPayment = Math.round(loanAmt / loanMonths);
+  } else {
+    monthlyPayment = Math.round(loanAmt * monthlyRate * Math.pow(1 + monthlyRate, loanMonths) / (Math.pow(1 + monthlyRate, loanMonths) - 1));
+  }
+
+  // 諸費用（簡易：物件価格の7%）
+  const closingCosts = Math.round(price * 0.07);
+
+  // 購入の総コスト
+  let buyCost = down + closingCosts;
+  for (let y = 1; y <= years; y++) {
+    if (y <= loanYears) buyCost += monthlyPayment * 12;
+    buyCost += maint * 12 + tax;
+  }
+  const resaleValue = Math.round(price * resaleRate);
+  const buyNet = buyCost - resaleValue;
+
+  // 賃貸の総コスト
+  let rentCost = rent * 2; // 初期費用（敷金+礼金概算）
+  let currentRent = rent;
+  const oppGain = Math.round(down * (Math.pow(1 + oppRate, years) - 1)); // 頭金の運用益
+  for (let y = 1; y <= years; y++) {
+    rentCost += currentRent * 12;
+    if (y % 2 === 0) rentCost += Math.round(currentRent * renewal); // 更新料
+    currentRent = Math.round(currentRent * (1 + rentUp));
+  }
+  const rentNet = rentCost - oppGain;
+
+  const diff = buyNet - rentNet;
+  const winner = diff < 0 ? '購入が有利' : diff > 0 ? '賃貸が有利' : '同等';
+
+  let html = `<div class="summary-grid" style="margin-top:16px">
+    <div class="summary-box"><div class="lbl">購入 総コスト</div><div class="val">${man(Math.round(buyCost / 10000))}</div><div class="small">売却益控除前</div></div>
+    <div class="summary-box"><div class="lbl">購入 実質コスト</div><div class="val" style="color:var(--accent)">${man(Math.round(buyNet / 10000))}</div><div class="small">−売却想定${man(Math.round(resaleValue / 10000))}</div></div>
+    <div class="summary-box"><div class="lbl">賃貸 総コスト</div><div class="val">${man(Math.round(rentCost / 10000))}</div><div class="small">初期費用含む</div></div>
+    <div class="summary-box"><div class="lbl">賃貸 実質コスト</div><div class="val" style="color:var(--accent2)">${man(Math.round(rentNet / 10000))}</div><div class="small">−運用益${man(Math.round(oppGain / 10000))}</div></div>
+  </div>`;
+
+  html += `<div class="summary-grid">
+    <div class="summary-box" style="grid-column:1/-1"><div class="lbl">${years}年間の比較結果</div><div class="val" style="color:${diff < 0 ? 'var(--ok)' : diff > 0 ? 'var(--ng)' : 'var(--text)'}">${winner}（差額 ${man(Math.round(Math.abs(diff) / 10000))}）</div></div>
+  </div>`;
+
+  html += `<table><thead><tr><th>内訳</th><th class="num">購入</th><th class="num">賃貸</th></tr></thead><tbody>`;
+  html += `<tr><td>初期費用</td><td class="num">${man(Math.round((down + closingCosts) / 10000))}</td><td class="num">${man(Math.round(rent * 2 / 10000))}</td></tr>`;
+  html += `<tr><td>月々支出×${years}年</td><td class="num">${man(Math.round((monthlyPayment * 12 * Math.min(years, loanYears) + maint * 12 * years) / 10000))}</td><td class="num">${man(Math.round((rentCost - rent * 2) / 10000))}</td></tr>`;
+  html += `<tr><td>固定資産税×${years}年</td><td class="num">${man(Math.round(tax * years / 10000))}</td><td class="num">—</td></tr>`;
+  html += `<tr><td>売却想定 / 運用益</td><td class="num" style="color:var(--ok)">−${man(Math.round(resaleValue / 10000))}</td><td class="num" style="color:var(--ok)">−${man(Math.round(oppGain / 10000))}</td></tr>`;
+  html += `<tr style="font-weight:bold;border-top:2px solid var(--border)"><td>実質コスト</td><td class="num">${man(Math.round(buyNet / 10000))}</td><td class="num">${man(Math.round(rentNet / 10000))}</td></tr>`;
+  html += `</tbody></table>`;
+
+  html += `<div class="note" style="margin-top:12px"><strong>注意：</strong>この比較は簡易モデルです。住宅ローン控除・団信保険の価値・修繕積立金の増額・引越し費用・家賃交渉余地等は含まれていません。また、不動産の資産性は立地・築年数・市況に大きく依存します。</div>`;
+
+  document.getElementById('bvrResult').innerHTML = html;
+}
+
+// ========== モジュール4: 住宅ローン控除 ==========
+function updateTcLimit() {
+  const type = SV('tc_propType');
+  const limits = {
+    'new_energy': { limit: 4500, period: 13, label: '認定住宅（長期優良/低炭素）' },
+    'new_zeh': { limit: 3500, period: 13, label: 'ZEH水準省エネ' },
+    'new_energy_std': { limit: 3000, period: 13, label: '省エネ基準適合' },
+    'new_other': { limit: 2000, period: 13, label: 'その他（2023年までに建築確認）' },
+    'used_energy': { limit: 3000, period: 10, label: '既存住宅・省エネ基準適合' },
+    'used_other': { limit: 2000, period: 10, label: '既存住宅・その他' }
+  };
+  const info = limits[type];
+  document.getElementById('tcLimitInfo').innerHTML = `<div class="note-info"><strong>${info.label}：</strong>借入限度額 ${info.limit}万円 ／ 控除期間 ${info.period}年 ／ 控除率 0.7%<br>年間最大控除額：${(info.limit * 0.007).toFixed(1)}万円</div>`;
+}
+
+function calcTaxCredit() {
+  const type = SV('tc_propType');
+  const loan = V('tc_loan') * 10000;
+  const rate = V('tc_rate') / 100;
+  const loanYears = parseInt(SV('tc_loanYears'));
+  const salary = V('tc_salary') * 10000;
+  const fx = V('tc_fx') * 10000;
+  const other = V('tc_other') * 10000;
+
+  const limits = {
+    'new_energy': { limit: 45000000, period: 13 },
+    'new_zeh': { limit: 35000000, period: 13 },
+    'new_energy_std': { limit: 30000000, period: 13 },
+    'new_other': { limit: 20000000, period: 13 },
+    'used_energy': { limit: 30000000, period: 10 },
+    'used_other': { limit: 20000000, period: 10 }
+  };
+  const info = limits[type];
+  const totalIncome = salary + fx + other;
+  const incomeOver = totalIncome > 20000000;
+
+  const monthlyRate = rate / 12;
+  const months = loanYears * 12;
+  let balance = loan;
+  let totalCredit = 0;
+  let yearlyData = [];
+
+  for (let y = 1; y <= info.period; y++) {
+    // 年末残高を計算（12回分の元金返済後）
+    for (let m = 0; m < 12; m++) {
+      if (balance <= 0) break;
+      const interest = balance * monthlyRate;
+      let payment;
+      if (monthlyRate === 0) {
+        payment = loan / months;
+      } else {
+        payment = loan * monthlyRate * Math.pow(1 + monthlyRate, months) / (Math.pow(1 + monthlyRate, months) - 1);
+      }
+      balance -= (payment - interest);
+    }
+    balance = Math.max(balance, 0);
+
+    const effectiveBalance = Math.min(balance, info.limit);
+    const credit = Math.round(effectiveBalance * 0.007);
+    const applicable = !incomeOver;
+
+    yearlyData.push({ year: y, balance: Math.round(balance), credit: applicable ? credit : 0, applicable });
+    if (applicable) totalCredit += credit;
+  }
+
+  let html = `<div class="summary-grid" style="margin-top:16px">
+    <div class="summary-box"><div class="lbl">控除総額（${info.period}年間）</div><div class="val" style="color:var(--ok)">${yen(totalCredit)}</div></div>
+    <div class="summary-box"><div class="lbl">年間最大控除額</div><div class="val">${yen(Math.round(Math.min(loan, info.limit) * 0.007))}</div></div>
+    <div class="summary-box"><div class="lbl">合計所得金額</div><div class="val" style="color:${incomeOver ? 'var(--ng)' : 'var(--ok)'}">${man(Math.round(totalIncome / 10000))}</div><div class="small">${incomeOver ? '2,000万円超 → 控除不可' : '2,000万円以下 → 控除可'}</div></div>
+  </div>`;
+
+  if (incomeOver) {
+    html += `<div class="note-danger">合計所得金額が2,000万円を超えているため、住宅ローン控除は適用されません。海外FX利益を含めた所得が2,000万円以下の年のみ控除が受けられます。</div>`;
+  }
+
+  html += `<h3 style="color:var(--accent2);margin-top:16px">年別控除額</h3>`;
+  html += `<div class="amort-scroll"><table><thead><tr><th>年</th><th class="num">年末ローン残高</th><th class="num">控除対象残高</th><th class="num">控除額（0.7%）</th><th>適用</th></tr></thead><tbody>`;
+  yearlyData.forEach(d => {
+    html += `<tr><td>${d.year}年目</td><td class="num">${yen(d.balance)}</td><td class="num">${yen(Math.min(d.balance, info.limit))}</td><td class="num">${yen(d.credit)}</td><td>${d.applicable ? '<span style="color:var(--ok)">○</span>' : '<span style="color:var(--ng)">×（所得超過）</span>'}</td></tr>`;
+  });
+  html += `</tbody></table></div>`;
+
+  document.getElementById('tcResult').innerHTML = html;
+}
+
+// ========== モジュール5: 不動産投資 ==========
+function calcInvestment() {
+  const price = V('inv_price') * 10000;
+  const rentPerUnit = V('inv_rent');
+  const vacancy = V('inv_vacancy') / 100;
+  const units = V('inv_units');
+  const mgmtRate = V('inv_mgmt') / 100;
+  const repair = V('inv_repair');
+  const fixedTax = V('inv_tax') * 10000;
+  const ins = V('inv_ins') * 10000;
+  const misc = V('inv_misc') * 10000;
+  const equity = V('inv_equity') * 10000;
+  const loanRate = V('inv_rate') / 100;
+  const loanYears = parseInt(SV('inv_loanYears'));
+
+  const grossRentYear = rentPerUnit * units * 12;
+  const effectiveRent = Math.round(grossRentYear * (1 - vacancy));
+  const surfaceYield = price > 0 ? grossRentYear / price : 0;
+
+  const mgmtFee = Math.round(effectiveRent * mgmtRate);
+  const repairYear = repair * units * 12;
+  const totalExpense = mgmtFee + repairYear + fixedTax + ins + misc;
+  const noi = effectiveRent - totalExpense;
+  const realYield = price > 0 ? noi / price : 0;
+
+  // ローン
+  const loanAmt = price - equity;
+  const monthlyLoanRate = loanRate / 12;
+  const loanMonths = loanYears * 12;
+  let annualDebt = 0;
+  if (loanAmt > 0 && monthlyLoanRate > 0) {
+    const monthlyPayment = loanAmt * monthlyLoanRate * Math.pow(1 + monthlyLoanRate, loanMonths) / (Math.pow(1 + monthlyLoanRate, loanMonths) - 1);
+    annualDebt = Math.round(monthlyPayment * 12);
+  } else if (loanAmt > 0) {
+    annualDebt = Math.round(loanAmt / loanYears);
+  }
+
+  const cashFlow = noi - annualDebt;
+  const ccr = equity > 0 ? cashFlow / equity : 0; // Cash on Cash Return
+  const dscr = annualDebt > 0 ? noi / annualDebt : Infinity;
+
+  let html = `<div class="summary-grid" style="margin-top:16px">
+    <div class="summary-box"><div class="lbl">表面利回り</div><div class="val">${(surfaceYield * 100).toFixed(2)}%</div></div>
+    <div class="summary-box"><div class="lbl">実質利回り（NOI）</div><div class="val" style="color:var(--accent)">${(realYield * 100).toFixed(2)}%</div></div>
+    <div class="summary-box"><div class="lbl">年間CF（税引前）</div><div class="val" style="color:${cashFlow >= 0 ? 'var(--ok)' : 'var(--ng)'}">${yen(cashFlow)}</div><div class="small">月額 ${yen(Math.round(cashFlow / 12))}</div></div>
+    <div class="summary-box"><div class="lbl">CCR（自己資金利回り）</div><div class="val">${(ccr * 100).toFixed(2)}%</div></div>
+  </div>`;
+
+  html += `<div class="summary-grid">
+    <div class="summary-box"><div class="lbl">DSCR（返済余裕度）</div><div class="val" style="color:${dscr >= 1.3 ? 'var(--ok)' : dscr >= 1.0 ? 'var(--warn)' : 'var(--ng)'}">${dscr === Infinity ? '∞' : dscr.toFixed(2)}</div><div class="small">${dscr >= 1.3 ? '安全圏（1.3以上）' : dscr >= 1.0 ? '注意（1.0〜1.3）' : '危険（1.0未満）'}</div></div>
+    <div class="summary-box"><div class="lbl">レバレッジ倍率</div><div class="val">${equity > 0 ? (price / equity).toFixed(1) + '倍' : '∞'}</div></div>
+  </div>`;
+
+  html += `<table><thead><tr><th>項目</th><th class="num">年額</th><th class="num">月額</th></tr></thead><tbody>`;
+  html += `<tr><td colspan="3" style="color:var(--accent2);font-weight:bold">▼ 収入</td></tr>`;
+  html += `<tr><td>満室想定家賃</td><td class="num">${yen(grossRentYear)}</td><td class="num">${yen(Math.round(grossRentYear / 12))}</td></tr>`;
+  html += `<tr><td>空室損（${(vacancy * 100).toFixed(0)}%）</td><td class="num" style="color:var(--ng)">−${yen(grossRentYear - effectiveRent)}</td><td class="num">−${yen(Math.round((grossRentYear - effectiveRent) / 12))}</td></tr>`;
+  html += `<tr style="font-weight:bold"><td>実効賃料収入</td><td class="num">${yen(effectiveRent)}</td><td class="num">${yen(Math.round(effectiveRent / 12))}</td></tr>`;
+  html += `<tr><td colspan="3" style="color:var(--accent2);font-weight:bold;padding-top:12px">▼ 経費</td></tr>`;
+  html += `<tr><td>管理委託費（${(mgmtRate * 100).toFixed(0)}%）</td><td class="num">${yen(mgmtFee)}</td><td class="num">${yen(Math.round(mgmtFee / 12))}</td></tr>`;
+  html += `<tr><td>修繕積立金</td><td class="num">${yen(repairYear)}</td><td class="num">${yen(repair * units)}</td></tr>`;
+  html += `<tr><td>固定資産税</td><td class="num">${yen(fixedTax)}</td><td class="num">${yen(Math.round(fixedTax / 12))}</td></tr>`;
+  html += `<tr><td>火災・地震保険</td><td class="num">${yen(ins)}</td><td class="num">${yen(Math.round(ins / 12))}</td></tr>`;
+  html += `<tr><td>その他経費</td><td class="num">${yen(misc)}</td><td class="num">${yen(Math.round(misc / 12))}</td></tr>`;
+  html += `<tr style="font-weight:bold;border-top:2px solid var(--border)"><td>経費合計</td><td class="num">${yen(totalExpense)}</td><td class="num">${yen(Math.round(totalExpense / 12))}</td></tr>`;
+  html += `<tr style="font-weight:bold;color:var(--accent)"><td>NOI（営業純利益）</td><td class="num">${yen(noi)}</td><td class="num">${yen(Math.round(noi / 12))}</td></tr>`;
+  html += `<tr><td colspan="3" style="color:var(--accent2);font-weight:bold;padding-top:12px">▼ ローン返済</td></tr>`;
+  html += `<tr><td>年間返済額</td><td class="num">${yen(annualDebt)}</td><td class="num">${yen(Math.round(annualDebt / 12))}</td></tr>`;
+  html += `<tr style="font-weight:bold;border-top:2px solid var(--border);color:${cashFlow >= 0 ? 'var(--ok)' : 'var(--ng)'}"><td>キャッシュフロー</td><td class="num">${yen(cashFlow)}</td><td class="num">${yen(Math.round(cashFlow / 12))}</td></tr>`;
+  html += `</tbody></table>`;
+
+  if (dscr < 1.0) {
+    html += `<div class="note-danger" style="margin-top:12px"><strong>DSCR 1.0未満：</strong>家賃収入でローン返済を賄えず、毎月持ち出しが発生します。空室率の悪化や金利上昇でさらに悪化するリスクがあります。</div>`;
+  }
+
+  document.getElementById('invResult').innerHTML = html;
+}
+
+// ========== 保存・読込・JSON ==========
+const STORAGE_KEY = 'realEstatePlanner_v1';
+
+function collectAllInputs() {
+  const data = {};
+  document.querySelectorAll('input[type=number],select').forEach(el => {
+    if (el.id) data[el.id] = el.value;
+  });
+  document.querySelectorAll('.checklist input[type=checkbox]').forEach(el => {
+    data['chk_' + el.dataset.key] = el.checked;
+  });
+  return data;
+}
+
+function applyData(data) {
+  Object.entries(data).forEach(([k, val]) => {
+    if (k.startsWith('chk_')) {
+      const cb = document.querySelector(`input[data-key="${k.replace('chk_', '')}"]`);
+      if (cb) { cb.checked = val; toggleCheckStyle(cb); }
+    } else {
+      const el = document.getElementById(k);
+      if (el) el.value = val;
+    }
+  });
+}
+
+function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(collectAllInputs())); alert('保存しました'); }
+function loadData() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) { alert('保存データがありません'); return; }
+  applyData(JSON.parse(raw)); alert('読み込みました');
+}
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(collectAllInputs(), null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'real_estate_planner_' + new Date().toISOString().slice(0, 10) + '.json'; a.click();
+}
+
+function toggleCheckStyle(cb) {
+  const span = cb.parentElement.querySelector('span');
+  if (cb.checked) span.classList.add('done'); else span.classList.remove('done');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) { try { applyData(JSON.parse(raw)); } catch (e) {} }
+  document.querySelectorAll('.checklist input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      toggleCheckStyle(cb);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(collectAllInputs()));
+    });
+  });
+  updateTcLimit();
+});
+</script>
+</body>
+</html>

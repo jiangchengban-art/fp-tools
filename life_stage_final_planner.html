@@ -2,781 +2,1240 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>ライフステージ後期対策プランナー</title>
 <style>
-  :root{
-    --bg:#14161f; --card:#1d2030; --card2:#252939; --border:#2a2e42;
-    --text:#d8dee9; --muted:#8b95a7; --label:#aab2c0;
-    --accent:#5dade2; --accent2:#f5b041; --ok:#58d68d; --ng:#ec7063;
-    --head:#f0f3f7;
-  }
-  *{box-sizing:border-box;}
-  body{
-    font-family:"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
-    background:var(--bg); color:var(--text); margin:0; padding:0; line-height:1.6;
-  }
-  header{
-    background:linear-gradient(135deg,#2a3550,#1d2030);
-    border-bottom:1px solid var(--border);
-    padding:13px 22px; display:flex; align-items:center; justify-content:space-between;
-    flex-wrap:wrap; gap:10px; position:sticky; top:0; z-index:50;
-  }
-  header h1{font-size:18px; margin:0; color:var(--head);}
-  header .tagline{font-size:11.5px; color:var(--muted); margin-top:2px;}
-  .header-actions{display:flex; gap:6px; flex-wrap:wrap;}
-  .btn{
-    background:var(--card2); color:var(--text); border:1px solid var(--border);
-    border-radius:6px; padding:7px 12px; font-size:12.5px; cursor:pointer;
-  }
-  .btn:hover{border-color:var(--accent);}
-  .btn.primary{background:#1a3a52; border-color:var(--accent); color:#cfe8f7;}
+:root{
+  --bg:#14161f;--card:#1d2030;--card2:#252939;--border:#2a2e42;
+  --text:#d8dee9;--muted:#8b95a7;--label:#aab2c0;
+  --accent:#5dade2;--accent2:#f5b041;--ok:#58d68d;--ng:#ec7063;
+  --head:#f0f3f7;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;font-size:14px;line-height:1.6;}
+header{background:linear-gradient(135deg,#1a1d2e 0%,#252a3a 100%);padding:18px 24px;text-align:center;border-bottom:1px solid var(--border);}
+header h1{font-size:20px;color:var(--head);font-weight:700;letter-spacing:.5px;}
+header p{color:var(--muted);font-size:12px;margin-top:4px;}
+.btn{background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px 16px;font-size:13px;cursor:pointer;transition:.2s;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn.primary:hover{background:#4a9bd9;}
+.layout{display:flex;min-height:100vh;}
+.nav{width:220px;background:var(--card);border-right:1px solid var(--border);padding:12px 0;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:9px 14px;cursor:pointer;font-size:12.5px;color:var(--muted);transition:.15s;border-left:3px solid transparent;}
+.nav-item:hover{background:var(--card2);color:var(--text);}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(93,173,226,.08);}
+.nav-num{font-weight:700;font-size:11px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--card2);color:var(--muted);flex-shrink:0;}
+.nav-item.active .nav-num{background:var(--accent);color:#fff;}
+.nav-label{flex:1;}
+.nav-sub{font-size:10px;color:var(--muted);padding:2px 14px 6px 45px;}
+.main{flex:1;padding:20px 28px 40px;max-width:900px;}
+.sec{display:none;}
+.sec.active{display:block;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px;}
+.card h2{font-size:16px;color:var(--head);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.card h3{font-size:14px;color:var(--accent);margin:14px 0 8px;font-weight:600;}
+.lead{font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7;}
+label.fld{display:block;font-size:12px;color:var(--label);margin:10px 0 4px;font-weight:500;}
+input[type="text"],input[type="number"],select,textarea{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;transition:.2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+textarea{resize:vertical;min-height:60px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.note{background:var(--card2);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--muted);margin:10px 0;line-height:1.6;}
+.note.info{border-left:3px solid var(--accent);}
+.note.warn{border-left:3px solid var(--accent2);}
+.guide{background:rgba(93,173,226,.06);border:1px dashed var(--accent);border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;color:var(--accent);line-height:1.6;}
+.simgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0;}
+.simbox{background:var(--card2);border-radius:8px;padding:14px;text-align:center;border:1px solid var(--border);}
+.simbox .lab{font-size:11px;color:var(--muted);margin-bottom:4px;}
+.simbox .val{font-size:20px;font-weight:700;color:var(--head);}
+.simbox.worst{border-color:var(--ng);}.simbox.worst .val{color:var(--ng);}
+.simbox.mid .val{color:var(--accent2);}
+.simbox.best{border-color:var(--ok);}.simbox.best .val{color:var(--ok);}
+table.breakdown{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0;}
+table.breakdown th{text-align:left;color:var(--accent);font-weight:600;padding:6px 4px;border-bottom:2px solid var(--border);font-size:11.5px;}
+table.breakdown td{padding:6px 4px;border-bottom:1px solid var(--border);}
+table th,table td{text-align:left;}
+.src{font-size:10.5px;color:var(--muted);margin-top:10px;line-height:1.5;}
+.navbtns{display:flex;justify-content:space-between;margin-top:20px;padding-top:14px;border-top:1px solid var(--border);}
+.footer-disc{text-align:center;font-size:10.5px;color:var(--muted);padding:20px;border-top:1px solid var(--border);margin-top:20px;line-height:1.6;}
 
-  .layout{display:flex; max-width:1180px; margin:0 auto; gap:18px; padding:18px;}
-  .nav{
-    flex:0 0 236px; background:var(--card); border:1px solid var(--border);
-    border-radius:8px; padding:8px; position:sticky; top:74px; align-self:flex-start;
-    max-height:calc(100vh - 90px); overflow-y:auto;
-  }
-  .nav-item{
-    display:flex; gap:10px; align-items:center; padding:9px 9px; border-radius:6px;
-    cursor:pointer; border:1px solid transparent; margin-bottom:2px;
-  }
-  .nav-item:hover{background:var(--card2);}
-  .nav-item.active{background:#1a2c40; border-color:var(--accent);}
-  .nav-num{
-    flex:0 0 26px; height:26px; border-radius:50%; background:var(--card2);
-    color:var(--label); display:flex; align-items:center; justify-content:center;
-    font-size:13px; font-weight:700;
-  }
-  .nav-item.active .nav-num{background:var(--accent); color:#0b1320;}
-  .nav-item.done .nav-num{background:var(--ok); color:#0b1320;}
-  .nav-label{font-size:13px; color:var(--text);}
-  .nav-sub{font-size:10.5px; color:var(--muted);}
+/* === New educational classes === */
+.keypoint{background:#152535;border-left:4px solid var(--accent);border-radius:4px;padding:13px 15px;margin:12px 0;font-size:13px;line-height:1.7;}
+.keypoint .kp-title{font-weight:700;color:var(--accent);font-size:13.5px;margin-bottom:4px;}
 
-  .main{flex:1 1 auto; min-width:0;}
-  .sec{display:none;}
-  .sec.active{display:block;}
+.flow{display:flex;flex-wrap:wrap;gap:0;margin:14px 0;align-items:stretch;}
+.flow .step{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;flex:1 1 120px;min-width:100px;text-align:center;font-size:12px;position:relative;}
+.flow .step .step-num{font-size:10px;color:var(--accent);font-weight:700;display:block;margin-bottom:2px;}
+.flow .step .step-label{color:var(--head);font-weight:600;font-size:12.5px;}
+.flow .step .step-sub{color:var(--muted);font-size:11px;margin-top:3px;}
+.flow .arrow{flex:0 0 30px;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:18px;font-weight:700;}
 
-  .card{
-    background:var(--card); border:1px solid var(--border); border-radius:8px;
-    box-shadow:0 1px 4px rgba(0,0,0,.35); padding:16px 18px; margin-bottom:14px;
-  }
-  .card h2{
-    font-size:16px; margin:0 0 4px 0; border-left:4px solid var(--accent);
-    padding-left:9px; color:var(--head);
-  }
-  .card h3{font-size:13.5px; color:var(--accent2); margin:16px 0 8px;}
-  .lead{font-size:12.5px; color:var(--muted); margin:0 0 12px;}
+.compare-tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0;}
+.compare-tbl th{background:var(--card2);color:var(--accent);font-weight:600;padding:8px 6px;font-size:11.5px;border-bottom:2px solid var(--accent);text-align:left;}
+.compare-tbl td{padding:7px 6px;border-bottom:1px solid var(--border);vertical-align:top;}
+.compare-tbl tr:nth-child(even) td{background:rgba(93,173,226,0.04);}
+.compare-tbl .highlight{color:var(--accent);font-weight:600;}
 
-  label.fld{display:block; margin:10px 0;}
-  label.fld > span{display:block; font-size:12px; color:var(--label); margin-bottom:4px;}
-  input,select,textarea{
-    background:var(--card2); color:var(--text); border:1px solid var(--border);
-    border-radius:5px; padding:7px 9px; font-size:13px; width:100%; font-family:inherit;
-  }
-  textarea{resize:vertical; min-height:62px;}
-  input:focus,select:focus,textarea:focus{outline:none; border-color:var(--accent);}
-  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:8px 14px;}
-  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px 14px;}
+.disease-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:10px 0;}
+.disease-card .dc-name{font-size:14px;font-weight:700;color:var(--accent2);margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:6px;}
+.disease-card .dc-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:12.5px;}
+.disease-card .dc-label{color:var(--accent);font-weight:600;font-size:11.5px;}
 
-  .radios{display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:4px;}
-  .radios label{display:flex; align-items:center; gap:5px; font-size:12.5px; color:var(--text); cursor:pointer;}
-  .radios input{width:auto;}
-  .chk{display:flex; align-items:flex-start; gap:8px; font-size:13px; margin:8px 0; cursor:pointer;}
-  .chk input{width:auto; margin-top:3px;}
+.timeline{position:relative;margin:16px 0 16px 20px;padding-left:24px;border-left:3px solid var(--accent);}
+.timeline .tl-item{position:relative;margin-bottom:16px;padding:10px 14px;background:var(--card2);border:1px solid var(--border);border-radius:6px;}
+.timeline .tl-item::before{content:'';position:absolute;left:-33px;top:14px;width:14px;height:14px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);}
+.timeline .tl-deadline{font-size:11.5px;font-weight:700;color:var(--accent2);margin-bottom:4px;}
+.timeline .tl-title{font-size:13px;font-weight:600;color:var(--head);}
+.timeline .tl-desc{font-size:12px;color:var(--text);margin-top:4px;}
 
-  table{width:100%; border-collapse:collapse; font-size:12.5px; margin-top:6px;}
-  th{text-align:left; color:var(--label); font-weight:600; padding:5px 4px; font-size:11.5px; border-bottom:1px solid var(--border);}
-  td{padding:3px 4px; vertical-align:top;}
-  td input,td select{padding:5px 6px; font-size:12px;}
-  .del{background:transparent; border:1px solid var(--border); color:var(--ng); width:30px; padding:4px 0; border-radius:5px; cursor:pointer;}
-  .del:hover{background:#3a2330;}
-  .addrow{margin-top:8px; background:var(--card2); border:1px dashed var(--border); color:var(--accent); padding:7px 12px; border-radius:6px; cursor:pointer; font-size:12.5px;}
-  .addrow:hover{border-color:var(--accent);}
+.checklist{list-style:none;padding:0;margin:10px 0;}
+.checklist li{position:relative;padding:6px 0 6px 28px;font-size:12.5px;border-bottom:1px solid rgba(42,46,66,0.5);}
+.checklist li::before{content:'\2610';position:absolute;left:2px;top:6px;font-size:15px;color:var(--accent);}
 
-  .note{
-    font-size:12px; color:var(--label); line-height:1.65; background:#1a1d2b;
-    border-left:4px solid var(--muted); padding:11px 13px; border-radius:4px; margin:10px 0;
-  }
-  .note.info{border-left-color:var(--accent); background:#152330;}
-  .note.warn{border-left-color:var(--ng); background:#2a1a20; color:#f3c3c3;}
-  .note strong{color:var(--head);}
-  .note.warn strong{color:#ffb3b3;}
-  .note .small{font-size:11px; color:var(--muted);}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;margin:8px 0;cursor:pointer;}
+.chk input{width:auto;}
 
-  .guide{font-size:12px; color:var(--text); background:var(--card2); border-radius:6px; padding:10px 12px; margin:8px 0;}
-  .guide b{color:var(--accent);}
-
-  /* progress */
-  .prog{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px;}
-  .prog .pi{background:var(--card2); border:1px solid var(--border); border-radius:6px; padding:9px 11px; font-size:12px;}
-  .prog .pi .st{font-size:11px;}
-  .prog .pi .st.ok{color:var(--ok);}
-  .prog .pi .st.no{color:var(--muted);}
-
-  /* simulator result */
-  .simgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0;}
-  .simbox{background:var(--card2); border:1px solid var(--border); border-radius:8px; padding:13px; text-align:center;}
-  .simbox .lab{font-size:11.5px; color:var(--muted);}
-  .simbox .val{font-size:21px; font-weight:700; margin-top:4px;}
-  .simbox.worst .val{color:var(--ng);}
-  .simbox.mid .val{color:var(--accent);}
-  .simbox.best .val{color:var(--ok);}
-  table.breakdown td{border-bottom:1px solid var(--border); padding:7px 4px;}
-  table.breakdown td.r{text-align:right; font-variant-numeric:tabular-nums;}
-  table.breakdown tr.total td{font-weight:700; color:var(--head); border-top:2px solid var(--accent);}
-  .src{font-size:10.5px; color:var(--muted); margin-top:2px;}
-
-  .navbtns{display:flex; justify-content:space-between; margin-top:6px;}
-
-  .footer-disc{max-width:1180px; margin:0 auto; padding:0 18px 34px;}
-
-  @media (max-width:900px){
-    .layout{flex-direction:column;}
-    .nav{position:static; flex:1 1 auto; width:100%; max-height:none; display:flex; overflow-x:auto; gap:4px;}
-    .nav-item{flex:0 0 auto; flex-direction:column; text-align:center; min-width:84px;}
-    .grid2,.grid3{grid-template-columns:1fr;}
-    .simgrid{grid-template-columns:1fr;}
-  }
-  @media print{
-    header .header-actions,.nav,.navbtns,.addrow,.del{display:none !important;}
-    .sec{display:block !important; page-break-before:always;}
-    .sec:first-of-type{page-break-before:auto;}
-    body{background:#fff; color:#000;}
-    .card{border:1px solid #bbb; box-shadow:none; background:#fff;}
-    .card h2{color:#000;} .note,.guide,.simbox,.prog .pi{background:#f4f4f4; color:#000;}
-    input,select,textarea{background:#fff; color:#000; border:1px solid #999;}
-  }
+@media(max-width:900px){
+  .layout{flex-direction:column;}
+  .nav{width:100%;height:auto;position:relative;display:flex;overflow-x:auto;padding:6px;gap:2px;border-right:none;border-bottom:1px solid var(--border);}
+  .nav-item{padding:6px 10px;white-space:nowrap;border-left:none;border-bottom:2px solid transparent;}
+  .nav-item.active{border-bottom-color:var(--accent);border-left-color:transparent;}
+  .nav-sub{display:none;}
+  .main{padding:14px;}
+  .grid2,.grid3,.simgrid{grid-template-columns:1fr;}
+  .flow{flex-direction:column;}
+  .flow .arrow{transform:rotate(90deg);flex:0 0 24px;}
+  .disease-card .dc-grid{grid-template-columns:1fr;}
+}
+@media print{
+  body{background:#fff;color:#222;}
+  .nav,.navbtns{display:none;}
+  .main{max-width:100%;padding:0;}
+  .sec{display:block!important;page-break-inside:avoid;}
+  .card{border:1px solid #ccc;box-shadow:none;background:#fff;}
+  header{background:#f5f5f5;border-bottom:1px solid #ccc;}
+  .keypoint{background:#eef6fc;border-left:4px solid #2980b9;}
+  .disease-card,.timeline .tl-item{background:#f9f9f9;border:1px solid #ccc;}
+  .flow .step{background:#f4f4f4;border:1px solid #bbb;}
+  .compare-tbl th{background:#e8e8e8;color:#000;}
+}
 </style>
 </head>
 <body>
 
-<header>
-  <div>
-    <h1>ライフステージ後期対策プランナー</h1>
-    <div class="tagline">元気なうちに「何が・どこに・誰が知っているか」を整理し、介護〜相続の費用も試算</div>
-  </div>
-  <div class="header-actions">
-    <button class="btn primary" onclick="doSave()">💾 保存</button>
-    <button class="btn" onclick="doLoad()">📂 読込</button>
-    <button class="btn" onclick="exportJSON()">⬇ JSON出力</button>
-    <button class="btn" onclick="importJSON()">⬆ JSON取込</button>
-    <button class="btn" onclick="window.print()">🖨 印刷/PDF</button>
-  </div>
+<header style="position:relative;">
+  <h1>ライフステージ後期対策プランナー</h1>
+  <p>介護・医療・年金・相続…知識ゼロから学べる総合ガイド</p>
+  <button class="btn" onclick="window.print()" style="position:absolute;right:20px;top:18px;">🖨 印刷/PDF</button>
 </header>
 
 <div class="layout">
-  <nav class="nav" id="nav">
-    <div class="nav-item active" data-sec="0" onclick="gotoSec(0)"><div class="nav-num">0</div><div><div class="nav-label">基本情報・進捗</div><div class="nav-sub">対象者・使い方</div></div></div>
-    <div class="nav-item" data-sec="1" onclick="gotoSec(1)"><div class="nav-num">1</div><div><div class="nav-label">介護</div><div class="nav-sub">暮らし・相談先</div></div></div>
-    <div class="nav-item" data-sec="2" onclick="gotoSec(2)"><div class="nav-num">2</div><div><div class="nav-label">医療</div><div class="nav-sub">医師・服薬・方針</div></div></div>
-    <div class="nav-item" data-sec="3" onclick="gotoSec(3)"><div class="nav-num">3</div><div><div class="nav-label">年金・保険</div><div class="nav-sub">書類・証券番号</div></div></div>
-    <div class="nav-item" data-sec="4" onclick="gotoSec(4)"><div class="nav-num">4</div><div><div class="nav-label">お金・契約</div><div class="nav-sub">口座・カード・契約</div></div></div>
-    <div class="nav-item" data-sec="5" onclick="gotoSec(5)"><div class="nav-num">5</div><div><div class="nav-label">相続・手続き</div><div class="nav-sub">不動産・遺言・印鑑</div></div></div>
-    <div class="nav-item" data-sec="6" onclick="gotoSec(6)"><div class="nav-num">6</div><div><div class="nav-label">抜けやすい備え</div><div class="nav-sub">後見・信託・ノート</div></div></div>
-    <div class="nav-item" data-sec="7" onclick="gotoSec(7)"><div class="nav-num">7</div><div><div class="nav-label">費用シミュレーター</div><div class="nav-sub">介護〜相続を3点試算</div></div></div>
-  </nav>
 
-  <div class="main">
+<!-- ===== NAV ===== -->
+<nav class="nav">
+  <div class="nav-item active" data-sec="0" onclick="gotoSec(0)">
+    <div class="nav-num">0</div>
+    <div><div class="nav-label">はじめに・全体像</div><div class="nav-sub">ライフステージの流れ</div></div>
+  </div>
+  <div class="nav-item" data-sec="1" onclick="gotoSec(1)">
+    <div class="nav-num">1</div>
+    <div><div class="nav-label">介護</div><div class="nav-sub">制度・施設・在宅</div></div>
+  </div>
+  <div class="nav-item" data-sec="2" onclick="gotoSec(2)">
+    <div class="nav-num">2</div>
+    <div><div class="nav-label">医療</div><div class="nav-sub">疾患・服薬・ACP</div></div>
+  </div>
+  <div class="nav-item" data-sec="3" onclick="gotoSec(3)">
+    <div class="nav-num">3</div>
+    <div><div class="nav-label">年金・保険</div><div class="nav-sub">受給・見直し・請求</div></div>
+  </div>
+  <div class="nav-item" data-sec="4" onclick="gotoSec(4)">
+    <div class="nav-num">4</div>
+    <div><div class="nav-label">お金・契約</div><div class="nav-sub">凍結対策・デジタル遺産</div></div>
+  </div>
+  <div class="nav-item" data-sec="5" onclick="gotoSec(5)">
+    <div class="nav-num">5</div>
+    <div><div class="nav-label">相続・手続き</div><div class="nav-sub">期限・遺言・税</div></div>
+  </div>
+  <div class="nav-item" data-sec="6" onclick="gotoSec(6)">
+    <div class="nav-num">6</div>
+    <div><div class="nav-label">抜けやすい備え</div><div class="nav-sub">後見・信託・ノート</div></div>
+  </div>
+  <div class="nav-item" data-sec="7" onclick="gotoSec(7)">
+    <div class="nav-num">7</div>
+    <div><div class="nav-label">費用シミュレーター</div><div class="nav-sub">3点試算</div></div>
+  </div>
+</nav>
 
-    <!-- ===== Section 0 ===== -->
-    <section class="sec active" id="sec0">
-      <div class="card">
-        <h2>基本情報</h2>
-        <p class="lead">記録する親（対象者）の基本情報です。1人分を記録します。父・母など複数を分けたい場合は、それぞれ入力して「JSON出力」で別ファイルに保存してください。</p>
-        <div class="grid3">
-          <label class="fld"><span>呼称（ニックネーム可）</span><input data-k="b_name" placeholder="例：お父さん"></label>
-          <label class="fld"><span>続柄</span><input data-k="b_rel" placeholder="例：父"></label>
-          <label class="fld"><span>生年（西暦）</span><input data-k="b_birth" type="number" placeholder="例：1950" oninput="calcAge()"></label>
-        </div>
-        <div class="grid2">
-          <label class="fld"><span>現在の年齢（自動計算）</span><input id="b_age" readonly></label>
-          <label class="fld"><span>主な居住地</span><input data-k="b_loc" placeholder="例：◯◯県◯◯市"></label>
-        </div>
+<!-- ===== MAIN ===== -->
+<div class="main">
+
+<!-- ==================== Section 0: はじめに・全体像 ==================== -->
+<div class="sec active" id="sec0">
+
+  <div class="card">
+    <h2>ライフステージ後期の全体像</h2>
+    <p class="lead">このセクションでは、高齢期に起こりうる変化と、それぞれの段階で必要になる知識・手続きの全体像を把握します。</p>
+
+    <div class="flow">
+      <div class="step">
+        <span class="step-num">STEP 1</span>
+        <div class="step-label">元気な時期</div>
+        <div class="step-sub">備えの黄金期</div>
       </div>
-
-      <div class="card">
-        <h2>このツールについて・データの注意</h2>
-        <div class="note info">
-          <strong>使い方</strong><br>
-          左のメニュー1〜6を順に埋めていくと、メニューの番号が<span style="color:var(--ok)">緑</span>になります。すべてご本人と相談しながら、分かる範囲で記入してください。空欄のままでも構いません。最後の「7. 費用シミュレーター」で、介護〜相続にかかる概算費用を試算できます。
-        </div>
-        <div class="note warn">
-          <strong>データの保管について（重要）</strong><br>
-          入力内容は<b>このブラウザ（端末）の中だけ</b>に保存され、インターネットには一切送信されません。<br>
-          ・必ず「💾 保存」を押してください（押すまで保存されません）。<br>
-          ・<b>共有パソコンやネットカフェ等では使用しないでください。</b><br>
-          ・印刷物・バックアップJSONには機微な情報が含まれます。<b>施錠できる場所</b>で保管してください。<br>
-          ・<b>暗証番号・パスワードは入力しない設計</b>です（「お金・契約」参照）。
-        </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">STEP 2</span>
+        <div class="step-label">要支援・要介護</div>
+        <div class="step-sub">介護保険の出番</div>
       </div>
-
-      <div class="card">
-        <h2>入力の進捗</h2>
-        <div class="prog" id="progGrid"></div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">STEP 3</span>
+        <div class="step-label">医療・入院</div>
+        <div class="step-sub">高額療養費等</div>
       </div>
-    </section>
-
-    <!-- ===== Section 1 介護 ===== -->
-    <section class="sec" id="sec1">
-      <div class="card">
-        <h2>① 介護 — どこで・どのように暮らしたいか</h2>
-        <p class="lead">介護が必要になったとき、本人がどう過ごしたいかを元気なうちに聞いておくと、家族が判断に迷いません。</p>
-        <label class="fld"><span>希望する暮らしの場所</span>
-          <div class="radios" data-prog="1">
-            <label><input type="radio" name="care_place" data-k="care_place" value="自宅で暮らし続けたい">自宅で暮らし続けたい</label>
-            <label><input type="radio" name="care_place" data-k="care_place" value="子と同居したい">子と同居したい</label>
-            <label><input type="radio" name="care_place" data-k="care_place" value="施設に入りたい">施設に入りたい</label>
-            <label><input type="radio" name="care_place" data-k="care_place" value="まだ決めていない">まだ決めていない</label>
-          </div>
-        </label>
-        <label class="fld"><span>在宅介護 / 施設介護の希望・条件メモ</span><textarea data-k="care_pref" placeholder="例：できるだけ在宅。難しくなったら近所の施設。延命より生活の質を優先 など"></textarea></label>
-        <label class="fld"><span>介護が必要になったとき頼りたい人・キーパーソン</span><input data-k="care_person" placeholder="例：長男（連絡先）、近くに住む妹 など"></label>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">STEP 4</span>
+        <div class="step-label">終末期</div>
+        <div class="step-sub">ACP・看取り</div>
       </div>
-      <div class="card">
-        <h2>困った時の相談先</h2>
-        <div class="guide">
-          <b>地域包括支援センター</b>：高齢者の介護・福祉・健康の総合相談窓口（市区町村ごとに設置・無料）。まず最初の相談先。<br>
-          <b>ケアマネジャー（介護支援専門員）</b>：要介護認定後のケアプラン作成。<br>
-          <b>市区町村の介護保険課</b>：要介護認定の申請窓口。<br>
-          <b>かかりつけ医・地域医療連携室</b>：医療と介護の橋渡し。
-        </div>
-        <label class="fld"><span>地元の相談先メモ（連絡先など）</span><textarea data-k="care_contact" placeholder="例：◯◯地域包括支援センター TEL 000-000-0000 / 担当ケアマネ ◯◯さん"></textarea></label>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">STEP 5</span>
+        <div class="step-label">死後手続き</div>
+        <div class="step-sub">相続・届出</div>
       </div>
-      <div class="navbtns"><span></span><button class="btn primary" onclick="gotoSec(2)">次へ ②医療 →</button></div>
-    </section>
+    </div>
+  </div>
 
-    <!-- ===== Section 2 医療 ===== -->
-    <section class="sec" id="sec2">
-      <div class="card">
-        <h2>② 医療 — かかりつけ・服薬・治療方針</h2>
-        <p class="lead">急な入院や救急搬送のとき、家族がすぐ答えられるよう、医療情報をまとめます。</p>
-        <h3>かかりつけ医・通院先</h3>
-        <table id="tblDoctors"><thead><tr><th>医院・病院名</th><th>診療科</th><th>電話</th><th></th></tr></thead><tbody></tbody></table>
-        <button class="addrow" onclick="addRow('tblDoctors')">＋ 通院先を追加</button>
+  <div class="card">
+    <h2>「いつ・何を・誰に相談」早見表</h2>
+    <table class="compare-tbl">
+      <thead><tr><th>テーマ</th><th>いつ</th><th>何をする</th><th>相談先</th></tr></thead>
+      <tbody>
+        <tr><td>介護の備え</td><td>元気なうちに</td><td>地域包括支援センターを確認</td><td>地域包括支援センター</td></tr>
+        <tr><td>認知症対策</td><td>判断能力があるうちに</td><td>任意後見・家族信託を検討</td><td>司法書士・弁護士</td></tr>
+        <tr><td>保険の見直し</td><td>年1回 or 生活変化時</td><td>保障内容と受取人を確認</td><td>保険会社・FP</td></tr>
+        <tr><td>遺言書</td><td>元気なうちに</td><td>公正証書遺言の作成</td><td>公証役場・弁護士</td></tr>
+        <tr><td>エンディングノート</td><td>いつでも</td><td>希望・連絡先・財産をメモ</td><td>家族</td></tr>
+        <tr><td>相続の準備</td><td>生前</td><td>財産目録の作成・相続人確認</td><td>税理士・司法書士</td></tr>
+      </tbody>
+    </table>
+  </div>
 
-        <label class="fld" style="margin-top:14px;"><span>持病・既往歴・アレルギー</span><textarea data-k="med_history" placeholder="例：高血圧、糖尿病、ペニシリンアレルギー など"></textarea></label>
-        <label class="fld"><span>服薬内容・お薬手帳の保管場所</span><textarea data-k="med_drugs" placeholder="例：朝の血圧薬ほか。お薬手帳は居間の引き出し。かかりつけ薬局：◯◯薬局"></textarea></label>
-      </div>
-      <div class="card">
-        <h3>緊急連絡先</h3>
-        <table id="tblContacts"><thead><tr><th>氏名</th><th>続柄</th><th>電話</th><th></th></tr></thead><tbody></tbody></table>
-        <button class="addrow" onclick="addRow('tblContacts')">＋ 連絡先を追加</button>
-      </div>
-      <div class="card">
-        <h3>治療方針の希望</h3>
-        <label class="fld"><span>延命治療について</span>
-          <div class="radios">
-            <label><input type="radio" name="med_eol" data-k="med_eol" value="希望する">希望する</label>
-            <label><input type="radio" name="med_eol" data-k="med_eol" value="希望しない">希望しない</label>
-            <label><input type="radio" name="med_eol" data-k="med_eol" value="家族に任せる">家族に任せる</label>
-            <label><input type="radio" name="med_eol" data-k="med_eol" value="未定">未定</label>
-          </div>
-        </label>
-        <label class="fld"><span>告知・終末期・その他の希望（自由記述）</span><textarea data-k="med_wish" placeholder="例：病名は本人に告知してほしい。最期は自宅で過ごしたい など"></textarea></label>
-        <div class="note info" style="font-size:11.5px;">延命治療の意思表示（事前指示書・リビングウィル）は、書面にしておくと家族・医療者に伝わりやすくなります。具体的な書式は主治医や自治体にご相談ください。</div>
-      </div>
-      <div class="navbtns"><button class="btn" onclick="gotoSec(1)">← 戻る</button><button class="btn primary" onclick="gotoSec(3)">次へ ③年金・保険 →</button></div>
-    </section>
+  <div class="card">
+    <h2>最低限の用語集</h2>
+    <table class="compare-tbl">
+      <thead><tr><th>用語</th><th>意味</th></tr></thead>
+      <tbody>
+        <tr><td>要介護認定</td><td>介護保険サービスを受けるための認定。市区町村に申請し、要支援1-2・要介護1-5の7段階で判定されます</td></tr>
+        <tr><td>地域包括支援センター</td><td>高齢者の介護・福祉・健康の無料総合相談窓口。全国に約5,400か所</td></tr>
+        <tr><td>高額療養費制度</td><td>1か月の医療費自己負担が上限額を超えた場合に、超過分が払い戻される制度</td></tr>
+        <tr><td>任意後見</td><td>判断能力があるうちに「将来誰に何を任せるか」を公正証書で決めておく制度</td></tr>
+        <tr><td>法定後見</td><td>判断能力が低下した後に家庭裁判所が後見人を選任する制度。本人の意思反映は限定的</td></tr>
+        <tr><td>家族信託</td><td>信頼する家族に財産管理を託す仕組み。認知症による口座凍結を防げます</td></tr>
+        <tr><td>遺言書</td><td>財産の分け方を法的に有効な形で残す書面。公正証書遺言が最も確実です</td></tr>
+        <tr><td>相続税基礎控除</td><td>3,000万円＋600万円×法定相続人数。これ以下なら相続税は非課税です</td></tr>
+        <tr><td>エンディングノート</td><td>法的効力はないが、希望・連絡先・財産情報を家族に伝えるノートです</td></tr>
+        <tr><td>ACP（人生会議）</td><td>将来の医療・ケアについて本人・家族・医療者が話し合うプロセスです</td></tr>
+      </tbody>
+    </table>
+  </div>
 
-    <!-- ===== Section 3 年金・保険 ===== -->
-    <section class="sec" id="sec3">
-      <div class="card">
-        <h2>③ 年金・保険</h2>
-        <p class="lead">年金や保険は「どこに書類があるか」「証券番号」「受取人」が分かれば、手続きが大きく前進します。</p>
-        <h3>年金</h3>
-        <div class="grid2">
-          <label class="fld"><span>受給状況</span>
-            <select data-k="pen_status"><option value="">選択</option><option>受給中</option><option>未受給（加入中）</option><option>不明</option></select>
-          </label>
-          <label class="fld"><span>年金の種類</span><input data-k="pen_type" placeholder="例：老齢基礎年金＋厚生年金"></label>
-        </div>
-        <label class="fld"><span>年金手帳・年金証書・基礎年金番号の保管場所メモ</span><textarea data-k="pen_doc" placeholder="例：年金証書は仏壇の引き出し。基礎年金番号は別途エンディングノートに記載"></textarea></label>
-      </div>
-      <div class="card">
-        <h3>加入している保険</h3>
-        <p class="lead" style="margin-bottom:6px;">生命保険・医療保険・がん保険・火災/地震・自動車保険など。受取人もあわせて確認しておきましょう。</p>
-        <table id="tblInsurance"><thead><tr><th>保険会社</th><th>種類</th><th>証券番号</th><th>受取人</th><th>証券の保管場所</th><th></th></tr></thead><tbody></tbody></table>
-        <button class="addrow" onclick="addRow('tblInsurance')">＋ 保険を追加</button>
-      </div>
-      <div class="navbtns"><button class="btn" onclick="gotoSec(2)">← 戻る</button><button class="btn primary" onclick="gotoSec(4)">次へ ④お金・契約 →</button></div>
-    </section>
+  <div class="keypoint">
+    <div class="kp-title">覚えておきたい</div>
+    困ったらまず「地域包括支援センター」に電話。無料で、介護・福祉・医療の相談ができます。お住まいの市区町村のホームページで最寄りのセンターを確認できます。
+  </div>
 
-    <!-- ===== Section 4 お金・契約 ===== -->
-    <section class="sec" id="sec4">
-      <div class="card">
-        <h2>④ お金・契約</h2>
-        <div class="note warn">
-          <strong>⚠ 暗証番号・パスワードは入力しないでください</strong><br>
-          このツールには<b>暗証番号・ネットバンキングのパスワード・口座番号の全桁を入力する欄は設けていません。</b>盗難・漏えい時の被害を防ぐためです。「どこにあるか・誰が知っているか」（保管場所メモ）だけを記録してください。口座番号は確認用に<b>末尾4桁のみ</b>とします。
-        </div>
-        <h3>主な口座・金融機関</h3>
-        <table id="tblAccounts"><thead><tr><th>金融機関</th><th>支店</th><th>種別</th><th>口座末尾4桁</th><th>用途・通帳/印鑑の保管場所メモ</th><th></th></tr></thead><tbody></tbody></table>
-        <button class="addrow" onclick="addRow('tblAccounts')">＋ 口座を追加</button>
-      </div>
-      <div class="card">
-        <h3>借入・ローン</h3>
-        <table id="tblLoans"><thead><tr><th>借入先</th><th>残高（万円）</th><th>種類</th><th>備考</th><th></th></tr></thead><tbody></tbody></table>
-        <button class="addrow" onclick="addRow('tblLoans')">＋ 借入を追加</button>
-      </div>
-      <div class="card">
-        <h3>クレジットカード</h3>
-        <table id="tblCards"><thead><tr><th>カード会社</th><th>末尾4桁</th><th>引落口座</th><th>備考</th><th></th></tr></thead><tbody></tbody></table>
-        <button class="addrow" onclick="addRow('tblCards')">＋ カードを追加</button>
-      </div>
-      <div class="card">
-        <h3>サブスク・公共料金・スマホ等の定期契約</h3>
-        <p class="lead" style="margin-bottom:6px;">亡くなった後・施設入所後に「解約し忘れて払い続ける」ことが多い項目です。把握しておくと解約がスムーズです。</p>
-        <table id="tblSubs"><thead><tr><th>サービス・契約名</th><th>月額（円）</th><th>支払方法</th><th>メモ</th><th></th></tr></thead><tbody></tbody></table>
-        <button class="addrow" onclick="addRow('tblSubs')">＋ 契約を追加</button>
-      </div>
-      <div class="navbtns"><button class="btn" onclick="gotoSec(3)">← 戻る</button><button class="btn primary" onclick="gotoSec(5)">次へ ⑤相続・手続き →</button></div>
-    </section>
-
-    <!-- ===== Section 5 相続・手続き ===== -->
-    <section class="sec" id="sec5">
-      <div class="card">
-        <h2>⑤ 相続・手続き</h2>
-        <p class="lead">相続で揉めない・困らないために、財産の所在と意思を整理します。評価額は「7. 費用シミュレーター」の相続税試算にも使われます。</p>
-        <h3>不動産</h3>
-        <table id="tblProps"><thead><tr><th>種類</th><th>所在地</th><th>名義</th><th>概算評価額（万円）</th><th></th></tr></thead><tbody></tbody></table>
-        <button class="addrow" onclick="addRow('tblProps')">＋ 不動産を追加</button>
-      </div>
-      <div class="card">
-        <h3>遺言書</h3>
-        <div class="grid3">
-          <label class="fld"><span>遺言書の有無</span>
-            <select data-k="will_exist" data-prog="5"><option value="">選択</option><option>ある</option><option>ない</option><option>作成予定</option><option>不明</option></select>
-          </label>
-          <label class="fld"><span>種類</span>
-            <select data-k="will_type"><option value="">選択</option><option>公正証書遺言</option><option>自筆証書遺言</option><option>自筆証書（法務局保管）</option><option>不明</option></select>
-          </label>
-          <label class="fld"><span>保管場所</span><input data-k="will_place" placeholder="例：◯◯公証役場 / 自宅金庫"></label>
-        </div>
-      </div>
-      <div class="card">
-        <h3>印鑑・重要書類の保管場所</h3>
-        <label class="fld"><span>実印・印鑑登録証（カード）の保管場所</span><input data-k="seal_place" placeholder="例：実印は寝室の金庫、登録カードは別保管"></label>
-        <label class="fld"><span>重要書類（権利証・登記識別情報・通帳・証券・保険証券等）の保管場所</span><textarea data-k="docs_place" placeholder="例：権利証は貸金庫。通帳は居間の引き出し。マイナンバーカードは本人が携帯"></textarea></label>
-      </div>
-      <div class="card">
-        <h3>家族間で共有しておきたいこと</h3>
-        <label class="fld"><span>自由記述</span><textarea data-k="family_share" placeholder="例：お墓・菩提寺のこと、形見分けの希望、特定の人への配慮、デジタル遺品（SNS・ネット証券）の扱い など"></textarea></label>
-      </div>
-      <div class="navbtns"><button class="btn" onclick="gotoSec(4)">← 戻る</button><button class="btn primary" onclick="gotoSec(6)">次へ ⑥抜けやすい備え →</button></div>
-    </section>
-
-    <!-- ===== Section 6 抜けやすい備え ===== -->
-    <section class="sec" id="sec6">
-      <div class="card">
-        <h2>⑥ 抜けやすい備え</h2>
-        <p class="lead">判断能力が低下してからでは使えない・間に合わない制度です。元気なうちの検討が肝心です。</p>
-
-        <h3>任意後見契約</h3>
-        <div class="guide">本人が元気なうちに、判断能力が低下した将来に備えて「誰に・何を任せるか」を<b>公正証書</b>で決めておく契約。実際に発動する際は家庭裁判所が「任意後見監督人」を選任します。<br><b>相談先</b>：公証役場、司法書士・弁護士、社会福祉協議会。</div>
-        <label class="chk"><input type="checkbox" data-k="prep_kouken" data-prog="6"> 任意後見契約を検討する／したい</label>
-        <label class="fld"><span>任せたい人・内容メモ</span><input data-k="prep_kouken_memo" placeholder="例：長男に財産管理を委任したい"></label>
-
-        <h3>家族信託</h3>
-        <div class="guide">財産（不動産・現預金など）の管理・承継を、信頼する家族に託す仕組み。認知症による「口座凍結・実家の売却不可」を防げる柔軟な手段。<br><b>相談先</b>：家族信託に詳しい司法書士・弁護士・税理士。</div>
-        <label class="chk"><input type="checkbox" data-k="prep_shintaku"> 家族信託を検討する／したい</label>
-        <label class="fld"><span>信託したい財産メモ</span><input data-k="prep_shintaku_memo" placeholder="例：実家（◯◯市）と預金の一部を長女に"></label>
-
-        <h3>エンディングノート</h3>
-        <div class="guide">遺言書のような法的効力はありませんが、本人の希望・連絡先・財産の所在などを自由に書き残せます。本ツールの内容を印刷して保管するのも有効です。</div>
-        <label class="chk"><input type="checkbox" data-k="prep_ending"> エンディングノートを作成している／する</label>
-        <label class="fld"><span>保管場所メモ</span><input data-k="prep_ending_memo" placeholder="例：本ツールを印刷して仏壇の引き出しに保管"></label>
-      </div>
-      <div class="navbtns"><button class="btn" onclick="gotoSec(5)">← 戻る</button><button class="btn primary" onclick="gotoSec(7)">次へ ⑦費用シミュレーター →</button></div>
-    </section>
-
-    <!-- ===== Section 7 費用シミュレーター ===== -->
-    <section class="sec" id="sec7">
-      <div class="card">
-        <h2>⑦ 費用シミュレーター</h2>
-        <p class="lead">介護・医療・葬儀・法的手続き・相続税の概算を、最悪／平均／ベストの3点で試算します。すべて<b>仮定に基づく概算</b>であり、実際の費用・税額を保証するものではありません。</p>
-
-        <h3>介護費</h3>
-        <div class="grid3">
-          <label class="fld"><span>ケア形態</span>
-            <select id="s_care" onchange="runSim()">
-              <option value="home">在宅介護</option>
-              <option value="tokuyou">特別養護老人ホーム</option>
-              <option value="yuryo">介護付有料老人ホーム</option>
-              <option value="sakou">サービス付き高齢者向け住宅</option>
-              <option value="none">介護費は試算しない</option>
-            </select>
-          </label>
-          <label class="fld"><span>想定介護期間（年）</span><input id="s_care_years" type="number" value="5" oninput="runSim()"></label>
-        </div>
-
-        <h3>医療費（介護期間中の自己負担目安）</h3>
-        <div class="grid3">
-          <label class="fld"><span>想定月額（万円）</span><input id="s_med_month" type="number" value="2" oninput="runSim()"></label>
-          <label class="fld"><span>想定年数（年）</span><input id="s_med_years" type="number" value="5" oninput="runSim()"></label>
-        </div>
-        <div class="note info" style="font-size:11px;">高額療養費制度・後期高齢者医療（窓口1〜3割）により自己負担には上限があります。入院・差額ベッド・通院交通費等の自己負担の目安として入力してください。</div>
-
-        <h3>葬儀費</h3>
-        <label class="fld"><span>葬儀の形式</span>
-          <select id="s_funeral" onchange="runSim()">
-            <option value="chokuso">直葬・火葬式</option>
-            <option value="ichinichi">一日葬</option>
-            <option value="kazoku" selected>家族葬</option>
-            <option value="ippan">一般葬</option>
-            <option value="none">葬儀費は試算しない</option>
-          </select>
-        </label>
-
-        <h3>法的手続き費用</h3>
-        <label class="chk"><input type="checkbox" id="s_kouken" onchange="runSim()"> 任意後見契約を利用する</label>
-        <label class="fld" style="margin-left:24px;"><span>後見監督人報酬の想定発動年数（年）</span><input id="s_kouken_years" type="number" value="3" oninput="runSim()"></label>
-        <label class="chk"><input type="checkbox" id="s_shintaku" onchange="runSim()"> 家族信託を利用する</label>
-        <label class="chk"><input type="checkbox" id="s_igon" onchange="runSim()"> 公正証書遺言を専門家に依頼する</label>
-
-        <h3>相続税（概算）</h3>
-        <div class="grid3">
-          <label class="fld"><span>遺産総額（万円）</span><input id="s_estate" type="number" placeholder="未入力なら不動産合計を使用" oninput="runSim()"></label>
-          <label class="fld"><span>法定相続人の数</span><input id="s_heirs" type="number" value="2" oninput="runSim()"></label>
-        </div>
-        <div class="note warn" style="font-size:11px;">相続税は<b>非常に簡略な概算</b>です。法定相続分どおりに均等按分したと仮定し、<b>配偶者の税額軽減・小規模宅地等の特例・各種控除は未考慮</b>です（これらで税額は大きく下がることが多い）。正確な金額は必ず税理士にご相談ください。</div>
-
-        <button class="btn primary" style="margin-top:6px;" onclick="runSim()">試算する</button>
-      </div>
-
-      <div class="card">
-        <h2>試算結果</h2>
-        <div class="simgrid">
-          <div class="simbox worst"><div class="lab">最悪ケース（高め）</div><div class="val" id="r_worst">—</div></div>
-          <div class="simbox mid"><div class="lab">平均ケース</div><div class="val" id="r_mid">—</div></div>
-          <div class="simbox best"><div class="lab">ベストケース（抑えめ）</div><div class="val" id="r_best">—</div></div>
-        </div>
-        <table class="breakdown"><tbody id="r_break"></tbody></table>
-        <div class="src" id="r_src"></div>
-      </div>
-      <div class="navbtns"><button class="btn" onclick="gotoSec(6)">← 戻る</button><span></span></div>
-    </section>
-
+  <div class="navbtns">
+    <span></span>
+    <button class="btn primary" onclick="gotoSec(1)">次へ ①介護 →</button>
   </div>
 </div>
 
+<!-- ==================== Section 1: 介護 ==================== -->
+<div class="sec" id="sec1">
+
+  <div class="card">
+    <h2>介護保険の基礎知識</h2>
+    <p class="lead">介護保険は40歳以上が加入する社会保険制度です。65歳以上（第1号被保険者）は原因を問わず、40-64歳（第2号被保険者）は特定疾病が原因の場合に利用できます。</p>
+
+    <h3>要介護度と区分支給限度額</h3>
+    <table class="compare-tbl">
+      <thead><tr><th>区分</th><th>状態の目安</th><th>区分支給限度額（月額）</th><th>自己負担目安（1割）</th></tr></thead>
+      <tbody>
+        <tr><td>要支援1</td><td>日常生活はほぼ自立、一部支援が必要</td><td>50,320円</td><td>約5,032円</td></tr>
+        <tr><td>要支援2</td><td>要支援1より支援が必要、介護予防が有効</td><td>105,310円</td><td>約10,531円</td></tr>
+        <tr><td>要介護1</td><td>立ち上がり・歩行が不安定、部分的に介助が必要</td><td>167,650円</td><td>約16,765円</td></tr>
+        <tr><td>要介護2</td><td>立ち上がり・歩行が困難、排泄・入浴に一部介助</td><td>197,050円</td><td>約19,705円</td></tr>
+        <tr><td>要介護3</td><td>立ち上がり・歩行ができない、排泄・入浴・衣服着脱に全介助</td><td>270,480円</td><td>約27,048円</td></tr>
+        <tr><td>要介護4</td><td>日常生活全般に全介助が必要、理解力の低下</td><td>309,380円</td><td>約30,938円</td></tr>
+        <tr><td>要介護5</td><td>寝たきり状態、意思疎通が困難</td><td>362,170円</td><td>約36,217円</td></tr>
+      </tbody>
+    </table>
+    <div class="src">出典：厚生労働省「介護報酬の算定構造」（2024年度改定）。自己負担割合は所得に応じて1〜3割。</div>
+    <div class="note info">自己負担割合は本人の所得により1割・2割・3割に分かれます。年金収入のみで280万円未満の方は原則1割です。</div>
+  </div>
+
+  <div class="card">
+    <h2>要介護認定の申請フロー</h2>
+    <div class="flow">
+      <div class="step">
+        <span class="step-num">1</span>
+        <div class="step-label">申請</div>
+        <div class="step-sub">市区町村の窓口へ</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">2</span>
+        <div class="step-label">訪問調査</div>
+        <div class="step-sub">認定調査員が自宅訪問（約2週間）</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">3</span>
+        <div class="step-label">主治医意見書</div>
+        <div class="step-sub">かかりつけ医が作成（並行）</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">4</span>
+        <div class="step-label">一次判定</div>
+        <div class="step-sub">コンピュータ判定</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">5</span>
+        <div class="step-label">二次判定</div>
+        <div class="step-sub">介護認定審査会</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">6</span>
+        <div class="step-label">結果通知</div>
+        <div class="step-sub">申請から原則30日以内（郵送）</div>
+      </div>
+    </div>
+    <div class="note info">申請は本人のほか、家族や地域包括支援センターが代行できます。結果に不服がある場合は、60日以内に都道府県の介護保険審査会に審査請求が可能です。</div>
+  </div>
+
+  <div class="card">
+    <h2>在宅介護 vs 施設介護</h2>
+    <table class="compare-tbl">
+      <thead><tr><th>項目</th><th>在宅介護</th><th>施設介護</th></tr></thead>
+      <tbody>
+        <tr><td>費用</td><td>月3〜8万円（介護度による）</td><td>月8〜30万円＋入居一時金</td></tr>
+        <tr><td>メリット</td><td>住み慣れた環境、家族との時間、費用を抑えやすい</td><td>24時間専門スタッフ、家族の負担軽減、緊急対応</td></tr>
+        <tr><td>デメリット</td><td>家族の負担大、夜間対応の不安、住宅改修が必要な場合も</td><td>費用が高い、入居待ちがある、環境変化のストレス</td></tr>
+        <tr><td>向いている人</td><td>軽度（要支援〜要介護2程度）、家族の協力がある、住環境が整っている</td><td>中重度（要介護3以上）、独居、家族が遠方</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>施設5種比較</h2>
+    <table class="compare-tbl">
+      <thead><tr><th>施設名</th><th>入居条件</th><th>月額費用目安</th><th>入居一時金</th><th>待機</th><th>特徴</th></tr></thead>
+      <tbody>
+        <tr><td>特別養護老人ホーム（特養）</td><td>原則要介護3以上</td><td>8〜15万円</td><td>なし</td><td>数ヶ月〜数年</td><td>公的施設で最も安価。終身利用可。人気が高く待機が長い</td></tr>
+        <tr><td>介護老人保健施設（老健）</td><td>要介護1以上</td><td>8〜15万円</td><td>なし</td><td>比較的短い</td><td>リハビリ重視。原則3〜6ヶ月の短期入所。在宅復帰が目標</td></tr>
+        <tr><td>介護付有料老人ホーム</td><td>自立〜要介護5</td><td>15〜30万円</td><td>0〜1,000万円</td><td>施設による</td><td>手厚い介護。費用は高いがサービスの質・選択肢が豊富</td></tr>
+        <tr><td>サービス付き高齢者向け住宅（サ高住）</td><td>60歳以上または要介護認定者</td><td>11〜25万円</td><td>20〜200万円</td><td>少なめ</td><td>バリアフリー賃貸。安否確認・生活相談付き。自由度が高い</td></tr>
+        <tr><td>グループホーム</td><td>要支援2以上の認知症の方</td><td>12〜18万円</td><td>0〜100万円</td><td>地域による</td><td>少人数（5〜9人）の家庭的環境。認知症ケアに特化。地域密着型</td></tr>
+      </tbody>
+    </table>
+    <div class="src">出典：厚生労働省「介護サービス情報公表システム」、各施設公表資料（2024年時点の概算）</div>
+  </div>
+
+  <div class="card">
+    <h2>主な在宅サービス一覧</h2>
+    <table class="compare-tbl">
+      <thead><tr><th>サービス名</th><th>内容</th><th>利用頻度の目安</th><th>月額目安（1割負担）</th></tr></thead>
+      <tbody>
+        <tr><td>訪問介護（ホームヘルプ）</td><td>食事・入浴・排泄の介助、掃除・洗濯・買い物の援助</td><td>週2〜5回</td><td>5,000〜15,000円</td></tr>
+        <tr><td>訪問看護</td><td>看護師が自宅を訪問し、医療的ケア（点滴、褥瘡処置等）を実施</td><td>週1〜3回</td><td>3,000〜10,000円</td></tr>
+        <tr><td>通所介護（デイサービス）</td><td>日帰りで施設に通い、入浴・食事・レクリエーション等</td><td>週1〜3回</td><td>7,000〜15,000円</td></tr>
+        <tr><td>短期入所（ショートステイ）</td><td>施設に短期間宿泊。家族の休息（レスパイト）にも</td><td>月数日〜2週間</td><td>日額2,000〜3,000円</td></tr>
+        <tr><td>福祉用具貸与</td><td>車椅子・介護ベッド・歩行器等のレンタル</td><td>必要に応じて</td><td>月500〜3,000円</td></tr>
+        <tr><td>住宅改修</td><td>手すり設置・段差解消・滑り防止等。上限20万円（自己負担1〜3割）</td><td>1回</td><td>上限20万円の1〜3割</td></tr>
+      </tbody>
+    </table>
+    <div class="src">出典：厚生労働省「介護給付費等実態統計」（2024年度）</div>
+  </div>
+
+  <div class="card">
+    <h2>困った時の連絡先</h2>
+    <div class="keypoint">
+      <div class="kp-title">困ったら、まずここに連絡</div>
+      <ul style="list-style:none;padding:0;margin:0;">
+        <li style="margin:6px 0;"><strong>地域包括支援センター：</strong>高齢者の総合相談窓口（無料）。お住まいの市区町村で検索できます</li>
+        <li style="margin:6px 0;"><strong>ケアマネジャー：</strong>要介護認定後、ケアプランを作成する専門職。利用者の自己負担はありません</li>
+        <li style="margin:6px 0;"><strong>市区町村の介護保険課：</strong>要介護認定の申請窓口</li>
+        <li style="margin:6px 0;"><strong>かかりつけ医：</strong>主治医意見書の作成、医療と介護の橋渡し</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="navbtns">
+    <button class="btn" onclick="gotoSec(0)">← はじめに</button>
+    <button class="btn primary" onclick="gotoSec(2)">次へ ②医療 →</button>
+  </div>
+</div>
+
+<!-- ==================== Section 2: 医療 ==================== -->
+<div class="sec" id="sec2">
+
+  <div class="card">
+    <h2>高齢期の医療制度</h2>
+    <p class="lead">75歳以上は「後期高齢者医療制度」に加入します。窓口負担は原則1割（現役並み所得者は3割、一定以上所得者は2割）です。</p>
+
+    <h3>高額療養費制度</h3>
+    <p style="font-size:13px;margin-bottom:10px;">1か月の医療費自己負担額が上限を超えた場合、超過分が払い戻されます。事前に「限度額適用認定証」を取得しておくと、窓口での支払いが上限額までに抑えられます。</p>
+    <table class="compare-tbl">
+      <thead><tr><th>所得区分</th><th>自己負担限度額（月額・70歳以上）</th><th>多数回該当</th></tr></thead>
+      <tbody>
+        <tr><td>現役並み所得（年収約370万円以上）</td><td>80,100円＋（医療費−267,000円）×1%</td><td>44,400円</td></tr>
+        <tr><td>一般（年収約156〜370万円）</td><td>57,600円</td><td>44,400円</td></tr>
+        <tr><td>低所得II（住民税非課税）</td><td>24,600円</td><td>—</td></tr>
+        <tr><td>低所得I（年金80万円以下等）</td><td>15,000円</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <div class="src">出典：厚生労働省「高額療養費制度を利用される皆さまへ」（2024年度）</div>
+    <div class="note info">「多数回該当」とは、直近12か月で高額療養費が3回以上あった場合、4回目から適用される低い上限額です。</div>
+  </div>
+
+  <div class="card">
+    <h2>知っておきたい8つの疾患</h2>
+    <p class="lead">高齢期に多い疾患について、初期症状・対応・治療の基礎知識をまとめます。</p>
+
+    <div class="disease-card">
+      <div class="dc-name">① 認知症（アルツハイマー型・レビー小体型・血管性）</div>
+      <div class="dc-grid">
+        <div><div class="dc-label">初期症状</div>同じ話の繰り返し、日付や場所の混乱、物の置き忘れ、判断力の低下</div>
+        <div><div class="dc-label">進行</div>緩やかに進行（アルツハイマー型）。レビー小体型は幻視・パーキンソン症状を伴います</div>
+        <div><div class="dc-label">主な治療薬</div>ドネペジル（アリセプト）、メマンチン等。進行を遅らせる効果があります</div>
+        <div><div class="dc-label">家族の対応</div>否定しない・急かさない、安全な環境づくり、早期受診（もの忘れ外来）</div>
+      </div>
+    </div>
+
+    <div class="disease-card">
+      <div class="dc-name">② 脳卒中（脳梗塞・脳出血・くも膜下出血）</div>
+      <div class="dc-grid">
+        <div><div class="dc-label">初期症状</div>FAST法で判定 — F:顔の歪み A:腕の麻痺 S:言葉のもつれ T:発症時刻を記録</div>
+        <div><div class="dc-label">緊急対応</div>発症後4.5時間以内のt-PA投与が鍵。すぐに救急車（119番）</div>
+        <div><div class="dc-label">リハビリ</div>発症後72時間以内に開始が理想。急性期→回復期→生活期の3段階</div>
+        <div><div class="dc-label">予防</div>高血圧管理、禁煙、適度な運動、心房細動の治療</div>
+      </div>
+    </div>
+
+    <div class="disease-card">
+      <div class="dc-name">③ 心疾患（狭心症・心筋梗塞・心不全）</div>
+      <div class="dc-grid">
+        <div><div class="dc-label">主な症状</div>胸の圧迫感・締め付け、息切れ、冷汗、左肩〜腕の痛み</div>
+        <div><div class="dc-label">緊急時</div>胸痛が15分以上続いたら迷わず119番。ニトロ舌下錠を処方されている方は使用</div>
+        <div><div class="dc-label">治療</div>カテーテル治療、バイパス手術、薬物療法（抗血小板薬、β遮断薬等）</div>
+        <div><div class="dc-label">日常管理</div>塩分制限、体重管理、服薬遵守、過度な運動を避ける</div>
+      </div>
+    </div>
+
+    <div class="disease-card">
+      <div class="dc-name">④ がん（高齢者に多い5大がん）</div>
+      <div class="dc-grid">
+        <div><div class="dc-label">5大がん</div>肺がん・胃がん・大腸がん・前立腺がん（男性）・乳がん（女性）</div>
+        <div><div class="dc-label">検診</div>胃・大腸・肺は年1回、乳がんは2年に1回が推奨。自治体のがん検診を活用</div>
+        <div><div class="dc-label">治療方針</div>高齢者は体力・QOLを考慮した治療選択が重要。緩和ケアは治療初期から並行可能</div>
+        <div><div class="dc-label">費用</div>高額療養費制度の活用。先進医療は自己負担（民間がん保険の対象になる場合あり）</div>
+      </div>
+    </div>
+
+    <div class="disease-card">
+      <div class="dc-name">⑤ 糖尿病（2型）</div>
+      <div class="dc-grid">
+        <div><div class="dc-label">指標</div>HbA1c 7.0%未満が一般的目標（高齢者は8.0%未満に緩和される場合あり）</div>
+        <div><div class="dc-label">3大合併症</div>網膜症（失明リスク）・腎症（透析リスク）・神経障害（足の壊疽リスク）</div>
+        <div><div class="dc-label">治療</div>食事療法→運動療法→経口薬→インスリン注射の段階的アプローチ</div>
+        <div><div class="dc-label">注意</div>低血糖（ふらつき・冷汗・意識障害）に注意。ブドウ糖を常備</div>
+      </div>
+    </div>
+
+    <div class="disease-card">
+      <div class="dc-name">⑥ 高血圧</div>
+      <div class="dc-grid">
+        <div><div class="dc-label">降圧目標</div>75歳未満は130/80mmHg未満、75歳以上は140/90mmHg未満（目安）</div>
+        <div><div class="dc-label">薬の種類</div>Ca拮抗薬、ARB、ACE阻害薬、利尿薬等。自己判断で中止しないでください</div>
+        <div><div class="dc-label">生活改善</div>減塩（1日6g未満）、適正体重、節酒、有酸素運動</div>
+        <div><div class="dc-label">注意</div>白衣高血圧（診察時のみ高い）と仮面高血圧（家庭で高い）。家庭血圧の記録が重要</div>
+      </div>
+    </div>
+
+    <div class="disease-card">
+      <div class="dc-name">⑦ 骨粗鬆症・骨折</div>
+      <div class="dc-grid">
+        <div><div class="dc-label">危険な骨折</div>大腿骨頸部骨折 → 寝たきりの主要原因。1年以内の死亡率約10%</div>
+        <div><div class="dc-label">治療薬</div>ビスホスホネート製剤、デノスマブ等。ビタミンD・カルシウム補充</div>
+        <div><div class="dc-label">転倒予防</div>家の段差解消、手すり設置、滑りにくい履物、筋力トレーニング</div>
+        <div><div class="dc-label">検査</div>骨密度検査（DEXA法）。閉経後の女性は特に定期検査を推奨</div>
+      </div>
+    </div>
+
+    <div class="disease-card">
+      <div class="dc-name">⑧ 誤嚥性肺炎</div>
+      <div class="dc-grid">
+        <div><div class="dc-label">原因</div>嚥下機能の低下により、食べ物や唾液が気管に入り肺炎を起こします</div>
+        <div><div class="dc-label">予防</div>口腔ケア（歯磨き・義歯の清掃）が最も重要。食事はゆっくり、姿勢を正して</div>
+        <div><div class="dc-label">食事の工夫</div>とろみ付け、一口量を少なく、むせやすい食品（お餅・海苔・こんにゃく）に注意</div>
+        <div><div class="dc-label">注意</div>高齢者の肺炎死亡の多くが誤嚥性。発熱・咳・食欲低下があれば早めに受診</div>
+      </div>
+    </div>
+
+    <div class="src">出典：日本老年医学会ガイドライン、各学会診療ガイドライン（2023-2024年版）を基に概要をまとめたもの。個別の診断・治療は必ず主治医にご相談ください。</div>
+  </div>
+
+  <div class="card">
+    <h2>服薬管理のポイント</h2>
+    <h3>ポリファーマシー（多剤併用）に注意</h3>
+    <p style="font-size:13px;margin-bottom:10px;">高齢者は複数の医療機関から薬を処方されることが多く、6種類以上の薬を服用している場合は副作用リスクが高まります。</p>
+    <div class="keypoint">
+      <div class="kp-title">服薬管理で大切なこと</div>
+      <ul style="list-style:none;padding:0;margin:0;">
+        <li style="margin:6px 0;">お薬手帳を1冊にまとめ、すべての医療機関・薬局で提示する</li>
+        <li style="margin:6px 0;">かかりつけ薬局を1つ決め、飲み合わせのチェックを受ける</li>
+        <li style="margin:6px 0;">残薬（飲み忘れて余った薬）がある場合は薬剤師に相談</li>
+        <li style="margin:6px 0;">自己判断で薬を中止・減量しない</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>事前指示書・ACP（人生会議）</h2>
+    <p style="font-size:13px;margin-bottom:10px;">ACP（Advance Care Planning、通称「人生会議」）とは、将来の医療やケアについて、本人・家族・医療者が繰り返し話し合うプロセスです。</p>
+    <p style="font-size:13px;margin-bottom:10px;">事前指示書（リビングウィル）は、判断能力があるうちに「延命治療を希望するか」「どのような最期を迎えたいか」を書面にしたものです。法的拘束力は限定的ですが、家族や医療者の判断の大きな助けになります。</p>
+    <div class="keypoint">
+      <div class="kp-title">救急時に伝える5項目</div>
+      名前と年齢 / 持病（既往歴）/ 現在飲んでいる薬 / アレルギー / かかりつけ医（病院名・電話番号）。<br>これらをカードにして財布に入れておくと安心です。
+    </div>
+  </div>
+
+  <div class="navbtns">
+    <button class="btn" onclick="gotoSec(1)">← ①介護</button>
+    <button class="btn primary" onclick="gotoSec(3)">次へ ③年金・保険 →</button>
+  </div>
+</div>
+
+<!-- ==================== Section 3: 年金・保険 ==================== -->
+<div class="sec" id="sec3">
+
+  <div class="card">
+    <h2>公的年金の基礎</h2>
+    <p class="lead">日本の公的年金は「2階建て」です。1階が国民年金（老齢基礎年金）、2階が厚生年金（老齢厚生年金）。</p>
+
+    <h3>老齢基礎年金</h3>
+    <p style="font-size:13px;margin-bottom:10px;">20〜60歳の40年間すべて保険料を納付した場合の満額は、年間約81万円（月額約6.8万円）です（2024年度）。未納期間があると、その分減額されます。</p>
+
+    <h3>繰上げ・繰下げ受給の損益分岐</h3>
+    <table class="compare-tbl">
+      <thead><tr><th>受給開始年齢</th><th>増減率</th><th>年額（満額ベース）</th><th>損益分岐年齢</th></tr></thead>
+      <tbody>
+        <tr><td>60歳（繰上げ）</td><td>−24%減額</td><td>約61.6万円</td><td>約80歳10ヶ月</td></tr>
+        <tr><td>61歳</td><td>−19.2%減額</td><td>約65.4万円</td><td>約81歳</td></tr>
+        <tr><td>62歳</td><td>−14.4%減額</td><td>約69.3万円</td><td>約81歳2ヶ月</td></tr>
+        <tr><td>63歳</td><td>−9.6%減額</td><td>約73.2万円</td><td>約81歳4ヶ月</td></tr>
+        <tr><td>64歳</td><td>−4.8%減額</td><td>約77.1万円</td><td>約81歳6ヶ月</td></tr>
+        <tr><td>65歳（原則）</td><td>0%</td><td>約81万円</td><td>—</td></tr>
+        <tr><td>66歳（繰下げ）</td><td>+8.4%増額</td><td>約87.8万円</td><td>約78歳</td></tr>
+        <tr><td>67歳</td><td>+16.8%増額</td><td>約94.6万円</td><td>約79歳</td></tr>
+        <tr><td>68歳</td><td>+25.2%増額</td><td>約101.4万円</td><td>約80歳</td></tr>
+        <tr><td>70歳</td><td>+42%増額</td><td>約115万円</td><td>約82歳</td></tr>
+        <tr><td>75歳（最大）</td><td>+84%増額</td><td>約149万円</td><td>約87歳</td></tr>
+      </tbody>
+    </table>
+    <div class="src">出典：日本年金機構「老齢基礎年金の繰上げ・繰下げ受給」（2024年度）。繰上げは1か月あたり0.4%減額、繰下げは1か月あたり0.7%増額。</div>
+    <div class="note info">繰上げ受給は一度開始すると取り消せません。また障害基礎年金の請求ができなくなる等の制約もあります。繰下げは加給年金や振替加算が受けられない期間が生じます。</div>
+
+    <h3>遺族年金</h3>
+    <p style="font-size:13px;margin-bottom:10px;">遺族基礎年金は、子のある配偶者または子に支給されます（子は18歳年度末まで）。遺族厚生年金は、亡くなった方が厚生年金加入者だった場合に配偶者等に支給されます。</p>
+
+    <h3>年金手続きフロー（死亡時）</h3>
+    <div class="flow">
+      <div class="step">
+        <span class="step-num">1</span>
+        <div class="step-label">死亡届提出</div>
+        <div class="step-sub">7日以内</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">2</span>
+        <div class="step-label">年金受給停止届</div>
+        <div class="step-sub">14日以内（厚年は10日）</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">3</span>
+        <div class="step-label">未支給年金請求</div>
+        <div class="step-sub">5年以内</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">4</span>
+        <div class="step-label">遺族年金請求</div>
+        <div class="step-sub">5年以内</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>保険の網羅解説</h2>
+    <p class="lead">加入している保険の内容を把握し、必要に応じて見直すことが大切です。</p>
+
+    <h3>生命保険</h3>
+    <p style="font-size:13px;margin-bottom:10px;">死亡時に保険金が支払われます。受取人の指定が重要です。</p>
+    <table class="compare-tbl">
+      <thead><tr><th>種類</th><th>特徴</th><th>保険期間</th><th>保険料</th></tr></thead>
+      <tbody>
+        <tr><td>定期保険</td><td>一定期間のみ保障。掛け捨て型</td><td>10年・20年等</td><td>安い</td></tr>
+        <tr><td>終身保険</td><td>一生涯保障。貯蓄性あり</td><td>終身</td><td>高い</td></tr>
+        <tr><td>養老保険</td><td>満期時に満期保険金。貯蓄性が高い</td><td>一定期間</td><td>最も高い</td></tr>
+      </tbody>
+    </table>
+    <div class="note info">死亡保険金の非課税枠：500万円×法定相続人数。相続税対策として活用されることがあります。</div>
+
+    <h3>医療保険</h3>
+    <p style="font-size:13px;margin-bottom:10px;">入院・手術時に給付金が支払われます。公的医療保険（高額療養費制度）でカバーされない差額ベッド代、先進医療、食事代等を補填する役割です。</p>
+    <div class="keypoint">
+      <div class="kp-title">見直しポイント</div>
+      <ul style="list-style:none;padding:0;margin:0;">
+        <li style="margin:5px 0;">入院日額は十分か</li>
+        <li style="margin:5px 0;">先進医療特約は付いているか</li>
+        <li style="margin:5px 0;">1入院の支払限度日数は何日か</li>
+        <li style="margin:5px 0;">保険料と貯蓄のバランスは適切か</li>
+      </ul>
+    </div>
+
+    <h3>がん保険</h3>
+    <p style="font-size:13px;margin-bottom:10px;">がんと診断された際の一時金、入院・通院給付金等が支給されます。</p>
+    <div class="note info">多くのがん保険には90日間の免責期間（待機期間）があります。加入後すぐにがんと診断されても給付されない場合があります。</div>
+
+    <h3>火災保険・地震保険</h3>
+    <p style="font-size:13px;margin-bottom:10px;">火災保険は建物と家財を対象とし、火災・風災・水災等を補償します。地震・津波・噴火による損害は火災保険では補償されず、地震保険（火災保険とセットで加入）が必要です。</p>
+
+    <h3>自動車保険</h3>
+    <p style="font-size:13px;margin-bottom:10px;">対人・対物賠償は無制限が基本。人身傷害保険、弁護士費用特約の付帯も検討しましょう。高齢ドライバーは保険料が上がる傾向があります。</p>
+
+    <h3>保険金請求フロー（死亡時）</h3>
+    <div class="flow">
+      <div class="step">
+        <span class="step-num">1</span>
+        <div class="step-label">保険証券を確認</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">2</span>
+        <div class="step-label">保険会社に連絡</div>
+        <div class="step-sub">電話</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">3</span>
+        <div class="step-label">必要書類の準備</div>
+        <div class="step-sub">死亡診断書等</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">4</span>
+        <div class="step-label">書類提出</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">5</span>
+        <div class="step-label">審査</div>
+        <div class="step-sub">1〜2ヶ月</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">6</span>
+        <div class="step-label">保険金支払い</div>
+      </div>
+    </div>
+
+    <div class="keypoint">
+      <div class="kp-title">覚えておきたい</div>
+      保険証券は1か所にまとめて保管しましょう。証券番号・保険会社の連絡先・受取人を一覧にして家族と共有しておくと、請求がスムーズです。
+    </div>
+  </div>
+
+  <div class="navbtns">
+    <button class="btn" onclick="gotoSec(2)">← ②医療</button>
+    <button class="btn primary" onclick="gotoSec(4)">次へ ④お金・契約 →</button>
+  </div>
+</div>
+
+<!-- ==================== Section 4: お金・契約 ==================== -->
+<div class="sec" id="sec4">
+
+  <div class="card">
+    <h2>認知症による口座凍結リスクと対策</h2>
+    <p class="lead">銀行が預金者の判断能力低下を確認した時点で、口座が凍結される可能性があります。ATMでの引き出し、振込、定期預金の解約ができなくなります。</p>
+
+    <h3>3つの対策</h3>
+    <table class="compare-tbl">
+      <thead><tr><th>対策</th><th>手続き</th><th>費用</th><th>柔軟性</th><th>デメリット</th></tr></thead>
+      <tbody>
+        <tr><td>代理人カード・代理人届</td><td>銀行窓口で届出。本人の判断能力があるうちに</td><td>無料〜数百円</td><td>低い（引出しのみ等、制限あり）</td><td>銀行によって対応が異なる。認知症進行後は取消されることも</td></tr>
+        <tr><td>家族信託</td><td>司法書士等に依頼し、信託契約を締結</td><td>30〜100万円</td><td>高い（不動産管理、資産運用も可）</td><td>初期費用が高い。受託者の責任が重い</td></tr>
+        <tr><td>成年後見制度（法定後見）</td><td>家庭裁判所に申立て</td><td>申立て費用1〜2万円＋後見人報酬月2〜6万円</td><td>中（裁判所の監督下で管理）</td><td>手続きに2〜4ヶ月。専門職後見人は自分で選べない。費用が継続的</td></tr>
+      </tbody>
+    </table>
+    <div class="keypoint">
+      <div class="kp-title">覚えておきたい</div>
+      口座は凍結される前提で備えることが大切です。代理人カードか家族信託は、本人の判断能力があるうちにしか手続きできません。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>死亡後の口座凍結</h2>
+    <p style="font-size:13px;margin-bottom:10px;">金融機関が名義人の死亡を知った時点で口座は凍結されます。相続人全員の合意と必要書類が揃うまで、原則として引き出しはできません。</p>
+
+    <h3>仮払い制度</h3>
+    <p style="font-size:13px;margin-bottom:10px;">2019年の法改正により、遺産分割前でも一定額を引き出せる「仮払い制度」が利用できます。</p>
+    <div class="note info">仮払い上限：各相続人が「預金額×1/3×法定相続分」まで引き出し可能（1金融機関あたり上限150万円）。葬儀費用等の緊急出費に対応できます。</div>
+  </div>
+
+  <div class="card">
+    <h2>デジタル遺産</h2>
+    <h3>ネット銀行・ネット証券</h3>
+    <p style="font-size:13px;margin-bottom:10px;">ログインIDやパスワードを家族が知らない場合、資産の存在自体に気づけないリスクがあります。通帳や郵便物がないネット専業銀行は特に注意が必要です。</p>
+
+    <h3>サブスクリプション</h3>
+    <p style="font-size:13px;margin-bottom:10px;">動画配信、音楽、クラウドストレージ等のサブスクリプションは、解約しない限り課金が続きます。クレジットカードの明細で利用中のサービスを確認しましょう。</p>
+
+    <h3>SNS・メールアカウント</h3>
+    <p style="font-size:13px;margin-bottom:10px;">主要サービスの死後アカウント対応：</p>
+    <table class="compare-tbl">
+      <thead><tr><th>サービス</th><th>死後の対応</th><th>事前設定</th></tr></thead>
+      <tbody>
+        <tr><td>Google</td><td>「非アクティブ アカウント管理ツール」で、一定期間ログインがない場合の処理を設定可能</td><td>あり</td></tr>
+        <tr><td>Apple</td><td>「故人アカウント管理連絡先」を設定可能（iOS 15.2以降）</td><td>あり</td></tr>
+        <tr><td>Facebook/Instagram</td><td>「追悼アカウント」に移行、または削除。事前にレガシーコンタクトを指定可能</td><td>あり</td></tr>
+        <tr><td>LINE</td><td>相続人からの申請でアカウント削除可能。トーク履歴等のデータ提供は不可</td><td>なし</td></tr>
+        <tr><td>X（旧Twitter）</td><td>家族からの申請でアカウント削除可能</td><td>なし</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>財産目録の作り方</h2>
+    <h3>リストアップすべき項目</h3>
+    <div class="grid2">
+      <div>
+        <h3>プラスの財産</h3>
+        <ul class="checklist">
+          <li>預貯金（銀行名・支店・おおよその残高）</li>
+          <li>有価証券（株式・投資信託・債券）</li>
+          <li>不動産（土地・建物・登記情報）</li>
+          <li>生命保険（死亡保険金の受取人）</li>
+          <li>退職金・年金（未受給分）</li>
+          <li>自動車・貴金属等の動産</li>
+          <li>貸付金・売掛金</li>
+          <li>ゴルフ会員権等</li>
+        </ul>
+      </div>
+      <div>
+        <h3>マイナスの財産</h3>
+        <ul class="checklist">
+          <li>住宅ローン</li>
+          <li>カードローン・キャッシング</li>
+          <li>未払いの税金</li>
+          <li>未払いの医療費</li>
+          <li>保証債務（連帯保証人になっている契約）</li>
+          <li>未払いの家賃・管理費</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>定期契約の解約チェックリスト</h2>
+    <ul class="checklist">
+      <li>電気・ガス・水道</li>
+      <li>固定電話・携帯電話</li>
+      <li>インターネット回線・プロバイダ</li>
+      <li>NHK受信料</li>
+      <li>新聞・雑誌の定期購読</li>
+      <li>各種サブスクリプション（動画・音楽・クラウド等）</li>
+      <li>クレジットカード</li>
+      <li>各種会員サービス・ポイントカード</li>
+      <li>郵便物の転送届（郵便局）</li>
+      <li>運転免許証の返納</li>
+      <li>パスポートの返納</li>
+      <li>マイナンバーカードの返納</li>
+    </ul>
+  </div>
+
+  <div class="navbtns">
+    <button class="btn" onclick="gotoSec(3)">← ③年金・保険</button>
+    <button class="btn primary" onclick="gotoSec(5)">次へ ⑤相続・手続き →</button>
+  </div>
+</div>
+
+<!-- ==================== Section 5: 相続・手続き ==================== -->
+<div class="sec" id="sec5">
+
+  <div class="card">
+    <h2>死亡後の手続きタイムライン</h2>
+    <p class="lead">大切な方が亡くなった後には、期限のある手続きが多数あります。期限を過ぎると不利益が生じるものもあるため、全体像を把握しておきましょう。</p>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-deadline">7日以内</div>
+        <div class="tl-title">死亡届・火葬許可証</div>
+        <div class="tl-desc">死亡を知った日から7日以内に市区町村役場へ届出。届出により火葬許可証が交付されます。届出人は親族・同居人等。</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-deadline">14日以内</div>
+        <div class="tl-title">年金受給停止届・健康保険資格喪失届・世帯主変更届</div>
+        <div class="tl-desc">年金事務所に受給停止届（厚生年金は10日以内）。健康保険・介護保険の資格喪失届を市区町村または健保組合へ。世帯主が死亡した場合は世帯主変更届。</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-deadline">3か月以内</div>
+        <div class="tl-title">相続放棄・限定承認</div>
+        <div class="tl-desc">相続を放棄する場合は、相続の開始を知った時から3か月以内に家庭裁判所に申述。限定承認も同期限。期限を過ぎると単純承認（借金も含めて全て相続）とみなされます。</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-deadline">4か月以内</div>
+        <div class="tl-title">所得税の準確定申告</div>
+        <div class="tl-desc">亡くなった方のその年1月1日〜死亡日までの所得について、相続人が確定申告を行います。</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-deadline">10か月以内</div>
+        <div class="tl-title">相続税の申告・納付</div>
+        <div class="tl-desc">遺産総額が基礎控除（3,000万円＋600万円×法定相続人数）を超える場合、被相続人の住所地の税務署に申告・納付。</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-deadline">3年以内</div>
+        <div class="tl-title">相続登記（2024年4月義務化）</div>
+        <div class="tl-desc">不動産の名義変更。正当な理由なく期限内に登記しない場合、10万円以下の過料の対象となります。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>相続人と法定相続分</h2>
+    <table class="compare-tbl">
+      <thead><tr><th>パターン</th><th>相続人</th><th>法定相続分</th></tr></thead>
+      <tbody>
+        <tr><td>配偶者＋子</td><td>配偶者と子</td><td>配偶者1/2、子1/2（子が複数なら均等按分）</td></tr>
+        <tr><td>配偶者＋親</td><td>配偶者と被相続人の父母</td><td>配偶者2/3、父母1/3</td></tr>
+        <tr><td>配偶者＋兄弟姉妹</td><td>配偶者と被相続人の兄弟姉妹</td><td>配偶者3/4、兄弟姉妹1/4</td></tr>
+      </tbody>
+    </table>
+    <div class="note info">子がいる場合は親・兄弟姉妹は相続人になりません。配偶者は常に相続人です。離婚した元配偶者は相続人ではありませんが、前婚の子は相続人です。</div>
+  </div>
+
+  <div class="card">
+    <h2>遺言書3種比較</h2>
+    <table class="compare-tbl">
+      <thead><tr><th></th><th>自筆証書遺言</th><th>公正証書遺言</th><th>秘密証書遺言</th></tr></thead>
+      <tbody>
+        <tr><td>作成方法</td><td>全文を自書（財産目録はPC可）</td><td>公証人が作成</td><td>内容を秘密にして公証人に提出</td></tr>
+        <tr><td>費用</td><td>無料（法務局保管は3,900円）</td><td>数万円（財産額による）</td><td>11,000円</td></tr>
+        <tr><td>証人</td><td>不要</td><td>2人必要</td><td>2人必要</td></tr>
+        <tr><td>検認</td><td>必要（法務局保管の場合は不要）</td><td>不要</td><td>必要</td></tr>
+        <tr><td>紛失・改ざんリスク</td><td>あり（法務局保管なら低い）</td><td>ほぼなし（公証役場で保管）</td><td>あり</td></tr>
+        <tr><td>メリット</td><td>手軽・費用がかからない</td><td>最も確実・無効になりにくい</td><td>内容を秘密にできる</td></tr>
+        <tr><td>デメリット</td><td>形式不備で無効になるリスク</td><td>費用がかかる・証人が必要</td><td>ほとんど利用されていない</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>相続税の基礎</h2>
+    <h3>基礎控除</h3>
+    <p style="font-size:13px;margin-bottom:10px;">相続税の基礎控除は「3,000万円＋600万円×法定相続人数」です。遺産総額がこれ以下であれば、相続税は非課税です。</p>
+    <table class="compare-tbl">
+      <thead><tr><th>法定相続分に応ずる取得金額</th><th>税率</th><th>控除額</th></tr></thead>
+      <tbody>
+        <tr><td>1,000万円以下</td><td>10%</td><td>なし</td></tr>
+        <tr><td>3,000万円以下</td><td>15%</td><td>50万円</td></tr>
+        <tr><td>5,000万円以下</td><td>20%</td><td>200万円</td></tr>
+        <tr><td>1億円以下</td><td>30%</td><td>700万円</td></tr>
+        <tr><td>2億円以下</td><td>40%</td><td>1,700万円</td></tr>
+        <tr><td>3億円以下</td><td>45%</td><td>2,700万円</td></tr>
+        <tr><td>6億円以下</td><td>50%</td><td>4,200万円</td></tr>
+        <tr><td>6億円超</td><td>55%</td><td>7,200万円</td></tr>
+      </tbody>
+    </table>
+    <div class="src">出典：国税庁「相続税の税率」（2024年）</div>
+
+    <h3>主な軽減措置</h3>
+    <table class="compare-tbl">
+      <thead><tr><th>制度</th><th>内容</th><th>効果</th></tr></thead>
+      <tbody>
+        <tr><td>配偶者の税額軽減</td><td>配偶者が取得する遺産が法定相続分以下、または1億6,000万円以下なら相続税ゼロ</td><td>非常に大きい</td></tr>
+        <tr><td>小規模宅地等の特例</td><td>被相続人の自宅の土地について、330㎡まで評価額を80%減額</td><td>大きい</td></tr>
+        <tr><td>生命保険の非課税枠</td><td>500万円×法定相続人数</td><td>中程度</td></tr>
+        <tr><td>死亡退職金の非課税枠</td><td>500万円×法定相続人数</td><td>中程度</td></tr>
+      </tbody>
+    </table>
+
+    <h3>相続登記の義務化（2024年4月施行）</h3>
+    <p style="font-size:13px;margin-bottom:10px;">相続によって不動産を取得したことを知った日から3年以内に相続登記の申請が必要です。正当な理由のない申請漏れには10万円以下の過料が科される可能性があります。2024年4月以前に相続した不動産も対象です（2027年3月末まで猶予）。</p>
+
+    <h3>相続放棄と限定承認</h3>
+    <table class="compare-tbl">
+      <thead><tr><th></th><th>相続放棄</th><th>限定承認</th></tr></thead>
+      <tbody>
+        <tr><td>内容</td><td>プラスもマイナスも全て放棄</td><td>プラスの範囲内でマイナスを引き継ぐ</td></tr>
+        <tr><td>期限</td><td>3か月以内</td><td>3か月以内</td></tr>
+        <tr><td>申立て</td><td>相続人単独で可</td><td>相続人全員で共同</td></tr>
+        <tr><td>利用場面</td><td>明らかに負債が多い場合</td><td>財産と負債の全容が不明な場合</td></tr>
+      </tbody>
+    </table>
+
+    <div class="keypoint">
+      <div class="kp-title">覚えておきたい</div>
+      相続税は基礎控除のおかげで約9割の方は非課税です（2022年の課税割合は約9.6%）。しかし、死亡届や年金の届出など、税金とは関係なく必要な手続きは全ての方に発生します。
+    </div>
+  </div>
+
+  <div class="navbtns">
+    <button class="btn" onclick="gotoSec(4)">← ④お金・契約</button>
+    <button class="btn primary" onclick="gotoSec(6)">次へ ⑥抜けやすい備え →</button>
+  </div>
+</div>
+
+<!-- ==================== Section 6: 抜けやすい備え ==================== -->
+<div class="sec" id="sec6">
+
+  <div class="card">
+    <h2>任意後見 vs 法定後見</h2>
+    <p class="lead">後見制度は、判断能力が不十分な方の財産管理や身上保護を支援する制度です。「任意後見」と「法定後見」の2種類があり、準備のタイミングが大きく異なります。</p>
+    <table class="compare-tbl">
+      <thead><tr><th></th><th>任意後見</th><th>法定後見</th></tr></thead>
+      <tbody>
+        <tr><td>開始時期</td><td>本人の判断能力があるうちに契約</td><td>判断能力が低下した後に申立て</td></tr>
+        <tr><td>後見人の選択</td><td>本人が自由に選べる</td><td>家庭裁判所が選任（希望は出せるが確約なし）</td></tr>
+        <tr><td>本人の意思</td><td>強く反映される</td><td>限定的（既に判断能力が低下しているため）</td></tr>
+        <tr><td>手続き</td><td>公証役場で任意後見契約を締結</td><td>家庭裁判所に申立て（2〜4か月）</td></tr>
+        <tr><td>費用</td><td>契約時3〜5万円＋監督人報酬月1〜2万円</td><td>申立て1〜2万円＋後見人報酬月2〜6万円</td></tr>
+        <tr><td>裁判所の関与</td><td>監督人を通じて間接的</td><td>直接的（定期報告義務あり）</td></tr>
+        <tr><td>メリット</td><td>自分の意思で決められる</td><td>判断能力低下後でも利用できる</td></tr>
+        <tr><td>デメリット</td><td>事前準備が必要。発動まで機能しない</td><td>費用が高く、手続きに時間がかかる</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>家族信託の仕組み</h2>
+    <p style="font-size:13px;margin-bottom:10px;">家族信託は、財産の所有者（委託者）が、信頼する家族（受託者）に財産の管理・処分を託す仕組みです。</p>
+    <div class="flow">
+      <div class="step">
+        <span class="step-num">委託者</span>
+        <div class="step-label">親</div>
+        <div class="step-sub">財産を託す</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">受託者</span>
+        <div class="step-label">子</div>
+        <div class="step-sub">管理・運用</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="step">
+        <span class="step-num">受益者</span>
+        <div class="step-label">親</div>
+        <div class="step-sub">利益を受ける</div>
+      </div>
+    </div>
+    <p style="font-size:13px;margin:10px 0;">認知症になった場合でも、受託者が継続して財産を管理できるため、口座凍結や不動産の売却不可を防げます。</p>
+    <table class="compare-tbl">
+      <thead><tr><th>項目</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>対象財産</td><td>現預金、不動産、有価証券等</td></tr>
+        <tr><td>費用</td><td>30〜100万円程度（信託財産の規模・内容による）</td></tr>
+        <tr><td>必要な専門家</td><td>司法書士、弁護士、税理士</td></tr>
+        <tr><td>注意点</td><td>受託者の責任が重い。信託契約の内容設計が重要。税務上の取扱いに注意</td></tr>
+      </tbody>
+    </table>
+    <div class="note warn">家族信託は比較的新しい仕組みであり、専門家によって見解が異なる場合があります。必ず家族信託に詳しい専門家に相談してください。</div>
+  </div>
+
+  <div class="card">
+    <h2>エンディングノート</h2>
+    <p style="font-size:13px;margin-bottom:10px;">エンディングノートは、法的効力はありませんが、自分の希望や大切な情報を家族に伝える「手紙」のようなものです。遺言書とは異なり、自由な形式で、いつでも書き直せます。</p>
+    <h3>書くとよい項目</h3>
+    <ul class="checklist">
+      <li>自分の基本情報（生年月日・本籍地・マイナンバー）</li>
+      <li>家族・親族の連絡先</li>
+      <li>友人・知人への連絡希望</li>
+      <li>かかりつけ医・持病・服薬情報</li>
+      <li>介護の希望（在宅か施設か）</li>
+      <li>延命治療・臓器提供の意思</li>
+      <li>葬儀の希望（形式・規模・宗教）</li>
+      <li>お墓の希望</li>
+      <li>財産の一覧（預貯金・不動産・保険等）</li>
+      <li>借入・保証人の情報</li>
+      <li>デジタルアカウント情報</li>
+      <li>大切な人へのメッセージ</li>
+    </ul>
+    <div class="keypoint">
+      <div class="kp-title">覚えておきたい</div>
+      エンディングノートに書いた内容には法的効力がありません。財産の分配を法的に有効にしたい場合は、別途「遺言書」の作成が必要です。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>おひとりさま対策</h2>
+    <p style="font-size:13px;margin-bottom:10px;">配偶者や子がいない方、あるいは頼れる家族が近くにいない方は、以下の制度・サービスの利用を検討しましょう。</p>
+    <table class="compare-tbl">
+      <thead><tr><th>制度・サービス</th><th>内容</th><th>費用目安</th></tr></thead>
+      <tbody>
+        <tr><td>身元保証サービス</td><td>入院・入所時の身元保証人を代行</td><td>初期10〜30万円＋年1〜3万円</td></tr>
+        <tr><td>死後事務委任契約</td><td>葬儀手配・各種届出・遺品整理等を事前に委任</td><td>50〜100万円程度（預託金含む）</td></tr>
+        <tr><td>見守りサービス</td><td>定期的な訪問・電話・センサーによる安否確認</td><td>月1,000〜3,000円程度</td></tr>
+        <tr><td>任意後見契約</td><td>判断能力低下時の財産管理等を事前に委任</td><td>契約時3〜5万円＋発動後月1〜2万円</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>見落としやすい項目</h2>
+    <ul class="checklist">
+      <li>ペットの引き取り先（飼い主が入院・死亡した場合の受入先の確保）</li>
+      <li>貸金庫の存在（相続人が知らないと開けられない。鍵と契約書の所在を共有）</li>
+      <li>墓地・仏壇の管理（承継者の指定、永代供養の検討）</li>
+      <li>デジタルアカウントのパスワード（管理アプリの存在と解除方法の共有）</li>
+      <li>借地権・借家権（相続対象。地主・大家への連絡が必要）</li>
+      <li>保証人になっている契約（連帯保証債務は相続される）</li>
+      <li>未届けの婚姻・認知（相続関係に影響する場合がある）</li>
+      <li>海外資産（海外口座・不動産。国際相続は手続きが複雑）</li>
+    </ul>
+
+    <div class="keypoint">
+      <div class="kp-title">覚えておきたい</div>
+      元気なうちにしかできないことがあります。任意後見契約と家族信託は、判断能力が十分ある段階でしか手続きできません。「まだ早い」と思った時が、ちょうどよいタイミングです。
+    </div>
+  </div>
+
+  <div class="navbtns">
+    <button class="btn" onclick="gotoSec(5)">← ⑤相続・手続き</button>
+    <button class="btn primary" onclick="gotoSec(7)">次へ ⑦費用シミュレーター →</button>
+  </div>
+</div>
+
+<!-- ==================== Section 7: 費用シミュレーター ==================== -->
+<div class="sec" id="sec7">
+
+  <div class="card">
+    <h2>費用シミュレーター</h2>
+    <p class="lead">ここまで学んだ知識を踏まえて、介護・医療・葬儀・法的手続き・相続税にかかる概算費用を確認しましょう。すべて仮定に基づく概算であり、実際の費用・税額を保証するものではありません。</p>
+
+    <!-- 介護費 -->
+    <label class="fld">介護の想定</label>
+    <select id="s_care">
+      <option value="0">介護なし（自立のまま）</option>
+      <option value="1" selected>在宅介護（軽度・要支援〜要介護2）</option>
+      <option value="2">在宅介護（中重度・要介護3〜5）</option>
+      <option value="3">施設介護（特養等・公的施設）</option>
+      <option value="4">施設介護（有料老人ホーム）</option>
+    </select>
+    <label class="fld">介護期間（年）</label>
+    <input type="number" id="s_care_years" value="5" min="0" max="30">
+
+    <!-- 医療費 -->
+    <label class="fld">月額医療費（自己負担・円）</label>
+    <input type="number" id="s_med_month" value="15000" min="0" step="1000">
+    <label class="fld">医療費がかかる期間（年）</label>
+    <input type="number" id="s_med_years" value="10" min="0" max="40">
+    <div class="note info">高額療養費制度により、70歳以上・一般所得の方の自己負担上限は月57,600円です。</div>
+
+    <!-- 葬儀費 -->
+    <label class="fld">葬儀の規模</label>
+    <select id="s_funeral">
+      <option value="0">直葬（火葬のみ）</option>
+      <option value="1">家族葬（小規模）</option>
+      <option value="2" selected>一般葬（標準）</option>
+      <option value="3">大規模葬</option>
+    </select>
+
+    <!-- 法的手続き -->
+    <label class="fld">法的手続き（該当するものにチェック）</label>
+    <label class="chk"><input type="checkbox" id="s_kouken"> 成年後見制度の利用</label>
+    <div id="koukenYearsWrap" style="display:none;margin-left:28px;">
+      <label class="fld">後見期間（年）</label>
+      <input type="number" id="s_kouken_years" value="5" min="1" max="20" style="width:120px;">
+    </div>
+    <label class="chk"><input type="checkbox" id="s_shintaku"> 家族信託の設定</label>
+    <label class="chk"><input type="checkbox" id="s_igon"> 公正証書遺言の作成</label>
+
+    <!-- 相続税 -->
+    <label class="fld">遺産総額（万円）</label>
+    <input type="number" id="s_estate" value="5000" min="0" step="100">
+    <label class="fld">法定相続人数</label>
+    <input type="number" id="s_heirs" value="2" min="1" max="10">
+    <div class="note warn">相続税はあくまで概算です。配偶者の税額軽減・小規模宅地等の特例等を適用する場合は税理士にご相談ください。</div>
+
+    <button class="btn primary" onclick="runSim()" style="margin-top:14px;width:100%;">試算する</button>
+
+    <!-- 結果 -->
+    <div class="simgrid" style="margin-top:18px;">
+      <div class="simbox worst"><div class="lab">最悪ケース</div><div class="val" id="r_worst">—</div></div>
+      <div class="simbox mid"><div class="lab">平均ケース</div><div class="val" id="r_mid">—</div></div>
+      <div class="simbox best"><div class="lab">ベストケース</div><div class="val" id="r_best">—</div></div>
+    </div>
+    <table class="breakdown" id="r_break">
+      <thead><tr><th>項目</th><th>最悪</th><th>平均</th><th>ベスト</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div id="r_src" class="src"></div>
+  </div>
+
+  <div class="navbtns">
+    <button class="btn" onclick="gotoSec(6)">← ⑥抜けやすい備え</button>
+    <span></span>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- Footer -->
 <div class="footer-disc">
   <div class="note">
     <strong>ご注意（免責）</strong><br>
-    本ツールはAIを活用した参考情報です。介護・医療・税務・法務に関する最終的な判断は、必ずご自身で<b>地域包括支援センター・医師・税理士・弁護士・司法書士・FP等の有資格専門家</b>にご相談のうえ行ってください。費用相場・制度・税率は変動します。各数値は調査時点の公表値・仮定値であり、将来の費用や制度の継続を保証するものではありません。<br>
-    <span class="small" id="discMeta"></span>
+    本資料はAIを活用した参考情報です。介護・医療・税務・法務に関する最終的な判断は、必ずご自身で<b>地域包括支援センター・医師・税理士・弁護士・司法書士・FP等の有資格専門家</b>にご相談のうえ行ってください。費用相場・制度・税率は変動します。各数値は調査時点の公表値・仮定値であり、将来の費用や制度の継続を保証するものではありません。<br>
+    <span style="font-size:10px;color:var(--muted);" id="discMeta"></span>
   </div>
 </div>
 
-<input type="file" id="fileInput" accept="application/json" style="display:none">
-
 <script>
-(function(){
-  'use strict';
-  var $=function(id){return document.getElementById(id);};
-  var num=function(id){var v=parseFloat(($(id)||{}).value);return isNaN(v)?0:v;};
-  var STORAGE_KEY='oyano_shukatsu_plan';
+/* ===== META ===== */
+var META={tool:'ライフステージ後期対策プランナー',ver:'1.0',date:'2026-06-28',src:'厚生労働省・国税庁・日本年金機構 他（2024年度公表値ベース）'};
+document.getElementById('discMeta').textContent='Tool: '+META.tool+' v'+META.ver+' ('+META.date+') | '+META.src;
 
-  /* ---------- 出典メタ ---------- */
-  var META={
-    care:'介護費：生命保険文化センター「2024年度 生命保険に関する全国実態調査」',
-    funeral:'葬儀費：鎌倉新書「第6回お葬式に関する全国調査（2024）」',
-    legal:'法的手続き：各専門家公表の費用相場（2025年時点）',
-    updated:'2026-06-23'
-  };
-  $('discMeta').textContent='【出典】'+META.care+' ／ '+META.funeral+' ／ '+META.legal+' ｜ 調査時点：'+META.updated;
+/* ===== helpers ===== */
+function $(id){return document.getElementById(id);}
+function num(id){var v=parseFloat($(id).value);return isNaN(v)?0:v;}
+function fmt(n){if(n>=100000000)return (n/100000000).toFixed(1)+'億円';if(n>=10000)return Math.round(n/10000).toLocaleString()+'万円';return Math.round(n).toLocaleString()+'円';}
 
-  /* ---------- ナビ ---------- */
-  window.gotoSec=function(n){
-    document.querySelectorAll('.sec').forEach(function(s){s.classList.remove('active');});
-    $('sec'+n).classList.add('active');
-    document.querySelectorAll('.nav-item').forEach(function(it){
-      it.classList.toggle('active', it.getAttribute('data-sec')===String(n));
-    });
-    if(n===7) runSim();
-    window.scrollTo({top:0,behavior:'smooth'});
-  };
+/* ===== navigation ===== */
+function gotoSec(n){
+  document.querySelectorAll('.sec').forEach(function(s){s.classList.remove('active');});
+  document.querySelectorAll('.nav-item').forEach(function(ni){ni.classList.remove('active');});
+  var sec=$('sec'+n);
+  if(sec)sec.classList.add('active');
+  var nav=document.querySelector('.nav-item[data-sec="'+n+'"]');
+  if(nav)nav.classList.add('active');
+  window.scrollTo(0,0);
+}
 
-  /* ---------- 動的テーブル定義 ---------- */
-  var TABLES={
-    tblDoctors:[{k:'name',ph:'医院名'},{k:'dept',ph:'診療科'},{k:'tel',ph:'電話'}],
-    tblContacts:[{k:'name',ph:'氏名'},{k:'rel',ph:'続柄'},{k:'tel',ph:'電話'}],
-    tblInsurance:[{k:'company',ph:'保険会社'},{k:'type',ph:'種類'},{k:'no',ph:'証券番号'},{k:'beneficiary',ph:'受取人'},{k:'place',ph:'保管場所'}],
-    tblAccounts:[{k:'bank',ph:'金融機関'},{k:'branch',ph:'支店'},{k:'type',ph:'種別'},{k:'last4',ph:'末尾4桁'},{k:'memo',ph:'用途・保管場所'}],
-    tblLoans:[{k:'lender',ph:'借入先'},{k:'balance',ph:'残高',type:'number'},{k:'type',ph:'種類'},{k:'memo',ph:'備考'}],
-    tblCards:[{k:'company',ph:'カード会社'},{k:'last4',ph:'末尾4桁'},{k:'account',ph:'引落口座'},{k:'memo',ph:'備考'}],
-    tblSubs:[{k:'name',ph:'サービス名'},{k:'monthly',ph:'月額(円)',type:'number'},{k:'pay',ph:'支払方法'},{k:'memo',ph:'メモ'}],
-    tblProps:[{k:'type',ph:'種類'},{k:'addr',ph:'所在地'},{k:'owner',ph:'名義'},{k:'value',ph:'評価額(万円)',type:'number'}]
-  };
+/* ===== kouken toggle ===== */
+$('s_kouken').addEventListener('change',function(){
+  document.getElementById('koukenYearsWrap').style.display=this.checked?'block':'none';
+});
 
-  function buildRow(tblId,data){
-    var cols=TABLES[tblId];
-    var tbody=$(tblId).querySelector('tbody');
-    var tr=document.createElement('tr');
-    var inputs={};
-    cols.forEach(function(c){
-      var td=document.createElement('td');
-      var el=document.createElement('input');
-      el.type=c.type||'text'; el.placeholder=c.ph||'';
-      if(data&&data[c.k]!=null) el.value=data[c.k];
-      el.addEventListener('input',refreshProgress);
-      inputs[c.k]=el; td.appendChild(el); tr.appendChild(td);
-    });
-    var td=document.createElement('td');
-    var b=document.createElement('button'); b.className='del'; b.textContent='×';
-    b.onclick=function(){tr.remove(); refreshProgress();};
-    td.appendChild(b); tr.appendChild(td);
-    tr._get=function(){var o={}; cols.forEach(function(c){o[c.k]=inputs[c.k].value;}); return o;};
-    tbody.appendChild(tr);
-    return tr;
-  }
-  window.addRow=function(tblId){buildRow(tblId); };
+/* ===== simulator data ===== */
+var CARE=[
+  {w:0,m:0,b:0},
+  {w:96000,m:60000,b:36000},
+  {w:200000,m:140000,b:80000},
+  {w:150000,m:110000,b:80000},
+  {w:350000,m:250000,b:180000}
+];
+var CARE_LABEL=['介護なし','在宅介護（軽度）','在宅介護（中重度）','施設介護（公的）','施設介護（有料）'];
+var FUNERAL=[
+  {w:300000,m:200000,b:120000},
+  {w:1200000,m:800000,b:500000},
+  {w:2500000,m:1500000,b:1000000},
+  {w:5000000,m:3000000,b:2000000}
+];
+var FUN_LABEL=['直葬','家族葬','一般葬','大規模葬'];
 
-  function getRows(tblId){
-    return Array.prototype.map.call($(tblId).querySelector('tbody').children,function(tr){return tr._get();});
-  }
-  function rowsFilled(tblId){
-    return getRows(tblId).some(function(r){return Object.keys(r).some(function(k){return (r[k]||'').toString().trim()!=='';});});
-  }
+/* ===== inheritance tax ===== */
+function sokujin(amt){
+  var tbl=[[10000000,.10,0],[30000000,.15,500000],[50000000,.20,2000000],[100000000,.30,7000000],[200000000,.40,17000000],[300000000,.45,27000000],[600000000,.50,42000000],[Infinity,.55,72000000]];
+  for(var i=0;i<tbl.length;i++){if(amt<=tbl[i][0])return Math.max(0,amt*tbl[i][1]-tbl[i][2]);}
+  return 0;
+}
+function inheritanceTax(estate,heirs){
+  var base=30000000+6000000*heirs;
+  var taxable=estate-base;
+  if(taxable<=0)return 0;
+  var perHeir=taxable/heirs;
+  var taxPerHeir=sokujin(perHeir);
+  return Math.round(taxPerHeir*heirs);
+}
+function estateBase(){
+  return num('s_estate')*10000;
+}
 
-  /* ---------- 静的フィールド ---------- */
-  function collectStatic(){
-    var o={};
-    document.querySelectorAll('[data-k]').forEach(function(el){
-      var k=el.getAttribute('data-k');
-      if(el.type==='radio'){ if(el.checked) o[el.name]=el.value; }
-      else if(el.type==='checkbox'){ o[k]=el.checked; }
-      else o[k]=el.value;
-    });
-    return o;
-  }
-  function applyStatic(o){
-    document.querySelectorAll('[data-k]').forEach(function(el){
-      var k=el.getAttribute('data-k');
-      if(el.type==='radio'){ el.checked=(o[el.name]===el.value); }
-      else if(el.type==='checkbox'){ el.checked=!!o[k]; }
-      else if(o[k]!=null) el.value=o[k];
-    });
-  }
+/* ===== runSim ===== */
+function runSim(){
+  var ci=parseInt($('s_care').value)||0;
+  var cy=num('s_care_years');
+  var mm=num('s_med_month');
+  var my=num('s_med_years');
+  var fi=parseInt($('s_funeral').value)||0;
+  var kouken=$('s_kouken').checked;
+  var ky=num('s_kouken_years');
+  var shintaku=$('s_shintaku').checked;
+  var igon=$('s_igon').checked;
 
-  window.calcAge=function(){
-    var by=num('b_birth');
-    $('b_age').value = (by>1850 && by<=2026) ? (2026-by)+'歳' : '';
-  };
+  var c=CARE[ci];
+  var careW=c.w*12*cy, careM=c.m*12*cy, careB=c.b*12*cy;
+  var medW=mm*1.3*12*my, medM=mm*12*my, medB=mm*0.7*12*my;
+  var f=FUNERAL[fi];
+  var funW=f.w, funM=f.m, funB=f.b;
 
-  /* ---------- 進捗トラッカー ---------- */
-  var SEC_DEF=[
-    {n:0,label:'基本情報',check:function(){return ($('b_name').value||'').trim()!=='';}},
-    {n:1,label:'介護',check:function(){var o=collectStatic();return !!(o.care_place||o.care_pref||o.care_contact);}},
-    {n:2,label:'医療',check:function(){var o=collectStatic();return rowsFilled('tblDoctors')||rowsFilled('tblContacts')||!!(o.med_drugs||o.med_eol);}},
-    {n:3,label:'年金・保険',check:function(){var o=collectStatic();return rowsFilled('tblInsurance')||!!(o.pen_doc||o.pen_status);}},
-    {n:4,label:'お金・契約',check:function(){return rowsFilled('tblAccounts')||rowsFilled('tblLoans')||rowsFilled('tblCards')||rowsFilled('tblSubs');}},
-    {n:5,label:'相続・手続き',check:function(){var o=collectStatic();return rowsFilled('tblProps')||!!(o.will_exist||o.seal_place||o.docs_place||o.family_share);}},
-    {n:6,label:'抜けやすい備え',check:function(){var o=collectStatic();return !!(o.prep_kouken||o.prep_shintaku||o.prep_ending);}}
+  var legW=0,legM=0,legB=0;
+  if(kouken){legW+=72000*ky;legM+=48000*ky;legB+=24000*ky;legW+=20000;legM+=15000;legB+=10000;}
+  if(shintaku){legW+=1000000;legM+=650000;legB+=300000;}
+  if(igon){legW+=150000;legM+=80000;legB+=50000;}
+
+  var estate=estateBase();
+  var heirs=Math.max(1,num('s_heirs'));
+  var tax=inheritanceTax(estate,heirs);
+  var taxW=tax, taxM=Math.round(tax*0.7), taxB=0;
+
+  var w=careW+medW+funW+legW+taxW;
+  var m=careM+medM+funM+legM+taxM;
+  var b=careB+medB+funB+legB+taxB;
+
+  $('r_worst').textContent=fmt(w);
+  $('r_mid').textContent=fmt(m);
+  $('r_best').textContent=fmt(b);
+
+  var rows=[
+    ['介護費（'+CARE_LABEL[ci]+'・'+cy+'年）',careW,careM,careB],
+    ['医療費（'+my+'年間）',medW,medM,medB],
+    ['葬儀費（'+FUN_LABEL[fi]+'）',funW,funM,funB],
+    ['法的手続き',legW,legM,legB],
+    ['相続税概算',taxW,taxM,taxB],
+    ['合計',w,m,b]
   ];
-  function refreshProgress(){
-    var grid=$('progGrid'); if(grid) grid.innerHTML='';
-    SEC_DEF.forEach(function(s){
-      var done=false; try{done=s.check();}catch(e){done=false;}
-      var item=document.querySelector('.nav-item[data-sec="'+s.n+'"]');
-      if(item) item.classList.toggle('done',done);
-      if(grid){
-        var d=document.createElement('div'); d.className='pi';
-        d.innerHTML='<div>'+s.n+'. '+s.label+'</div><div class="st '+(done?'ok':'no')+'">'+(done?'✓ 入力あり':'未入力')+'</div>';
-        grid.appendChild(d);
-      }
-    });
-  }
-
-  /* ===================== 費用シミュレーター ===================== */
-  // 介護：月額レンジ[min,mid,max]（万円）と 一時費用[min,mid,max]（万円）
-  var CARE={
-    home:   {monthly:[3,5.3,8],  once:[20,47,100]},
-    tokuyou:{monthly:[8,12,15],  once:[10,30,60]},
-    yuryo:  {monthly:[15,22,30], once:[0,300,1000]},
-    sakou:  {monthly:[11,18,25], once:[20,80,200]}
-  };
-  // 葬儀：[min,mid,max]（万円）
-  var FUNERAL={
-    chokuso:[20,42.8,60], ichinichi:[60,87.5,110], kazoku:[70,105.7,150], ippan:[120,161.3,220]
-  };
-  var CARE_LABEL={home:'在宅介護',tokuyou:'特別養護老人ホーム',yuryo:'介護付有料老人ホーム',sakou:'サ高住'};
-  var FUN_LABEL={chokuso:'直葬・火葬式',ichinichi:'一日葬',kazoku:'家族葬',ippan:'一般葬'};
-
-  function fmt(man){ // 万円 → 表示
-    man=Math.round(man);
-    if(man>=10000){ return (man/10000).toFixed(man%10000===0?0:2).replace(/\.00$/,'')+'億円'; }
-    return man.toLocaleString('ja-JP')+'万円';
-  }
-
-  // 相続税 速算（万円 in / 万円 out）
-  function sokujin(man){
-    if(man<=0) return 0;
-    var t;
-    if(man<=1000) t=man*0.10;
-    else if(man<=3000) t=man*0.15-50;
-    else if(man<=5000) t=man*0.20-200;
-    else if(man<=10000) t=man*0.30-700;
-    else if(man<=20000) t=man*0.40-1700;
-    else if(man<=30000) t=man*0.45-2700;
-    else if(man<=60000) t=man*0.50-4200;
-    else t=man*0.55-7200;
-    return Math.max(0,t);
-  }
-  function inheritanceTax(estateMan,heirs){
-    heirs=Math.max(1,Math.round(heirs));
-    var basic=3000+600*heirs;
-    var taxable=Math.max(0,estateMan-basic);
-    if(taxable<=0) return 0;
-    var per=taxable/heirs;
-    return sokujin(per)*heirs;
-  }
-
-  window.runSim=function(){
-    var rows=[]; // {label, min, mid, max, src}
-    // --- 介護 ---
-    var careKey=$('s_care').value, years=Math.max(0,num('s_care_years'));
-    if(careKey!=='none' && CARE[careKey]){
-      var c=CARE[careKey], m=c.monthly, o=c.once;
-      rows.push({
-        label:'介護費（'+CARE_LABEL[careKey]+'・'+years+'年）',
-        min:m[0]*12*years+o[0], mid:m[1]*12*years+o[1], max:m[2]*12*years+o[2],
-        src:'月額'+m[0]+'〜'+m[2]+'万＋一時費用'+o[0]+'〜'+o[2]+'万'
-      });
-    }
-    // --- 医療 ---
-    var medM=num('s_med_month'), medY=num('s_med_years');
-    if(medM>0 && medY>0){
-      var medTotal=medM*12*medY;
-      rows.push({label:'医療費（月'+medM+'万×'+medY+'年）',min:medTotal*0.7,mid:medTotal,max:medTotal*1.4,src:'高額療養費制度等で上限あり。自己負担の目安'});
-    }
-    // --- 葬儀 ---
-    var fKey=$('s_funeral').value;
-    if(fKey!=='none' && FUNERAL[fKey]){
-      var f=FUNERAL[fKey];
-      rows.push({label:'葬儀費（'+FUN_LABEL[fKey]+'）',min:f[0],mid:f[1],max:f[2],src:'鎌倉新書 全国平均ベース'});
-    }
-    // --- 法的手続き ---
-    if($('s_kouken').checked){
-      var ky=Math.max(0,num('s_kouken_years'));
-      // 初期費用（公正証書＋専門家）＋ 監督人報酬 月1〜2万
-      rows.push({label:'任意後見契約（監督人報酬'+ky+'年分含む）',
-        min:10+1*12*ky, mid:15+1.5*12*ky, max:20+2*12*ky,
-        src:'初期10〜20万＋監督人報酬 月1〜2万'});
-    }
-    if($('s_shintaku').checked){
-      // 信託財産 = 遺産総額入力 or 不動産合計 を流用
-      var trustAsset=estateBase();
-      var consult=Math.max(30,trustAsset*0.01); // 最低30万 or 1%
-      rows.push({label:'家族信託（組成費用）',
-        min:consult*0.8+15, mid:consult+25, max:consult*1.3+40,
-        src:'コンサル'+Math.round(consult)+'万(信託財産の約1%・最低30万)＋契約書/登記等'});
-    }
-    if($('s_igon').checked){
-      rows.push({label:'公正証書遺言（専門家依頼）',min:15,mid:25,max:40,src:'公証人手数料＋専門家報酬15〜40万'});
-    }
-    // --- 相続税 ---
-    var estate=estateBase(), heirs=num('s_heirs');
-    var tax=inheritanceTax(estate,heirs);
-    if(estate>0){
-      rows.push({label:'相続税 概算（遺産'+fmt(estate)+'・相続人'+Math.max(1,Math.round(heirs))+'人）',
-        min:tax,mid:tax,max:tax,src:'基礎控除3,000万＋600万×相続人。配偶者軽減・特例は未考慮'});
-    }
-
-    // --- 集計 ---
-    var sum={min:0,mid:0,max:0};
-    rows.forEach(function(r){sum.min+=r.min;sum.mid+=r.mid;sum.max+=r.max;});
-    $('r_worst').textContent=fmt(sum.max);
-    $('r_mid').textContent=fmt(sum.mid);
-    $('r_best').textContent=fmt(sum.min);
-
-    var tb=$('r_break'); tb.innerHTML='';
-    var head=document.createElement('tr');
-    head.innerHTML='<td style="color:var(--label);font-size:11px;">費目</td><td class="r" style="color:var(--ng);font-size:11px;">最悪</td><td class="r" style="color:var(--accent);font-size:11px;">平均</td><td class="r" style="color:var(--ok);font-size:11px;">ベスト</td>';
-    tb.appendChild(head);
-    rows.forEach(function(r){
-      var tr=document.createElement('tr');
-      tr.innerHTML='<td>'+r.label+'<div class="src">'+r.src+'</div></td><td class="r">'+fmt(r.max)+'</td><td class="r">'+fmt(r.mid)+'</td><td class="r">'+fmt(r.min)+'</td>';
-      tb.appendChild(tr);
-    });
-    if(rows.length===0){
-      var tr=document.createElement('tr'); tr.innerHTML='<td colspan="4" style="color:var(--muted);">項目を選択・入力すると試算結果が表示されます。</td>'; tb.appendChild(tr);
-    }else{
-      var tt=document.createElement('tr'); tt.className='total';
-      tt.innerHTML='<td>合計</td><td class="r">'+fmt(sum.max)+'</td><td class="r">'+fmt(sum.mid)+'</td><td class="r">'+fmt(sum.min)+'</td>';
-      tb.appendChild(tt);
-    }
-    $('r_src').textContent='※ 概算です。相続税は配偶者の税額軽減・小規模宅地等の特例で大きく下がる場合があります。最終判断は専門家にご相談ください。';
-  };
-
-  function estateBase(){
-    var manual=num('s_estate');
-    if(manual>0) return manual;
-    // 不動産合計を使用
-    var sum=0;
-    getRows('tblProps').forEach(function(r){var v=parseFloat(r.value);if(!isNaN(v))sum+=v;});
-    return sum;
-  }
-
-  /* ---------- 保存・読込 ---------- */
-  function snapshot(){
-    var tables={};
-    Object.keys(TABLES).forEach(function(id){tables[id]=getRows(id);});
-    return {static:collectStatic(), tables:tables, savedAt:new Date().toISOString()};
-  }
-  function restore(data){
-    if(!data) return;
-    // テーブル再構築
-    Object.keys(TABLES).forEach(function(id){
-      var tbody=$(id).querySelector('tbody'); tbody.innerHTML='';
-      var arr=(data.tables&&data.tables[id])||[];
-      arr.forEach(function(row){buildRow(id,row);});
-    });
-    applyStatic(data.static||{});
-    calcAge(); refreshProgress();
-  }
-
-  window.doSave=function(){
-    try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(snapshot())); alert('保存しました（この端末内のみ）。'); }
-    catch(e){ alert('保存に失敗しました：'+e.message); }
-  };
-  window.doLoad=function(){
-    var json=localStorage.getItem(STORAGE_KEY);
-    if(!json){ alert('保存データがありません。'); return; }
-    try{ restore(JSON.parse(json)); alert('読み込みました。'); }catch(e){ alert('読込に失敗しました：'+e.message); }
-  };
-  window.exportJSON=function(){
-    var name=($('b_name').value||'parent').replace(/[^\w぀-ヿ一-鿿]/g,'')||'parent';
-    var blob=new Blob([JSON.stringify(snapshot(),null,2)],{type:'application/json'});
-    var a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download='shukatsu_'+name+'_'+new Date().toISOString().slice(0,10)+'.json';
-    a.click(); URL.revokeObjectURL(a.href);
-  };
-  window.importJSON=function(){ $('fileInput').click(); };
-  $('fileInput').addEventListener('change',function(e){
-    var file=e.target.files[0]; if(!file) return;
-    var reader=new FileReader();
-    reader.onload=function(ev){
-      try{ restore(JSON.parse(ev.target.result)); alert('JSONを取り込みました。'); }
-      catch(err){ alert('ファイルが不正です：'+err.message); }
-    };
-    reader.readAsText(file); e.target.value='';
+  var tb=$('r_break').querySelector('tbody');
+  tb.innerHTML='';
+  rows.forEach(function(r){
+    var tr=document.createElement('tr');
+    if(r[0]==='合計')tr.style.fontWeight='700';
+    tr.innerHTML='<td>'+r[0]+'</td><td>'+fmt(r[1])+'</td><td>'+fmt(r[2])+'</td><td>'+fmt(r[3])+'</td>';
+    tb.appendChild(tr);
   });
 
-  /* ---------- 初期化 ---------- */
-  document.querySelectorAll('[data-k]').forEach(function(el){
-    var ev=(el.tagName==='SELECT'||el.type==='radio'||el.type==='checkbox')?'change':'input';
-    el.addEventListener(ev,refreshProgress);
-  });
-  // 各テーブルに初期1行
-  Object.keys(TABLES).forEach(function(id){ buildRow(id); });
-  // 前回データがあれば自動復元
-  var saved=localStorage.getItem(STORAGE_KEY);
-  if(saved){ try{ restore(JSON.parse(saved)); }catch(e){} }
-  calcAge(); refreshProgress(); runSim();
-})();
+  $('r_src').innerHTML='前提：介護費は月額×12×年数で算出。医療費の最悪ケースは入力値×1.3倍、ベストケースは×0.7倍。相続税は基礎控除（3,000万円＋600万円×相続人数）適用後の速算表で概算。配偶者の税額軽減・小規模宅地等の特例は未適用。';
+}
+
+/* ===== auto-calculate on input ===== */
+['s_care','s_care_years','s_med_month','s_med_years','s_funeral','s_kouken','s_kouken_years','s_shintaku','s_igon','s_estate','s_heirs'].forEach(function(id){
+  var el=$(id);
+  if(el) el.addEventListener(el.tagName==='SELECT'||el.type==='checkbox'?'change':'input', runSim);
+});
+
+/* ===== run on load ===== */
+runSim();
 </script>
 </body>
 </html>
