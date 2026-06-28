@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>借金返済プランナー</title>
+<style>
+  :root {
+    --bg: #14161f; --card: #1d2030; --card2: #252939; --border: #2a2e42;
+    --text: #d8dee9; --muted: #8b95a7; --label: #aab2c0;
+    --accent: #e74c3c; --accent2: #f5b041; --ok: #58d68d; --ng: #ec7063;
+    --warn: #e67e22; --head: #f0f3f7;
+    --risk-high: #ec7063; --risk-mid: #f5b041; --risk-low: #58d68d;
+    --blue: #5dade2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    background: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.55;
+  }
+  header {
+    background: linear-gradient(135deg, #2a1a1a, #1d2030);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 22px; display: flex; align-items: center;
+    justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  header h1 { font-size: 19px; margin: 0; color: var(--head); }
+  header .tagline { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .header-actions button {
+    padding: 6px 12px; border: 1px solid var(--border); background: var(--card2);
+    color: var(--text); border-radius: 4px; cursor: pointer; font-size: 12px;
+  }
+  .header-actions button:hover { background: #303651; }
+  .layout { display: flex; max-width: 1200px; margin: 0 auto; gap: 18px; padding: 18px; align-items: flex-start; }
+  .nav {
+    flex: 0 0 220px; background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px; position: sticky; top: 78px;
+  }
+  .nav .nav-item {
+    display: flex; gap: 10px; align-items: flex-start; padding: 10px;
+    border-radius: 6px; cursor: pointer; margin-bottom: 4px; border: 1px solid transparent;
+  }
+  .nav .nav-item:hover { background: var(--card2); }
+  .nav .nav-item.active { background: #2a1a1a; border-color: var(--accent); }
+  .nav .nav-num {
+    flex: 0 0 24px; height: 24px; border-radius: 50%; background: var(--card2);
+    color: var(--muted); text-align: center; line-height: 24px; font-size: 13px; font-weight: bold;
+  }
+  .nav .nav-item.active .nav-num { background: var(--accent); color: #fff; }
+  .nav .nav-label { font-size: 13px; padding-top: 3px; }
+  .nav .nav-sub { font-size: 11px; color: var(--muted); }
+  .main { flex: 1 1 auto; min-width: 0; }
+  .mod { display: none; }
+  .mod.active { display: block; }
+  .card {
+    background: var(--card); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    padding: 18px 20px; margin-bottom: 16px; border: 1px solid var(--border);
+  }
+  .card h2 { font-size: 16px; margin: 0 0 12px 0; border-left: 4px solid var(--accent); padding-left: 8px; color: var(--head); }
+  .card h3 { font-size: 14px; margin: 14px 0 8px 0; color: var(--accent2); }
+  label { font-size: 13px; color: var(--label); }
+  .row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 10px; }
+  .field { display: flex; flex-direction: column; gap: 3px; }
+  input[type=number], input[type=text], select {
+    background: var(--card2); color: #e6e9ef; border: 1px solid #3a3f55; border-radius: 4px;
+    padding: 6px 8px; font-size: 14px; width: 180px;
+  }
+  input[type=range] { width: 180px; accent-color: var(--accent); }
+  select { cursor: pointer; }
+  .run-btn {
+    padding: 10px 24px; border: none; border-radius: 4px; cursor: pointer;
+    font-size: 15px; font-weight: bold; background: var(--accent); color: #fff;
+  }
+  .run-btn:hover { filter: brightness(1.1); }
+  .secondary-btn {
+    padding: 8px 18px; border: 1px solid var(--accent); border-radius: 4px; cursor: pointer;
+    font-size: 13px; background: var(--card); color: var(--accent);
+  }
+  .secondary-btn:hover { background: var(--card2); }
+  .danger-btn {
+    padding: 6px 14px; border: 1px solid var(--ng); border-radius: 4px; cursor: pointer;
+    font-size: 12px; background: var(--card); color: var(--ng);
+  }
+  .danger-btn:hover { background: #2a1a1a; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+  th, td { padding: 7px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+  th { color: var(--muted); font-weight: normal; font-size: 12px; background: var(--card2); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  th.num { text-align: right; }
+  .badge {
+    display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: bold;
+  }
+  .badge-high { background: rgba(236,112,99,0.2); color: var(--risk-high); border: 1px solid var(--risk-high); }
+  .badge-mid { background: rgba(245,176,65,0.2); color: var(--risk-mid); border: 1px solid var(--risk-mid); }
+  .badge-low { background: rgba(88,214,141,0.2); color: var(--risk-low); border: 1px solid var(--risk-low); }
+  .badge-blue { background: rgba(93,173,226,0.2); color: var(--blue); border: 1px solid var(--blue); }
+  .note {
+    font-size: 12px; color: var(--label); line-height: 1.6; background: #2a2517;
+    border-left: 4px solid var(--warn); padding: 12px 14px; border-radius: 4px; margin: 12px 0;
+  }
+  .note-warn {
+    font-size: 12px; color: var(--label); line-height: 1.6; background: #2a2017;
+    border-left: 4px solid #f39c12; padding: 12px 14px; border-radius: 4px; margin: 12px 0;
+  }
+  .note-info {
+    font-size: 12px; color: var(--label); line-height: 1.6; background: #172a3a;
+    border-left: 4px solid var(--blue); padding: 12px 14px; border-radius: 4px; margin: 12px 0;
+  }
+  .note-ok {
+    font-size: 12px; color: var(--label); line-height: 1.6; background: #1a2d1a;
+    border-left: 4px solid var(--ok); padding: 12px 14px; border-radius: 4px; margin: 12px 0;
+  }
+  .note-danger {
+    font-size: 12px; color: var(--label); line-height: 1.6; background: #2a1515;
+    border-left: 4px solid var(--ng); padding: 12px 14px; border-radius: 4px; margin: 12px 0;
+  }
+  .small { font-size: 12px; color: var(--muted); }
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px; margin: 12px 0;
+  }
+  .summary-box {
+    background: var(--card2); border-radius: 6px; padding: 14px;
+    border: 1px solid var(--border); text-align: center;
+  }
+  .summary-box .val { font-size: 22px; font-weight: bold; color: var(--head); margin: 6px 0 2px; }
+  .summary-box .lbl { font-size: 11px; color: var(--muted); }
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tab-bar button {
+    padding: 6px 14px; border: 1px solid var(--border); background: var(--card2);
+    color: var(--muted); border-radius: 4px; cursor: pointer; font-size: 13px;
+  }
+  .tab-bar button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .compare-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0;
+  }
+  .compare-box {
+    background: var(--card2); border-radius: 8px; padding: 16px;
+    border: 1px solid var(--border);
+  }
+  .compare-box h3 { margin: 0 0 10px 0; font-size: 14px; }
+  .signal { display: inline-block; width: 16px; height: 16px; border-radius: 50%; vertical-align: middle; margin-right: 4px; }
+  .signal-red { background: var(--ng); box-shadow: 0 0 6px var(--ng); }
+  .signal-yellow { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+  .signal-green { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+  .debt-entry {
+    background: var(--card2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px; margin-bottom: 10px; position: relative;
+  }
+  .debt-entry .remove-btn {
+    position: absolute; top: 8px; right: 8px; background: none; border: none;
+    color: var(--ng); cursor: pointer; font-size: 16px; padding: 4px 8px;
+  }
+  .debt-entry .remove-btn:hover { color: #ff6b6b; }
+  .rate-range { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .disclaimer {
+    background: #1a1a2e; border: 1px solid #2a2e42; border-radius: 6px;
+    padding: 14px; font-size: 11px; color: var(--muted); line-height: 1.7; margin-top: 20px;
+  }
+  .section-toggle {
+    cursor: pointer; user-select: none; display: flex; justify-content: space-between;
+    align-items: center; padding: 10px 0;
+  }
+  .section-toggle .arrow { transition: transform 0.2s; font-size: 12px; }
+  .section-toggle .arrow.open { transform: rotate(90deg); }
+  .section-content { display: none; }
+  .section-content.open { display: block; }
+  canvas { max-width: 100%; background: var(--card2); border-radius: 6px; margin-top: 10px; }
+  @media (max-width: 800px) {
+    .layout { flex-direction: column; padding: 10px; }
+    .nav { flex: none; position: static; display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; }
+    .nav .nav-item { padding: 6px 10px; margin: 0; }
+    .nav .nav-sub { display: none; }
+    .compare-grid { grid-template-columns: 1fr; }
+    input[type=number], input[type=text], select { width: 100%; }
+  }
+  @media print {
+    header { position: static; }
+    .nav, .header-actions, .run-btn, .secondary-btn, .danger-btn, button { display: none !important; }
+    .mod { display: block !important; }
+    body { background: #fff; color: #000; }
+    .card { box-shadow: none; border: 1px solid #ccc; background: #fff; }
+    .card h2 { border-left-color: #333; color: #000; }
+    th { background: #eee; }
+    .note, .note-warn, .note-info, .note-ok, .note-danger { background: #f8f8f8; border-left-color: #999; color: #333; }
+    .summary-box, .debt-entry, .compare-box { background: #f5f5f5; border-color: #ccc; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>借金返済プランナー</h1>
+    <div class="tagline">消費者金融＋クレジットカード — 返済戦略シミュレーター</div>
+  </div>
+  <div class="header-actions">
+    <button onclick="saveData()">💾 保存</button>
+    <button onclick="loadData()">📂 読込</button>
+    <button onclick="exportJSON()">📤 JSON</button>
+    <button onclick="window.print()">🖨 印刷/PDF</button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav"></nav>
+  <div class="main" id="main"></div>
+</div>
+
+<script>
+// ========== 業者マスターデータ ==========
+const LENDERS = {
+  consumer: {
+    label: '消費者金融（大手）',
+    items: [
+      { id:'acom', name:'アコム', rateMin:3.0, rateMax:18.0, defaultRate:18.0 },
+      { id:'promise', name:'プロミス', rateMin:4.5, rateMax:17.8, defaultRate:17.8 },
+      { id:'aiful', name:'アイフル', rateMin:3.0, rateMax:18.0, defaultRate:18.0 },
+      { id:'mobit', name:'SMBCモビット', rateMin:3.0, rateMax:18.0, defaultRate:18.0 },
+      { id:'lake', name:'レイク', rateMin:4.5, rateMax:18.0, defaultRate:18.0 },
+    ]
+  },
+  consumer_mid: {
+    label: '消費者金融（中小）',
+    items: [
+      { id:'itsumo', name:'いつも', rateMin:4.8, rateMax:18.0, defaultRate:18.0 },
+      { id:'fukuho', name:'フクホー', rateMin:7.3, rateMax:18.0, defaultRate:18.0 },
+      { id:'central', name:'セントラル', rateMin:4.8, rateMax:18.0, defaultRate:18.0 },
+      { id:'futaba', name:'フタバ', rateMin:14.959, rateMax:17.95, defaultRate:17.95 },
+    ]
+  },
+  card_cashing: {
+    label: 'クレカ キャッシング',
+    items: [
+      { id:'saison_c', name:'セゾンカード', rateMin:12.0, rateMax:18.0, defaultRate:18.0 },
+      { id:'rakuten_c', name:'楽天カード', rateMin:18.0, rateMax:18.0, defaultRate:18.0 },
+      { id:'epos_c', name:'エポスカード', rateMin:18.0, rateMax:18.0, defaultRate:18.0 },
+      { id:'dcard_c', name:'dカード', rateMin:15.0, rateMax:18.0, defaultRate:18.0 },
+      { id:'smbc_c', name:'三井住友カード', rateMin:15.0, rateMax:18.0, defaultRate:18.0 },
+      { id:'jcb_c', name:'JCBカード', rateMin:15.0, rateMax:18.0, defaultRate:18.0 },
+      { id:'aeon_c', name:'イオンカード', rateMin:7.8, rateMax:18.0, defaultRate:18.0 },
+      { id:'life_c', name:'ライフカード', rateMin:13.505, rateMax:18.0, defaultRate:18.0 },
+      { id:'amex_c', name:'アメックス', rateMin:15.0, rateMax:18.0, defaultRate:18.0 },
+      { id:'orico_c', name:'オリコカード', rateMin:15.0, rateMax:18.0, defaultRate:18.0 },
+    ]
+  },
+  card_ribo: {
+    label: 'クレカ リボ払い',
+    items: [
+      { id:'saison_r', name:'セゾンカード', rateMin:12.0, rateMax:18.0, defaultRate:15.0 },
+      { id:'rakuten_r', name:'楽天カード', rateMin:15.0, rateMax:15.0, defaultRate:15.0 },
+      { id:'epos_r', name:'エポスカード', rateMin:15.0, rateMax:15.0, defaultRate:15.0 },
+      { id:'dcard_r', name:'dカード', rateMin:15.0, rateMax:15.0, defaultRate:15.0 },
+      { id:'smbc_r', name:'三井住友カード', rateMin:15.0, rateMax:15.0, defaultRate:15.0 },
+      { id:'jcb_r', name:'JCBカード', rateMin:15.0, rateMax:15.0, defaultRate:15.0 },
+      { id:'aeon_r', name:'イオンカード', rateMin:15.0, rateMax:15.0, defaultRate:15.0 },
+      { id:'life_r', name:'ライフカード', rateMin:15.0, rateMax:15.0, defaultRate:15.0 },
+      { id:'orico_r', name:'オリコカード', rateMin:15.0, rateMax:15.0, defaultRate:15.0 },
+    ]
+  },
+  other: {
+    label: 'その他（手入力）',
+    items: [
+      { id:'other', name:'その他（手入力）', rateMin:1.0, rateMax:20.0, defaultRate:18.0 },
+    ]
+  }
+};
+
+function findLender(id) {
+  for (const g of Object.values(LENDERS)) {
+    const found = g.items.find(l => l.id === id);
+    if (found) return found;
+  }
+  return null;
+}
+
+// ========== 状態管理 ==========
+let debts = [];
+let nextDebtId = 1;
+
+// ========== ナビゲーション ==========
+const MODULES = [
+  { id:'m0', num:'0', label:'ルール完全網羅', sub:'法律・制度・債務整理' },
+  { id:'m1', num:'1', label:'借入登録', sub:'業者選択・残高入力' },
+  { id:'m2', num:'2', label:'完済シミュレーター', sub:'利息内訳・残高推移' },
+  { id:'m3', num:'3', label:'返済戦略比較', sub:'雪崩式 vs 雪だるま式' },
+  { id:'m4', num:'4', label:'危険度診断', sub:'信号機表示・相談ライン' },
+];
+
+function buildNav() {
+  const nav = document.getElementById('nav');
+  nav.innerHTML = MODULES.map((m,i) =>
+    `<div class="nav-item${i===0?' active':''}" data-mod="${m.id}" onclick="switchMod('${m.id}')">
+      <div class="nav-num">${m.num}</div>
+      <div><div class="nav-label">${m.label}</div><div class="nav-sub">${m.sub}</div></div>
+    </div>`
+  ).join('');
+}
+
+function switchMod(id) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.mod===id));
+  document.querySelectorAll('.mod').forEach(el => el.classList.toggle('active', el.id===id));
+}
+
+// ========== フォーマット ==========
+const fmt = n => n == null ? '—' : n.toLocaleString('ja-JP', {maximumFractionDigits:0});
+const fmtP = n => n == null ? '—' : n.toFixed(1) + '%';
+const fmtM = n => {
+  if (n == null) return '—';
+  const y = Math.floor(n / 12);
+  const m = n % 12;
+  return y > 0 ? `${y}年${m}ヶ月` : `${m}ヶ月`;
+};
+
+// ========== Module 0: ルール完全網羅 ==========
+function buildMod0() {
+  return `<div class="mod active" id="m0">
+    <div class="card">
+      <h2>消費者金融・カード借入のルール完全網羅</h2>
+      <p class="small">借金返済の第一歩は「自分の借入が法的にどういう状態か」を正しく理解すること。ここでは知識ゼロから必要な情報を網羅します。</p>
+    </div>
+
+    <!-- 利息制限法 -->
+    <div class="card">
+      <div class="section-toggle" onclick="toggleSection(this)">
+        <h2>1. 上限金利（利息制限法）</h2>
+        <span class="arrow">▶</span>
+      </div>
+      <div class="section-content">
+        <p>日本では<strong>利息制限法</strong>により、借入額に応じた上限金利が定められています。これを超える利息は<strong>無効</strong>です。</p>
+        <table>
+          <tr><th>元本の額</th><th class="num">上限金利（年率）</th></tr>
+          <tr><td>10万円未満</td><td class="num"><strong>20.0%</strong></td></tr>
+          <tr><td>10万円以上 100万円未満</td><td class="num"><strong>18.0%</strong></td></tr>
+          <tr><td>100万円以上</td><td class="num"><strong>15.0%</strong></td></tr>
+        </table>
+        <div class="note-info">
+          <strong>出資法</strong>の上限は 20.0%。これを超えると刑事罰の対象です。<br>
+          かつて存在した「グレーゾーン金利」（利息制限法の上限〜出資法の上限の間）は 2010年の法改正で撤廃されました。
+        </div>
+        <h3>実務上のポイント</h3>
+        <ul>
+          <li>大手消費者金融の上限金利はほぼ <strong>18.0%</strong>（利息制限法の「10万〜100万未満」の上限）</li>
+          <li>100万円以上借りている場合、金利が15%を超えていたら<strong>法律違反の可能性</strong>あり → 契約書を要確認</li>
+          <li>初回は上限金利（18.0%前後）が適用されるケースがほとんど</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 総量規制 -->
+    <div class="card">
+      <div class="section-toggle" onclick="toggleSection(this)">
+        <h2>2. 総量規制（借りすぎ防止）</h2>
+        <span class="arrow">▶</span>
+      </div>
+      <div class="section-content">
+        <p><strong>貸金業法</strong>により、貸金業者からの借入総額は<strong>年収の3分の1</strong>を超えてはならないと定められています。</p>
+        <table>
+          <tr><th>年収</th><th class="num">借入上限（総量規制）</th></tr>
+          <tr><td>300万円</td><td class="num">100万円</td></tr>
+          <tr><td>450万円</td><td class="num">150万円</td></tr>
+          <tr><td>600万円</td><td class="num">200万円</td></tr>
+        </table>
+        <div class="note-warn">
+          <strong>対象</strong>：消費者金融 ＋ クレカのキャッシング枠（合算）<br>
+          <strong>対象外</strong>：住宅ローン・自動車ローン・銀行カードローン・クレカのショッピングリボ<br>
+          ※ 銀行カードローンは総量規制の対象外ですが、各行が自主的に規制しています。
+        </div>
+      </div>
+    </div>
+
+    <!-- 返済方式 -->
+    <div class="card">
+      <div class="section-toggle" onclick="toggleSection(this)">
+        <h2>3. 返済方式の違い（重要）</h2>
+        <span class="arrow">▶</span>
+      </div>
+      <div class="section-content">
+        <p>消費者金融とクレカでは返済の仕組みが異なります。仕組みを知らないと「いくら返しても減らない」状態に陥ります。</p>
+        <table>
+          <tr><th>方式</th><th>仕組み</th><th>特徴</th></tr>
+          <tr><td><strong>残高スライドリボルビング</strong></td><td>残高が減ると最低返済額も下がる</td><td>消費者金融で一般的。返済額が減るため完済が遠のきやすい（罠）</td></tr>
+          <tr><td><strong>元利定額リボ</strong></td><td>毎月の返済額が一定</td><td>クレカのリボ払いで一般的。元金と利息の合計が固定</td></tr>
+          <tr><td><strong>元金定額リボ</strong></td><td>毎月の元金返済が一定＋利息</td><td>初月の返済が高いが、確実に残高が減る</td></tr>
+          <tr><td><strong>一括返済</strong></td><td>翌月に全額返済</td><td>クレカのキャッシング一括。利息は日割</td></tr>
+        </table>
+        <div class="note-danger">
+          <strong>残高スライドの罠</strong>：残高50万円 → 最低返済1.5万円 → 残高が減ると返済額も下がる → 完済まで5年以上・利息が元本に迫るケースも。<br>
+          <strong>対策</strong>：最低返済額に頼らず、<strong>固定額を毎月返す</strong>ことが最も重要です。
+        </div>
+      </div>
+    </div>
+
+    <!-- 過払い金 -->
+    <div class="card">
+      <div class="section-toggle" onclick="toggleSection(this)">
+        <h2>4. 過払い金・グレーゾーン金利</h2>
+        <span class="arrow">▶</span>
+      </div>
+      <div class="section-content">
+        <p><strong>2010年以前</strong>に消費者金融やクレカキャッシングを利用していた場合、利息制限法の上限を超える金利（グレーゾーン金利）で支払っていた可能性があります。</p>
+        <h3>過払い金が発生する条件</h3>
+        <ul>
+          <li>2010年6月17日以前に借入を開始</li>
+          <li>利息制限法の上限を超える金利で取引（例：29.2%など）</li>
+          <li>完済から<strong>10年以内</strong>（消滅時効）</li>
+        </ul>
+        <h3>消滅時効について</h3>
+        <table>
+          <tr><th>状況</th><th>時効の起算点</th><th>期間</th></tr>
+          <tr><td>完済済みの借入</td><td>最終取引日</td><td>10年</td></tr>
+          <tr><td>返済中の借入</td><td>時効は進行していない</td><td>—</td></tr>
+          <tr><td>返済を放置している借入</td><td>最終返済日（または期限の利益喪失日）</td><td>5年（商事）</td></tr>
+        </table>
+        <div class="note-info">
+          過払い金の請求は<strong>弁護士・司法書士</strong>に相談してください。取引履歴の開示請求→引き直し計算→交渉（または訴訟）の流れです。初回相談無料の事務所も多くあります。
+        </div>
+      </div>
+    </div>
+
+    <!-- 債務整理 -->
+    <div class="card">
+      <div class="section-toggle" onclick="toggleSection(this)">
+        <h2>5. 債務整理 3種比較</h2>
+        <span class="arrow">▶</span>
+      </div>
+      <div class="section-content">
+        <p>返済が困難な場合、法的に債務を整理する方法が3つあります。どれを選ぶかは借入総額・収入・資産状況で異なります。</p>
+        <table>
+          <tr><th></th><th>任意整理</th><th>個人再生</th><th>自己破産</th></tr>
+          <tr><td><strong>概要</strong></td><td>弁護士が業者と交渉し将来利息をカット。元本は原則全額返済</td><td>裁判所を通じて借金を<strong>1/5〜1/10</strong>に圧縮。3〜5年で返済</td><td>裁判所が借金を<strong>全額免除</strong>（免責）</td></tr>
+          <tr><td><strong>対象債務</strong></td><td>選べる（一部だけ可）</td><td>全債務が対象</td><td>全債務が対象</td></tr>
+          <tr><td><strong>住宅</strong></td><td>影響なし</td><td>住宅ローン特則で<strong>残せる</strong></td><td>原則<strong>失う</strong></td></tr>
+          <tr><td><strong>費用目安</strong></td><td>1社あたり3〜5万円</td><td>30〜50万円＋弁護士費用</td><td>30〜50万円＋弁護士費用</td></tr>
+          <tr><td><strong>期間</strong></td><td>3〜6ヶ月</td><td>1〜1.5年</td><td>3ヶ月〜1年</td></tr>
+          <tr><td><strong>信用情報</strong></td><td>約5年</td><td>約5〜10年</td><td>約5〜10年</td></tr>
+          <tr><td><strong>職業制限</strong></td><td>なし</td><td>なし</td><td>手続中のみ一部制限あり（士業・警備員等）</td></tr>
+          <tr><td><strong>向いている人</strong></td><td>借金総額が少なめで安定収入がある</td><td>借金が多いが住宅を残したい</td><td>返済見込みが全くない</td></tr>
+        </table>
+        <div class="note-warn">
+          <strong>信用情報への登録（いわゆる「ブラックリスト」）</strong><br>
+          債務整理を行うと、信用情報機関（CIC・JICC・KSC）に事故情報が登録されます。<br>
+          登録期間中は新たな借入・クレカ作成・ローン審査が<strong>通らなくなります</strong>。<br>
+          ただし、登録期間が過ぎれば記録は削除され、再び利用可能になります。
+        </div>
+      </div>
+    </div>
+
+    <!-- 相談窓口 -->
+    <div class="card">
+      <div class="section-toggle" onclick="toggleSection(this)">
+        <h2>6. 無料相談窓口</h2>
+        <span class="arrow">▶</span>
+      </div>
+      <div class="section-content">
+        <table>
+          <tr><th>窓口</th><th>内容</th><th>費用</th></tr>
+          <tr><td><strong>法テラス</strong>（日本司法支援センター）</td><td>収入要件を満たせば弁護士・司法書士の無料法律相談（3回まで）。費用の立替制度あり</td><td>相談無料</td></tr>
+          <tr><td><strong>弁護士会の法律相談</strong></td><td>各地の弁護士会が開催する債務整理相談。初回30分無料の場合あり</td><td>無料〜5,000円程度</td></tr>
+          <tr><td><strong>司法書士会の無料相談</strong></td><td>140万円以下の案件は司法書士が代理可能</td><td>相談無料</td></tr>
+          <tr><td><strong>消費生活センター</strong>（188）</td><td>多重債務の相談窓口。適切な専門家への橋渡し</td><td>無料</td></tr>
+          <tr><td><strong>日本貸金業協会 相談窓口</strong></td><td>貸金業者とのトラブル相談</td><td>無料</td></tr>
+          <tr><td><strong>JCCO（日本クレジットカウンセリング協会）</strong></td><td>多重債務の無料カウンセリング・任意整理の無料支援</td><td>無料</td></tr>
+        </table>
+        <div class="note-ok">
+          <strong>一人で悩まないでください。</strong>上記の窓口は全て無料（または初回無料）で相談できます。「まだ大丈夫」と思っているうちに相談するのが最も効果的です。
+        </div>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      ※ 本セクションの情報は 2026年6月時点の法令・制度に基づく参考情報です。個別の法的判断は弁護士・司法書士にご相談ください。税務判断は税理士にご確認ください。
+    </div>
+  </div>`;
+}
+
+// ========== Module 1: 借入登録 ==========
+function buildMod1() {
+  return `<div class="mod" id="m1">
+    <div class="card">
+      <h2>借入の登録</h2>
+      <p class="small">業者を選択すると公式の上限金利が自動セットされます。契約書やアプリで実際の適用金利がわかる場合はスライダーで調整できます。</p>
+      <div class="row" style="margin-top:12px;">
+        <button class="run-btn" onclick="addDebt()">＋ 借入を追加</button>
+      </div>
+    </div>
+    <div id="debtList"></div>
+    <div class="card" id="debtSummary" style="display:none;">
+      <h2>総債務サマリー</h2>
+      <div class="summary-grid" id="debtSummaryGrid"></div>
+      <div class="row" style="margin-top:12px;">
+        <div class="field">
+          <label>手取り月収（任意・危険度診断に使用）</label>
+          <input type="number" id="monthlyIncome" placeholder="例: 250000" onchange="updateSummary()">
+        </div>
+        <div class="field">
+          <label>年収（任意・総量規制チェックに使用）</label>
+          <input type="number" id="annualIncome" placeholder="例: 4000000" onchange="updateSummary()">
+        </div>
+      </div>
+      <div id="regulationCheck"></div>
+    </div>
+  </div>`;
+}
+
+function addDebt() {
+  const id = nextDebtId++;
+  debts.push({ id, lenderId:'', name:'', rate:18.0, balance:0, minPayment:0, customName:'' });
+  renderDebtList();
+}
+
+function removeDebt(id) {
+  debts = debts.filter(d => d.id !== id);
+  renderDebtList();
+  updateSummary();
+}
+
+function renderDebtList() {
+  const container = document.getElementById('debtList');
+  container.innerHTML = debts.map((d, i) => {
+    const lender = d.lenderId ? findLender(d.lenderId) : null;
+    const rangeText = lender ? `公式レンジ：${lender.rateMin}% 〜 ${lender.rateMax}%` : '';
+    return `<div class="debt-entry">
+      <button class="remove-btn" onclick="removeDebt(${d.id})" title="削除">✕</button>
+      <div style="font-size:13px;color:var(--accent2);margin-bottom:8px;font-weight:bold;">借入 #${i+1}</div>
+      <div class="row">
+        <div class="field">
+          <label>カテゴリ</label>
+          <select onchange="onCategoryChange(${d.id}, this.value)">
+            <option value="">— 選択 —</option>
+            ${Object.entries(LENDERS).map(([k,g]) =>
+              `<optgroup label="${g.label}">${g.items.map(l =>
+                `<option value="${l.id}" ${d.lenderId===l.id?'selected':''}>${l.name}</option>`
+              ).join('')}</optgroup>`
+            ).join('')}
+          </select>
+        </div>
+        <div class="field" ${d.lenderId==='other'?'':'style="display:none"'} id="customName_${d.id}">
+          <label>業者名（手入力）</label>
+          <input type="text" value="${d.customName||''}" placeholder="業者名" onchange="onFieldChange(${d.id},'customName',this.value)">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>現在の残高（円）</label>
+          <input type="number" value="${d.balance||''}" placeholder="例: 500000" onchange="onFieldChange(${d.id},'balance',+this.value)">
+        </div>
+        <div class="field">
+          <label>毎月の最低返済額（円）</label>
+          <input type="number" value="${d.minPayment||''}" placeholder="例: 15000" onchange="onFieldChange(${d.id},'minPayment',+this.value)">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>実質年率：<strong id="rateDisplay_${d.id}">${d.rate.toFixed(1)}%</strong></label>
+          <input type="range" min="${lender?lender.rateMin:1}" max="${lender?lender.rateMax:20}" step="0.1"
+            value="${d.rate}" oninput="onRateSlide(${d.id}, this.value)">
+          <div class="rate-range" id="rateRange_${d.id}">${rangeText}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('debtSummary').style.display = debts.length > 0 ? 'block' : 'none';
+  updateSummary();
+}
+
+function onCategoryChange(debtId, lenderId) {
+  const d = debts.find(x => x.id === debtId);
+  if (!d) return;
+  d.lenderId = lenderId;
+  const lender = findLender(lenderId);
+  if (lender) {
+    d.name = lender.name;
+    d.rate = lender.defaultRate;
+  }
+  renderDebtList();
+}
+
+function onRateSlide(debtId, val) {
+  const d = debts.find(x => x.id === debtId);
+  if (!d) return;
+  d.rate = parseFloat(val);
+  const el = document.getElementById('rateDisplay_' + debtId);
+  if (el) el.textContent = d.rate.toFixed(1) + '%';
+}
+
+function onFieldChange(debtId, field, val) {
+  const d = debts.find(x => x.id === debtId);
+  if (d) d[field] = val;
+  updateSummary();
+}
+
+function updateSummary() {
+  if (debts.length === 0) return;
+  const totalBalance = debts.reduce((s,d) => s + (d.balance||0), 0);
+  const totalMinPay = debts.reduce((s,d) => s + (d.minPayment||0), 0);
+  const weightedRate = totalBalance > 0
+    ? debts.reduce((s,d) => s + (d.balance||0) * d.rate, 0) / totalBalance : 0;
+  const monthlyInterest = debts.reduce((s,d) => s + (d.balance||0) * d.rate / 100 / 12, 0);
+
+  document.getElementById('debtSummaryGrid').innerHTML = `
+    <div class="summary-box"><div class="lbl">総債務額</div><div class="val" style="color:var(--ng)">${fmt(totalBalance)}円</div></div>
+    <div class="summary-box"><div class="lbl">借入件数</div><div class="val">${debts.filter(d=>d.balance>0).length}件</div></div>
+    <div class="summary-box"><div class="lbl">加重平均金利</div><div class="val">${weightedRate.toFixed(1)}%</div></div>
+    <div class="summary-box"><div class="lbl">毎月の利息合計</div><div class="val" style="color:var(--ng)">${fmt(Math.round(monthlyInterest))}円</div></div>
+    <div class="summary-box"><div class="lbl">最低返済合計/月</div><div class="val">${fmt(totalMinPay)}円</div></div>
+    <div class="summary-box"><div class="lbl">返済に占める利息率</div><div class="val">${totalMinPay>0?(monthlyInterest/totalMinPay*100).toFixed(0)+'%':'—'}</div></div>
+  `;
+
+  // 総量規制チェック
+  const annualIncome = +document.getElementById('annualIncome')?.value || 0;
+  const el = document.getElementById('regulationCheck');
+  if (annualIncome > 0) {
+    const limit = Math.floor(annualIncome / 3);
+    const cashingTotal = debts.filter(d => {
+      return d.lenderId && !d.lenderId.endsWith('_r');
+    }).reduce((s,d) => s + (d.balance||0), 0);
+    const pct = (cashingTotal / limit * 100).toFixed(0);
+    const over = cashingTotal > limit;
+    el.innerHTML = `<div class="${over?'note-danger':'note-ok'}" style="margin-top:12px;">
+      <strong>総量規制チェック</strong>（キャッシング＋消費者金融のみ）<br>
+      年収 ${fmt(annualIncome)}円 × 1/3 = 上限 <strong>${fmt(limit)}円</strong><br>
+      対象借入合計：<strong>${fmt(cashingTotal)}円</strong>（上限の ${pct}%）<br>
+      ${over ? '⚠️ 総量規制の上限を超えています。新規借入は困難な状態です。' : '✅ 総量規制の範囲内です。'}
+    </div>`;
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+// ========== Module 2: 完済シミュレーター ==========
+function buildMod2() {
+  return `<div class="mod" id="m2">
+    <div class="card">
+      <h2>完済シミュレーター</h2>
+      <p class="small">登録した借入ごとに、毎月の返済額から完済までの期間・総支払利息を試算します。</p>
+      <div class="row" style="margin-top:12px;">
+        <div class="field">
+          <label>毎月の返済可能額（全社合計）</label>
+          <input type="number" id="simMonthlyTotal" placeholder="例: 50000" value="">
+        </div>
+        <button class="run-btn" onclick="runSimulation()">シミュレーション実行</button>
+      </div>
+      <div class="note-info" style="margin-top:8px;">
+        返済可能額を入力しない場合、各社の最低返済額で試算します（残高スライドは非対応・固定額で計算）。
+      </div>
+    </div>
+    <div id="simResults"></div>
+    <div class="card" style="display:none;" id="simChartCard">
+      <h2>残高推移グラフ</h2>
+      <canvas id="simChart" width="750" height="380"></canvas>
+    </div>
+  </div>`;
+}
+
+function simulateDebt(balance, rate, monthlyPayment, maxMonths) {
+  if (balance <= 0 || monthlyPayment <= 0) return { months:0, totalInterest:0, totalPaid:0, history:[] };
+  maxMonths = maxMonths || 600;
+  let remaining = balance;
+  let totalInterest = 0;
+  let totalPaid = 0;
+  const history = [remaining];
+
+  for (let m = 1; m <= maxMonths; m++) {
+    const interest = remaining * (rate / 100) / 12;
+    totalInterest += interest;
+    const payment = Math.min(monthlyPayment, remaining + interest);
+    const principal = payment - interest;
+    totalPaid += payment;
+    remaining = Math.max(0, remaining - principal);
+    history.push(remaining);
+    if (remaining <= 0) return { months:m, totalInterest: Math.round(totalInterest), totalPaid: Math.round(totalPaid), history };
+  }
+  return { months: maxMonths, totalInterest: Math.round(totalInterest), totalPaid: Math.round(totalPaid), history, incomplete: true };
+}
+
+function runSimulation() {
+  const valid = debts.filter(d => d.balance > 0);
+  if (valid.length === 0) {
+    document.getElementById('simResults').innerHTML = '<div class="note-warn">借入を登録してください（Module 1）。</div>';
+    return;
+  }
+
+  const totalBudget = +document.getElementById('simMonthlyTotal').value || 0;
+  let results = [];
+
+  if (totalBudget > 0) {
+    // 按分：最低返済額ベースで配分、余剰は高金利に充当
+    const totalMin = valid.reduce((s,d) => s + (d.minPayment||0), 0);
+    valid.forEach(d => {
+      const pay = totalBudget > totalMin
+        ? (d.minPayment||0) + (totalBudget - totalMin) * ((d.balance||0) / valid.reduce((s,x)=>s+(x.balance||0),0))
+        : (d.minPayment || Math.round(d.balance * 0.03));
+      const r = simulateDebt(d.balance, d.rate, Math.round(pay), 600);
+      results.push({ ...d, payment: Math.round(pay), ...r });
+    });
+  } else {
+    valid.forEach(d => {
+      const pay = d.minPayment || Math.round(d.balance * 0.03);
+      const r = simulateDebt(d.balance, d.rate, pay, 600);
+      results.push({ ...d, payment: pay, ...r });
+    });
+  }
+
+  const totalInterest = results.reduce((s,r) => s + r.totalInterest, 0);
+  const totalPaid = results.reduce((s,r) => s + r.totalPaid, 0);
+  const maxMonths = Math.max(...results.map(r => r.months));
+
+  let html = `<div class="card">
+    <h2>各社の返済シミュレーション結果</h2>
+    <div class="summary-grid">
+      <div class="summary-box"><div class="lbl">全社 完済時期</div><div class="val">${fmtM(maxMonths)}</div></div>
+      <div class="summary-box"><div class="lbl">総支払利息</div><div class="val" style="color:var(--ng)">${fmt(totalInterest)}円</div></div>
+      <div class="summary-box"><div class="lbl">総支払額（元本＋利息）</div><div class="val">${fmt(totalPaid)}円</div></div>
+    </div>
+    <table>
+      <tr><th>業者</th><th class="num">残高</th><th class="num">金利</th><th class="num">月返済額</th><th class="num">完済期間</th><th class="num">総利息</th><th class="num">総支払額</th></tr>
+      ${results.map(r => `<tr>
+        <td>${r.customName || r.name || '不明'}</td>
+        <td class="num">${fmt(r.balance)}円</td>
+        <td class="num">${fmtP(r.rate)}</td>
+        <td class="num">${fmt(r.payment)}円</td>
+        <td class="num">${r.incomplete?'50年超':fmtM(r.months)}</td>
+        <td class="num" style="color:var(--ng)">${fmt(r.totalInterest)}円</td>
+        <td class="num">${fmt(r.totalPaid)}円</td>
+      </tr>`).join('')}
+    </table>
+  </div>`;
+
+  // 利息内訳（初月）
+  html += `<div class="card">
+    <h2>初月の返済内訳</h2>
+    <p class="small">毎月の返済額のうち、どれだけが利息に消えているかを確認できます。</p>
+    <table>
+      <tr><th>業者</th><th class="num">月返済額</th><th class="num">うち利息</th><th class="num">うち元金</th><th class="num">利息割合</th></tr>
+      ${results.map(r => {
+        const interest = Math.round(r.balance * r.rate / 100 / 12);
+        const principal = r.payment - interest;
+        const ratio = r.payment > 0 ? (interest / r.payment * 100) : 0;
+        return `<tr>
+          <td>${r.customName || r.name || '不明'}</td>
+          <td class="num">${fmt(r.payment)}円</td>
+          <td class="num" style="color:var(--ng)">${fmt(interest)}円</td>
+          <td class="num" style="color:var(--ok)">${fmt(Math.max(0,principal))}円</td>
+          <td class="num"><span class="badge ${ratio>60?'badge-high':ratio>40?'badge-mid':'badge-low'}">${ratio.toFixed(0)}%</span></td>
+        </tr>`;
+      }).join('')}
+    </table>
+  </div>`;
+
+  document.getElementById('simResults').innerHTML = html;
+
+  // グラフ描画
+  drawSimChart(results, maxMonths);
+}
+
+function drawSimChart(results, maxMonths) {
+  const card = document.getElementById('simChartCard');
+  card.style.display = 'block';
+  const canvas = document.getElementById('simChart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pad = { t:30, r:20, b:40, l:70 };
+  const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#252939'; ctx.fillRect(0,0,W,H);
+
+  const maxBal = Math.max(...results.map(r => r.balance));
+  const months = Math.min(maxMonths, 120);
+
+  // grid
+  ctx.strokeStyle = '#3a3f55'; ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 5; i++) {
+    const y = pad.t + cH - (cH * i / 5);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W-pad.r, y); ctx.stroke();
+    ctx.fillStyle = '#8b95a7'; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(fmt(Math.round(maxBal * i / 5)) + '円', pad.l - 6, y + 4);
+  }
+
+  // x-axis
+  const step = months <= 24 ? 3 : months <= 60 ? 6 : 12;
+  for (let m = 0; m <= months; m += step) {
+    const x = pad.l + (cW * m / months);
+    ctx.fillStyle = '#8b95a7'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(m + '月', x, H - pad.b + 16);
+  }
+
+  // lines
+  const colors = ['#e74c3c','#f5b041','#5dade2','#58d68d','#af7ac5','#ec7063','#48c9b0','#f1948a','#85c1e9','#82e0aa','#d7bde2','#f7dc6f','#aed6f1','#fadbd8'];
+  results.forEach((r, idx) => {
+    ctx.strokeStyle = colors[idx % colors.length];
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const hist = r.history;
+    for (let m = 0; m <= Math.min(months, hist.length-1); m++) {
+      const x = pad.l + (cW * m / months);
+      const y = pad.t + cH - (cH * hist[m] / maxBal);
+      if (m === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  });
+
+  // legend
+  ctx.font = '11px sans-serif';
+  results.forEach((r, idx) => {
+    const lx = pad.l + 10 + (idx % 3) * 200;
+    const ly = pad.t + 10 + Math.floor(idx / 3) * 16;
+    ctx.fillStyle = colors[idx % colors.length];
+    ctx.fillRect(lx, ly - 4, 12, 4);
+    ctx.fillStyle = '#d8dee9';
+    ctx.textAlign = 'left';
+    ctx.fillText(r.customName || r.name || '不明', lx + 16, ly);
+  });
+}
+
+// ========== Module 3: 返済戦略比較 ==========
+function buildMod3() {
+  return `<div class="mod" id="m3">
+    <div class="card">
+      <h2>返済戦略の比較</h2>
+      <p class="small">同じ月額予算で「高金利優先（雪崩式）」と「残高小さい順（雪だるま式）」を比較します。</p>
+      <div class="row" style="margin-top:12px;">
+        <div class="field">
+          <label>毎月の返済予算（全社合計）</label>
+          <input type="number" id="stratBudget" placeholder="例: 50000" value="">
+        </div>
+        <button class="run-btn" onclick="runStrategyCompare()">比較実行</button>
+      </div>
+      <div class="note-info" style="margin-top:8px;">
+        各社の最低返済額を合計した額以上を入力してください。余剰分の「どこに充てるか」が戦略の違いになります。
+      </div>
+    </div>
+    <div id="stratResults"></div>
+  </div>`;
+}
+
+function runStrategy(sortedDebts, budget, maxMonths) {
+  maxMonths = maxMonths || 600;
+  let balances = sortedDebts.map(d => d.balance || 0);
+  const rates = sortedDebts.map(d => d.rate);
+  const mins = sortedDebts.map(d => d.minPayment || Math.round((d.balance||0) * 0.02) || 1000);
+  let totalInterest = 0;
+  let month = 0;
+  const completionOrder = [];
+  const histories = sortedDebts.map(() => []);
+  balances.forEach((b,i) => histories[i].push(b));
+
+  while (balances.some(b => b > 0) && month < maxMonths) {
+    month++;
+    let remaining = budget;
+
+    // 最低返済を先に充当
+    let payments = balances.map((b, i) => {
+      if (b <= 0) return 0;
+      const pay = Math.min(mins[i], b + b * rates[i] / 100 / 12);
+      remaining -= pay;
+      return pay;
+    });
+
+    // 余剰を優先順位の高いものに充当
+    if (remaining > 0) {
+      for (let i = 0; i < balances.length; i++) {
+        if (balances[i] <= 0) continue;
+        const interest = balances[i] * rates[i] / 100 / 12;
+        const maxExtra = balances[i] + interest - payments[i];
+        const extra = Math.min(remaining, maxExtra);
+        payments[i] += extra;
+        remaining -= extra;
+        if (remaining <= 0) break;
+      }
+    }
+
+    // 利息計算・残高更新
+    for (let i = 0; i < balances.length; i++) {
+      if (balances[i] <= 0) { histories[i].push(0); continue; }
+      const interest = balances[i] * rates[i] / 100 / 12;
+      totalInterest += interest;
+      const principal = payments[i] - interest;
+      balances[i] = Math.max(0, balances[i] - principal);
+      histories[i].push(balances[i]);
+      if (balances[i] <= 0 && !completionOrder.find(x => x.index === i)) {
+        completionOrder.push({ index: i, month, name: sortedDebts[i].customName || sortedDebts[i].name });
+      }
+    }
+  }
+
+  return { months: month, totalInterest: Math.round(totalInterest), completionOrder, histories, incomplete: balances.some(b => b > 0) };
+}
+
+function runStrategyCompare() {
+  const valid = debts.filter(d => d.balance > 0);
+  if (valid.length < 2) {
+    document.getElementById('stratResults').innerHTML = '<div class="note-warn">比較には2件以上の借入を登録してください。</div>';
+    return;
+  }
+
+  const budget = +document.getElementById('stratBudget').value || 0;
+  const totalMin = valid.reduce((s,d) => s + (d.minPayment || Math.round((d.balance||0) * 0.02) || 1000), 0);
+  if (budget < totalMin) {
+    document.getElementById('stratResults').innerHTML = `<div class="note-danger">返済予算（${fmt(budget)}円）が最低返済合計（${fmt(totalMin)}円）を下回っています。最低返済額以上を入力してください。</div>`;
+    return;
+  }
+
+  // 雪崩式：高金利順
+  const avalanche = [...valid].sort((a,b) => b.rate - a.rate);
+  const avalancheResult = runStrategy(avalanche, budget, 600);
+
+  // 雪だるま式：残高小さい順
+  const snowball = [...valid].sort((a,b) => (a.balance||0) - (b.balance||0));
+  const snowballResult = runStrategy(snowball, budget, 600);
+
+  const interestDiff = snowballResult.totalInterest - avalancheResult.totalInterest;
+  const monthDiff = snowballResult.months - avalancheResult.months;
+
+  let html = `<div class="card">
+    <h2>戦略比較サマリー</h2>
+    <div class="compare-grid">
+      <div class="compare-box" style="border-color:var(--accent);">
+        <h3 style="color:var(--accent);">🏔️ 雪崩式（高金利優先）</h3>
+        <p class="small">金利が高い借入から集中返済 → 利息の節約額が最大</p>
+        <div class="summary-grid">
+          <div class="summary-box"><div class="lbl">完済期間</div><div class="val">${avalancheResult.incomplete?'50年超':fmtM(avalancheResult.months)}</div></div>
+          <div class="summary-box"><div class="lbl">総支払利息</div><div class="val" style="color:var(--ng)">${fmt(avalancheResult.totalInterest)}円</div></div>
+        </div>
+        <h3>完済順序</h3>
+        <ol style="font-size:12px;padding-left:20px;">
+          ${avalancheResult.completionOrder.map(c => `<li>${c.name}（${fmtM(c.month)}）</li>`).join('')}
+        </ol>
+      </div>
+      <div class="compare-box" style="border-color:var(--blue);">
+        <h3 style="color:var(--blue);">⛄ 雪だるま式（残高小さい順）</h3>
+        <p class="small">残高が少ない借入から完済 → 達成感でモチベーション維持</p>
+        <div class="summary-grid">
+          <div class="summary-box"><div class="lbl">完済期間</div><div class="val">${snowballResult.incomplete?'50年超':fmtM(snowballResult.months)}</div></div>
+          <div class="summary-box"><div class="lbl">総支払利息</div><div class="val" style="color:var(--ng)">${fmt(snowballResult.totalInterest)}円</div></div>
+        </div>
+        <h3>完済順序</h3>
+        <ol style="font-size:12px;padding-left:20px;">
+          ${snowballResult.completionOrder.map(c => `<li>${c.name}（${fmtM(c.month)}）</li>`).join('')}
+        </ol>
+      </div>
+    </div>
+    <div class="${interestDiff > 0 ? 'note-ok' : 'note-info'}">
+      <strong>比較結果</strong><br>
+      ${interestDiff > 0
+        ? `雪崩式なら雪だるま式より <strong>${fmt(interestDiff)}円</strong> 利息を節約できます${monthDiff > 0 ? `（${monthDiff}ヶ月早く完済）` : ''}。<br>数字で見れば雪崩式が有利ですが、早く1社を完済して心理的な負担を減らしたい場合は雪だるま式も有効です。`
+        : `両方式の差は ${fmt(Math.abs(interestDiff))}円 と小さいため、<strong>どちらでも継続できる方を選ぶ</strong>のが最善です。`
+      }
+    </div>
+  </div>`;
+
+  // 雪崩式の返済優先順解説
+  html += `<div class="card">
+    <h2>雪崩式の返済優先順</h2>
+    <p class="small">最低返済額はすべての社に支払い、余剰分を以下の順で集中充当します。</p>
+    <table>
+      <tr><th>優先順位</th><th>業者</th><th class="num">金利</th><th class="num">残高</th></tr>
+      ${avalanche.map((d,i) => `<tr>
+        <td><strong>${i+1}</strong></td>
+        <td>${d.customName || d.name}</td>
+        <td class="num">${fmtP(d.rate)}</td>
+        <td class="num">${fmt(d.balance)}円</td>
+      </tr>`).join('')}
+    </table>
+  </div>`;
+
+  document.getElementById('stratResults').innerHTML = html;
+}
+
+// ========== Module 4: 危険度診断 ==========
+function buildMod4() {
+  return `<div class="mod" id="m4">
+    <div class="card">
+      <h2>危険度診断</h2>
+      <p class="small">返済の負担度を客観的な指標で可視化します。Module 1 で借入と収入を登録すると自動で診断します。</p>
+      <button class="run-btn" onclick="runDiagnosis()">診断を実行</button>
+    </div>
+    <div id="diagResults"></div>
+  </div>`;
+}
+
+function runDiagnosis() {
+  const valid = debts.filter(d => d.balance > 0);
+  if (valid.length === 0) {
+    document.getElementById('diagResults').innerHTML = '<div class="note-warn">借入を登録してください（Module 1）。</div>';
+    return;
+  }
+
+  const totalBalance = valid.reduce((s,d) => s + (d.balance||0), 0);
+  const totalMinPay = valid.reduce((s,d) => s + (d.minPayment||0), 0);
+  const monthlyInterest = valid.reduce((s,d) => s + (d.balance||0) * d.rate / 100 / 12, 0);
+  const monthlyIncome = +document.getElementById('monthlyIncome')?.value || 0;
+  const annualIncome = +document.getElementById('annualIncome')?.value || 0;
+
+  let html = `<div class="card"><h2>診断結果</h2>`;
+
+  // 指標1：返済額 / 手取月収
+  if (monthlyIncome > 0) {
+    const ratio = totalMinPay / monthlyIncome * 100;
+    let signal, msg;
+    if (ratio > 40) { signal = 'signal-red'; msg = '⚠️ 危険水準。生活費を圧迫しています。債務整理の検討を強くおすすめします。'; }
+    else if (ratio > 25) { signal = 'signal-yellow'; msg = '⚡ 注意水準。繰上げ返済で早期完済を目指しましょう。'; }
+    else { signal = 'signal-green'; msg = '✅ 管理可能な水準です。計画通り返済を続けてください。'; }
+
+    html += `<div style="margin:14px 0;padding:12px;background:var(--card2);border-radius:6px;">
+      <div style="font-size:14px;font-weight:bold;margin-bottom:6px;">
+        <span class="signal ${signal}"></span> 返済負担率：${ratio.toFixed(1)}%
+      </div>
+      <div class="small">毎月の最低返済合計 ${fmt(totalMinPay)}円 ÷ 手取り月収 ${fmt(monthlyIncome)}円</div>
+      <div style="margin-top:6px;font-size:12px;">${msg}</div>
+      <table style="margin-top:8px;">
+        <tr><th>水準</th><th>返済負担率</th><th>判定</th></tr>
+        <tr><td>安全</td><td class="num">〜25%</td><td><span class="signal signal-green"></span> 管理可能</td></tr>
+        <tr><td>注意</td><td class="num">25%〜40%</td><td><span class="signal signal-yellow"></span> 早期完済推奨</td></tr>
+        <tr><td>危険</td><td class="num">40%超</td><td><span class="signal signal-red"></span> 債務整理検討</td></tr>
+      </table>
+    </div>`;
+  } else {
+    html += `<div class="note-info">手取り月収を入力すると「返済負担率」を診断できます（Module 1）。</div>`;
+  }
+
+  // 指標2：総債務 / 年収
+  if (annualIncome > 0) {
+    const ratio = totalBalance / annualIncome;
+    let signal, msg;
+    if (ratio > 0.5) { signal = 'signal-red'; msg = '⚠️ 年収の半分以上が借金です。返済計画の根本的な見直しが必要です。'; }
+    else if (ratio > 0.3) { signal = 'signal-yellow'; msg = '⚡ 年収の3割を超えています。追加借入は避け、返済に集中しましょう。'; }
+    else { signal = 'signal-green'; msg = '✅ 年収に対して管理可能な水準です。'; }
+
+    html += `<div style="margin:14px 0;padding:12px;background:var(--card2);border-radius:6px;">
+      <div style="font-size:14px;font-weight:bold;margin-bottom:6px;">
+        <span class="signal ${signal}"></span> 債務年収比：${(ratio * 100).toFixed(0)}%
+      </div>
+      <div class="small">総債務 ${fmt(totalBalance)}円 ÷ 年収 ${fmt(annualIncome)}円</div>
+      <div style="margin-top:6px;font-size:12px;">${msg}</div>
+    </div>`;
+  }
+
+  // 指標3：利息の重さ
+  const interestRatio = totalMinPay > 0 ? monthlyInterest / totalMinPay * 100 : 0;
+  let signal3, msg3;
+  if (interestRatio > 60) { signal3 = 'signal-red'; msg3 = '⚠️ 返済の半分以上が利息に消えています。元金がほとんど減らない状態です。'; }
+  else if (interestRatio > 40) { signal3 = 'signal-yellow'; msg3 = '⚡ 利息の比率が高めです。返済額を増やせると効果的です。'; }
+  else { signal3 = 'signal-green'; msg3 = '✅ 元金がしっかり減っている状態です。'; }
+
+  html += `<div style="margin:14px 0;padding:12px;background:var(--card2);border-radius:6px;">
+    <div style="font-size:14px;font-weight:bold;margin-bottom:6px;">
+      <span class="signal ${signal3}"></span> 利息比率：${interestRatio.toFixed(0)}%
+    </div>
+    <div class="small">毎月の利息合計 ${fmt(Math.round(monthlyInterest))}円 ÷ 最低返済合計 ${fmt(totalMinPay)}円</div>
+    <div style="margin-top:6px;font-size:12px;">${msg3}</div>
+  </div>`;
+
+  // 指標4：件数リスク
+  const count = valid.length;
+  let signal4, msg4;
+  if (count >= 5) { signal4 = 'signal-red'; msg4 = '⚠️ 5社以上の多重債務状態です。おまとめローンまたは債務整理の検討をおすすめします。'; }
+  else if (count >= 3) { signal4 = 'signal-yellow'; msg4 = '⚡ 3社以上です。追加借入を避け、戦略的な返済を心がけてください。'; }
+  else { signal4 = 'signal-green'; msg4 = '✅ 管理可能な件数です。'; }
+
+  html += `<div style="margin:14px 0;padding:12px;background:var(--card2);border-radius:6px;">
+    <div style="font-size:14px;font-weight:bold;margin-bottom:6px;">
+      <span class="signal ${signal4}"></span> 借入件数：${count}社
+    </div>
+    <div style="margin-top:6px;font-size:12px;">${msg4}</div>
+  </div>`;
+
+  // 専門家相談ラインのまとめ
+  const anyRed = [signal, signal3, signal4].includes('signal-red') || (monthlyIncome > 0 && totalMinPay / monthlyIncome > 0.4);
+  if (anyRed) {
+    html += `<div class="note-danger">
+      <strong>⚠️ 専門家への相談を検討してください</strong><br>
+      1つ以上の指標が危険水準です。一人で抱え込まず、以下の無料窓口への相談をおすすめします。<br>
+      ・<strong>法テラス</strong>（0570-078374）：無料法律相談<br>
+      ・<strong>消費生活センター</strong>（188）：多重債務相談<br>
+      ・<strong>JCCO</strong>（日本クレジットカウンセリング協会）：無料カウンセリング<br>
+      <br>早い段階の相談ほど選択肢が多く、回復も早くなります。
+    </div>`;
+  }
+
+  html += `</div>`;
+  document.getElementById('diagResults').innerHTML = html;
+}
+
+// ========== セクション開閉 ==========
+function toggleSection(el) {
+  const arrow = el.querySelector('.arrow');
+  const content = el.nextElementSibling;
+  arrow.classList.toggle('open');
+  content.classList.toggle('open');
+}
+
+// ========== 保存・読込・JSON ==========
+function getState() {
+  return {
+    debts,
+    nextDebtId,
+    monthlyIncome: +document.getElementById('monthlyIncome')?.value || 0,
+    annualIncome: +document.getElementById('annualIncome')?.value || 0,
+    savedAt: new Date().toISOString()
+  };
+}
+
+function applyState(state) {
+  debts = state.debts || [];
+  nextDebtId = state.nextDebtId || debts.length + 1;
+  renderDebtList();
+  if (state.monthlyIncome) {
+    const el = document.getElementById('monthlyIncome');
+    if (el) el.value = state.monthlyIncome;
+  }
+  if (state.annualIncome) {
+    const el = document.getElementById('annualIncome');
+    if (el) el.value = state.annualIncome;
+  }
+  updateSummary();
+}
+
+function saveData() {
+  try {
+    localStorage.setItem('debt_repayment_planner', JSON.stringify(getState()));
+    alert('保存しました。');
+  } catch(e) { alert('保存に失敗しました: ' + e.message); }
+}
+
+function loadData() {
+  try {
+    const data = localStorage.getItem('debt_repayment_planner');
+    if (!data) { alert('保存データがありません。'); return; }
+    applyState(JSON.parse(data));
+    switchMod('m1');
+    alert('読み込みました。');
+  } catch(e) { alert('読込に失敗しました: ' + e.message); }
+}
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(getState(), null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `debt_plan_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+// ========== 初期化 ==========
+function init() {
+  buildNav();
+  document.getElementById('main').innerHTML =
+    buildMod0() + buildMod1() + buildMod2() + buildMod3() + buildMod4() +
+    `<div class="disclaimer" style="margin-top:24px;">
+      ※ 本ツールは返済計画の参考情報を提供するものです。金利データは 2026年6月時点の各社公式情報に基づきますが、変更される場合があります。<strong>必ず契約書または各社公式サイトで実際の適用金利をご確認ください。</strong><br>
+      ※ 債務整理・過払い金請求は弁護士・司法書士にご相談ください。税務判断は税理士にご確認ください。<br>
+      ※ 入力データはブラウザのlocalStorageに保存され、外部に送信されることはありません。
+    </div>`;
+
+  // 自動復元
+  try {
+    const data = localStorage.getItem('debt_repayment_planner');
+    if (data) applyState(JSON.parse(data));
+  } catch(e) {}
+}
+
+init();
+</script>
+</body>
+</html>
