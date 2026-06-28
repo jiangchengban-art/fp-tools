@@ -92,6 +92,10 @@
     font-size: 12px; color: var(--label); line-height: 1.6; background: #2a2517;
     border-left: 4px solid var(--warn); padding: 12px 14px; border-radius: 4px; margin: 12px 0;
   }
+  .note-warn {
+    font-size: 12px; color: var(--label); line-height: 1.6; background: #2a2017;
+    border-left: 4px solid #f39c12; padding: 12px 14px; border-radius: 4px; margin: 12px 0;
+  }
   .note-info {
     font-size: 12px; color: var(--label); line-height: 1.6; background: #172a3a;
     border-left: 4px solid #5dade2; padding: 12px 14px; border-radius: 4px; margin: 12px 0;
@@ -148,6 +152,31 @@
     background: rgba(0,200,83,0.15); color: var(--accent); border: 1px solid var(--accent);
   }
   .compare-highlight { background: rgba(0,200,83,0.08); }
+  .biz-toggle {
+    display: flex; gap: 0; border-radius: 6px; overflow: hidden; border: 1px solid var(--border);
+    margin: 0 auto; width: fit-content;
+  }
+  .biz-toggle button {
+    padding: 8px 20px; border: none; background: var(--card2); color: var(--muted);
+    cursor: pointer; font-size: 13px; font-weight: bold; transition: all 0.2s;
+  }
+  .biz-toggle button.active { background: var(--accent); color: var(--bg); }
+  .biz-toggle button:hover:not(.active) { background: #303651; }
+  .biz-bar {
+    background: var(--card2); border-bottom: 1px solid var(--border);
+    padding: 8px 22px; text-align: center;
+  }
+  .uber-only, .flex-only { display: none !important; }
+  body.biz-uber .uber-only { display: block !important; }
+  body.biz-uber tr.uber-only { display: table-row !important; }
+  body.biz-uber td.uber-only, body.biz-uber th.uber-only { display: table-cell !important; }
+  body.biz-uber li.uber-only { display: flex !important; }
+  body.biz-uber strong.uber-only, body.biz-uber span.uber-only { display: inline !important; }
+  body.biz-flex .flex-only { display: block !important; }
+  body.biz-flex tr.flex-only { display: table-row !important; }
+  body.biz-flex td.flex-only, body.biz-flex th.flex-only { display: table-cell !important; }
+  body.biz-flex li.flex-only { display: flex !important; }
+  body.biz-flex strong.flex-only, body.biz-flex span.flex-only { display: inline !important; }
   .disclaimer {
     font-size: 11px; color: var(--muted); background: var(--card); padding: 14px;
     border-radius: 6px; border: 1px solid var(--border); margin-top: 20px; line-height: 1.6;
@@ -185,6 +214,13 @@
   </div>
 </header>
 
+<div class="biz-bar">
+  <div class="biz-toggle" id="bizToggle">
+    <button class="active" onclick="switchBiz('uber')">&#x1F354; ウーバー配達</button>
+    <button onclick="switchBiz('flex')">&#x1F4E6; Amazon Flex</button>
+  </div>
+</div>
+
 <div class="layout">
   <nav class="nav" id="sidebar">
     <div class="nav-item active" onclick="showMod(0)">
@@ -209,7 +245,9 @@
 
     <!-- ===== MODULE 1: 開業準備ナビ ===== -->
     <div class="mod active" id="mod0">
-      <div class="card">
+
+      <!-- Uber Eats: 配達手段比較 -->
+      <div class="card uber-only">
         <h2>配達手段の比較</h2>
         <p class="small">原付二種（125cc以下）が稼ぎ・コストのバランスで最も人気。</p>
         <table>
@@ -238,7 +276,91 @@
         </table>
       </div>
 
-      <div class="card">
+      <!-- Amazon Flex: 概要＆車両 -->
+      <div class="card flex-only">
+        <h2>Amazon Flex とは</h2>
+        <div class="note-info">
+          <strong>Amazon Flex はブロック制（時給固定）の荷物配達。</strong>Uber Eats とは報酬モデルが根本的に異なります。
+          軽貨物車＋黒ナンバーが必須。安定収入が見込める反面、初期投資が大きい。
+        </div>
+        <table>
+          <tr><th>項目</th><th>Uber Eats（参考）</th><th style="background:rgba(0,200,83,0.15);color:var(--accent);">Amazon Flex</th></tr>
+          <tr><td>報酬モデル</td><td>出来高制（単価×件数）</td><td>ブロック制（時給固定）</td></tr>
+          <tr><td>時給目安</td><td>1,200〜2,500円</td><td>1,900〜2,500円</td></tr>
+          <tr><td>車両</td><td>自転車/原付二種 OK</td><td><span style="color:var(--ng)">軽貨物車（軽バン）必須</span></td></tr>
+          <tr><td>黒ナンバー</td><td>125cc以下は不要</td><td><span style="color:var(--ng)">必須</span></td></tr>
+          <tr><td>事業届出</td><td>任意</td><td><span style="color:var(--ng)">貨物軽自動車運送事業届出 必須</span></td></tr>
+          <tr><td>チップ</td><td>あり</td><td>なし</td></tr>
+          <tr><td>月収目安</td><td>15〜40万円</td><td>25〜45万円</td></tr>
+          <tr><td>初期費用</td><td>3〜35万円</td><td>50〜200万円</td></tr>
+          <tr><td>安定度</td><td><span class="badge badge-avg">変動大</span></td><td><span class="badge badge-best">比較的安定</span></td></tr>
+        </table>
+      </div>
+
+      <div class="card flex-only">
+        <h2>軽貨物車の調達</h2>
+        <div class="tab-bar" id="flexVehicleTabBar">
+          <button class="active" onclick="showFlexVehicleTab('buy')">中古購入</button>
+          <button onclick="showFlexVehicleTab('lease')">リース</button>
+          <button onclick="showFlexVehicleTab('rental')">レンタル</button>
+        </div>
+        <div id="flexVBuy">
+          <h3>人気車種＆価格相場（2025〜2026年）</h3>
+          <table>
+            <tr><th>車種</th><th class="num">新車</th><th class="num">中古（3年落ち以内）</th><th>配達向きポイント</th></tr>
+            <tr><td>ダイハツ ハイゼットカーゴ</td><td class="num">110〜160万円</td><td class="num">50〜100万円</td><td>荷室広い・燃費良・台数豊富</td></tr>
+            <tr><td>スズキ エブリイ</td><td class="num">100〜155万円</td><td class="num">45〜90万円</td><td>最安クラス・軽量・取り回し良</td></tr>
+            <tr><td>ホンダ N-VAN</td><td class="num">130〜185万円</td><td class="num">70〜120万円</td><td>助手席フラット・荷室広い</td></tr>
+            <tr><td>日産 NV100クリッパー</td><td class="num">100〜150万円</td><td class="num">45〜85万円</td><td>OEM（エブリイベース）・安い</td></tr>
+          </table>
+          <div class="note-info">
+            <strong>中古の選び方：</strong>走行距離10万km以下・3年落ち以内が目安。カーセンサー・グーネットで相場チェック。Amazon Flex用ならエブリイ/ハイゼットの中古が60〜80万円でコスパ最良。
+          </div>
+        </div>
+        <div id="flexVLease" style="display:none">
+          <h3>リースサービス比較</h3>
+          <table>
+            <tr><th>サービス</th><th class="num">月額</th><th>含まれるもの</th><th>契約期間</th></tr>
+            <tr><td>黒ナンバーつきリース各社</td><td class="num">25,000〜40,000円</td><td>車両・車検・自賠責</td><td>1〜5年</td></tr>
+            <tr><td>カーリース（一般）</td><td class="num">20,000〜35,000円</td><td>車両のみ（黒ナンバー別途）</td><td>3〜7年</td></tr>
+            <tr><td>Amazon提携リース</td><td class="num">30,000〜45,000円</td><td>車両・保険・メンテナンス込</td><td>1年〜</td></tr>
+          </table>
+          <div class="note-info">
+            <strong>リースのメリット：</strong>頭金不要で月額固定。黒ナンバー取得代行込みのサービスなら手続き簡単。ただし長期（3年超）は中古購入の方がトータル安くなる場合が多い。
+          </div>
+        </div>
+        <div id="flexVRental" style="display:none">
+          <h3>短期レンタル比較</h3>
+          <table>
+            <tr><th>サービス</th><th class="num">月額</th><th>含まれるもの</th><th>最低期間</th></tr>
+            <tr><td>軽バンレンタル専門</td><td class="num">35,000〜55,000円</td><td>車両・自賠責・黒ナンバー</td><td>1ヶ月〜</td></tr>
+            <tr><td>個人間カーシェア</td><td class="num">30,000〜50,000円</td><td>車両のみ</td><td>応相談</td></tr>
+          </table>
+          <div class="note-info">
+            <strong>レンタルは検証用：</strong>まず1〜2ヶ月レンタルでAmazon Flexの稼ぎを検証→続けるなら中古購入 or 長期リースに切替がおすすめ。月額は高いが初期投資ゼロ。
+          </div>
+        </div>
+      </div>
+
+      <div class="card flex-only">
+        <h2>黒ナンバー取得＆開業手順（Amazon Flex 必須）</h2>
+        <div class="note">
+          <strong>Amazon Flex は黒ナンバー（事業用ナンバー）が全員必須です。</strong>取得費用は約2,500円と安いですが、手続きに1〜2週間かかります。2025年4月〜安全管理者講習の受講も義務化されています。
+        </div>
+        <ol class="step-list">
+          <li><div class="step-num">1</div><div class="step-body"><div class="step-title">貨物軽自動車運送事業経営届出書を作成</div><div class="step-desc">国交省の運輸支局から書式をダウンロード。車両情報・営業所（自宅可）・車庫を記載。</div></div></li>
+          <li><div class="step-num">2</div><div class="step-body"><div class="step-title">安全管理者講習を受講（2025年4月〜義務化）</div><div class="step-desc">新規届出者は届出時点で修了証が必要。NASVA（自動車事故対策機構）等で受講。費用：無料〜数千円。</div></div></li>
+          <li><div class="step-num">3</div><div class="step-body"><div class="step-title">運輸支局に届出</div><div class="step-desc">管轄の運輸支局へ持参 or 郵送。手数料なし。所要時間 30分〜1時間。届出受理で「事業用自動車等連絡書」を受領。</div></div></li>
+          <li><div class="step-num">4</div><div class="step-body"><div class="step-title">軽自動車検査協会で黒ナンバー交付</div><div class="step-desc">連絡書＋車検証＋現ナンバープレートを持参。ナンバー交付手数料 約1,500円。即日交付。</div></div></li>
+          <li><div class="step-num">5</div><div class="step-body"><div class="step-title">事業用任意保険に加入</div><div class="step-desc">自家用保険は使えない。事業用は月額 7,000〜15,000円。自賠責保険も営業用に切替（12ヶ月 約17,790円）。</div></div></li>
+          <li><div class="step-num">6</div><div class="step-body"><div class="step-title">Amazon Flex アプリで登録</div><div class="step-desc">アプリDL→身分証・免許証・車検証・黒ナンバー写真をアップロード。審査 3〜7日。</div></div></li>
+        </ol>
+        <div class="note-info" style="margin-top:12px;">
+          <strong>開業届も同時に提出推奨：</strong>Amazon Flex は事業として認められやすく、青色申告65万控除を初年度から適用可能。黒ナンバー取得＝事業実態があるため、税務署での開業届がスムーズ。
+        </div>
+      </div>
+
+      <div class="card uber-only">
         <h2>原付二種（125cc）バイク準備</h2>
         <div class="tab-bar">
           <button class="active" onclick="showBikeTab('buy')">購入</button>
@@ -287,7 +409,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card uber-only">
         <h2>125cc超の場合：黒ナンバー取得手順</h2>
         <div class="note">
           <strong>125cc以下（原付二種）は黒ナンバー不要です。</strong>以下は 125cc超のバイクや軽貨物を使う場合のみ必要な手続き。
@@ -300,7 +422,7 @@
         </ol>
       </div>
 
-      <div class="card">
+      <div class="card uber-only">
         <h2>必要装備チェックリスト</h2>
         <div id="equipProgress"></div>
         <div class="progress-bar"><div class="progress-fill" id="equipBar" style="width:0%"></div></div>
@@ -317,7 +439,7 @@
         <p class="small" style="margin-top:10px;">装備合計目安：<strong>12,000〜30,000円</strong>（保険除く初回購入分）</p>
       </div>
 
-      <div class="card">
+      <div class="card uber-only">
         <h2>登録〜稼働開始ステップ</h2>
         <ol class="step-list">
           <li><div class="step-num">1</div><div class="step-body"><div class="step-title">Uber Eats 配達パートナー登録（オンライン）</div><div class="step-desc">公式サイトからアカウント作成。身分証明書・免許証・車両情報をアップロード。所要 15〜30分。</div></div></li>
@@ -328,6 +450,26 @@
         <div class="note-ok">
           <strong>登録から初回配達まで：約2〜4週間。</strong>バイク準備（中古購入なら1〜2週間・レンタルなら即日〜3日）と並行して進めるのが最速。
         </div>
+      </div>
+
+      <!-- Amazon Flex: 装備チェックリスト -->
+      <div class="card flex-only">
+        <h2>必要装備チェックリスト（Amazon Flex）</h2>
+        <div id="flexEquipProgress"></div>
+        <div class="progress-bar"><div class="progress-fill" id="flexEquipBar" style="width:0%"></div></div>
+        <ul class="checklist" id="flexEquipList">
+          <li><input type="checkbox" onchange="updateFlexEquipProgress()"> <span>軽貨物車（軽バン）</span><span class="small" style="margin-left:auto;">中古50〜100万 / リース月2.5〜4万</span></li>
+          <li><input type="checkbox" onchange="updateFlexEquipProgress()"> <span>黒ナンバー取得</span><span class="small" style="margin-left:auto;">約2,500円</span></li>
+          <li><input type="checkbox" onchange="updateFlexEquipProgress()"> <span>安全管理者講習 修了証</span><span class="small" style="margin-left:auto;">無料〜数千円</span></li>
+          <li><input type="checkbox" onchange="updateFlexEquipProgress()"> <span>事業用任意保険</span><span class="small" style="margin-left:auto;">月7,000〜15,000円</span></li>
+          <li><input type="checkbox" onchange="updateFlexEquipProgress()"> <span>自賠責保険（営業用）</span><span class="small" style="margin-left:auto;">約17,790円/年</span></li>
+          <li><input type="checkbox" onchange="updateFlexEquipProgress()"> <span>スマホホルダー（車載用）</span><span class="small" style="margin-left:auto;">1,000〜3,000円</span></li>
+          <li><input type="checkbox" onchange="updateFlexEquipProgress()"> <span>モバイルバッテリー / 車載充電器</span><span class="small" style="margin-left:auto;">1,500〜3,000円</span></li>
+          <li><input type="checkbox" onchange="updateFlexEquipProgress()"> <span>折りたたみ台車（あると便利）</span><span class="small" style="margin-left:auto;">3,000〜8,000円</span></li>
+          <li><input type="checkbox" onchange="updateFlexEquipProgress()"> <span>Amazon Flex アプリ登録</span><span class="small" style="margin-left:auto;">無料</span></li>
+          <li><input type="checkbox" onchange="updateFlexEquipProgress()"> <span>開業届＋青色申告承認申請書</span><span class="small" style="margin-left:auto;">無料（税務署）</span></li>
+        </ul>
+        <p class="small" style="margin-top:10px;">装備合計目安（車両除く）：<strong>6,000〜15,000円</strong>。車両＋保険＋黒ナンバーで初期 <strong>60〜120万円</strong>（中古購入）/ <strong>5〜10万円</strong>（リース初月）。</p>
       </div>
     </div>
 
@@ -344,6 +486,8 @@
             <th>福岡</th>
           </tr>
           <tr><td>ワンルーム家賃（月）</td><td class="num">65,000〜80,000円</td><td class="num">45,000〜60,000円</td><td class="num">45,000〜55,000円</td><td class="num">38,000〜50,000円</td></tr>
+          <tr><td>シェアルーム（月）</td><td class="num">35,000〜55,000円</td><td class="num">25,000〜40,000円</td><td class="num">25,000〜35,000円</td><td class="num">22,000〜32,000円</td></tr>
+          <tr><td>ネットカフェ（月額プラン）</td><td class="num">50,000〜70,000円</td><td class="num">40,000〜55,000円</td><td class="num">35,000〜50,000円</td><td class="num">30,000〜45,000円</td></tr>
           <tr><td>敷金・礼金</td><td class="num">1〜2ヶ月分</td><td class="num">0〜1ヶ月分</td><td class="num">0〜1ヶ月分</td><td class="num">0〜1ヶ月分</td></tr>
           <tr><td>仲介手数料</td><td class="num">0.5〜1ヶ月分</td><td class="num">0.5〜1ヶ月分</td><td class="num">0.5〜1ヶ月分</td><td class="num">0.5〜1ヶ月分</td></tr>
           <tr><td>配達需要</td>
@@ -352,7 +496,14 @@
             <td><span class="badge badge-avg">中程度</span></td>
             <td><span class="badge badge-avg">中程度</span></td>
           </tr>
-          <tr><td>時給目安（125cc）</td><td class="num">1,500〜2,500円</td><td class="num">1,200〜2,200円</td><td class="num">1,000〜2,000円</td><td class="num">1,000〜1,800円</td></tr>
+          <tr class="uber-only"><td>時給目安（125cc）</td><td class="num">1,500〜2,500円</td><td class="num">1,200〜2,200円</td><td class="num">1,000〜2,000円</td><td class="num">1,000〜1,800円</td></tr>
+          <tr class="flex-only"><td>Flex ブロック時給</td><td class="num">2,000〜2,500円</td><td class="num">1,900〜2,300円</td><td class="num">1,800〜2,200円</td><td class="num">1,800〜2,200円</td></tr>
+          <tr class="flex-only"><td>Flex ブロック取りやすさ</td>
+            <td><span class="badge badge-worst">競争激しい</span></td>
+            <td><span class="badge badge-avg">普通</span></td>
+            <td><span class="badge badge-best">取りやすい</span></td>
+            <td><span class="badge badge-best">取りやすい</span></td>
+          </tr>
           <tr><td>競合の多さ</td>
             <td><span class="badge badge-worst">多い</span></td>
             <td><span class="badge badge-avg">やや多い</span></td>
@@ -389,8 +540,16 @@
               <tr><td>港区・品川</td><td>大井町・蒲田・戸越</td><td class="num">60,000〜75,000円</td></tr>
               <tr><td>池袋・豊島区</td><td>板橋・練馬・要町</td><td class="num">55,000〜68,000円</td></tr>
             </table>
+            <h4 style="margin-top:16px;">住居パターン比較（東京）</h4>
+            <table>
+              <tr><th>タイプ</th><th class="num">月額目安</th><th class="num">初期費用</th><th>メリット</th><th>デメリット</th></tr>
+              <tr><td>ワンルーム</td><td class="num">65,000〜80,000円</td><td class="num">15〜25万円</td><td>プライベート確保・住民票OK</td><td>初期費用が高い</td></tr>
+              <tr><td>シェアルーム</td><td class="num">35,000〜55,000円</td><td class="num">3〜5万円</td><td>初期費用激安・家具付き・光熱費込み多い</td><td>共用スペース・騒音リスク</td></tr>
+              <tr><td>ネットカフェ</td><td class="num">50,000〜70,000円</td><td class="num">0円</td><td>初期費用ゼロ・即入居・Wi-Fi完備</td><td>住民票不可（一部可）・荷物制限・長期は割高</td></tr>
+            </table>
             <div class="note-info">
-              <strong>東京のコツ：</strong>需要エリア（渋谷/新宿/港区）から電車10〜15分圏のワンルームが家賃と稼ぎのバランス良。バイクなら自走圏が広いので板橋区・練馬区あたりも選択肢。
+              <strong>東京のコツ：</strong>需要エリア（渋谷/新宿/港区）から電車10〜15分圏のワンルームが家賃と稼ぎのバランス良。バイクなら自走圏が広いので板橋区・練馬区あたりも選択肢。<br>
+              <strong>節約スタート：</strong>シェアルームなら初月10万以下で開始可能。ネットカフェは「とりあえず1〜2週間」の拠点として使い、収入が安定してから部屋を借りる段階移行がおすすめ。
             </div>
           </div>
         </div>
@@ -405,8 +564,16 @@
               <tr><td>天王寺・阿倍野</td><td>昭和町・西田辺・住吉</td><td class="num">38,000〜50,000円</td></tr>
               <tr><td>京橋・OBP</td><td>関目・野江・蒲生四丁目</td><td class="num">40,000〜52,000円</td></tr>
             </table>
+            <h4 style="margin-top:16px;">住居パターン比較（大阪）</h4>
+            <table>
+              <tr><th>タイプ</th><th class="num">月額目安</th><th class="num">初期費用</th><th>メリット</th><th>デメリット</th></tr>
+              <tr><td>ワンルーム</td><td class="num">45,000〜60,000円</td><td class="num">5〜12万円</td><td>プライベート確保・敷礼0多い</td><td>東京よりは安いが固定費</td></tr>
+              <tr><td>シェアルーム</td><td class="num">25,000〜40,000円</td><td class="num">2〜4万円</td><td>初期費用激安・難波/梅田アクセス良物件多い</td><td>共用スペース</td></tr>
+              <tr><td>ネットカフェ</td><td class="num">40,000〜55,000円</td><td class="num">0円</td><td>初期費用ゼロ・なんば/梅田に店舗多い</td><td>住民票不可・荷物制限</td></tr>
+            </table>
             <div class="note-info">
-              <strong>大阪のコツ：</strong>梅田〜難波間が配達の黄金エリア。中崎町・大国町は家賃4万台でアクセス良。初期費用（敷金礼金0物件多）も東京より大幅に安い。
+              <strong>大阪のコツ：</strong>梅田〜難波間が配達の黄金エリア。中崎町・大国町は家賃4万台でアクセス良。初期費用（敷金礼金0物件多）も東京より大幅に安い。<br>
+              <strong>節約スタート：</strong>大阪はシェアルーム2.5万〜と全国最安クラス。西成エリアなら格安ワンルームも3万円台あり。
             </div>
           </div>
         </div>
@@ -420,8 +587,16 @@
               <tr><td>名駅周辺</td><td>亀島・中村区役所・烏森</td><td class="num">42,000〜52,000円</td></tr>
               <tr><td>金山・熱田</td><td>金山南・西高蔵</td><td class="num">40,000〜50,000円</td></tr>
             </table>
+            <h4 style="margin-top:16px;">住居パターン比較（名古屋）</h4>
+            <table>
+              <tr><th>タイプ</th><th class="num">月額目安</th><th class="num">初期費用</th><th>メリット</th><th>デメリット</th></tr>
+              <tr><td>ワンルーム</td><td class="num">45,000〜55,000円</td><td class="num">5〜10万円</td><td>プライベート確保・物件豊富</td><td>車社会のため駐輪場確認必須</td></tr>
+              <tr><td>シェアルーム</td><td class="num">25,000〜35,000円</td><td class="num">2〜4万円</td><td>栄/名駅近くでも3万台あり</td><td>物件数が東京・大阪より少ない</td></tr>
+              <tr><td>ネットカフェ</td><td class="num">35,000〜50,000円</td><td class="num">0円</td><td>初期費用ゼロ・名駅/栄に店舗集中</td><td>住民票不可・荷物制限</td></tr>
+            </table>
             <div class="note-info">
-              <strong>名古屋のコツ：</strong>需要エリアは栄〜名駅に集中。車社会で配達員が少ないため競合が弱い。ただし注文件数自体は東京・大阪より少ない。
+              <strong>名古屋のコツ：</strong>需要エリアは栄〜名駅に集中。車社会で配達員が少ないため競合が弱い。ただし注文件数自体は東京・大阪より少ない。<br>
+              <strong>節約スタート：</strong>シェアルームは東別院・大須エリアに2.5万〜の物件あり。需要エリアまで自走5分圏内。
             </div>
           </div>
         </div>
@@ -435,8 +610,16 @@
               <tr><td>博多駅周辺</td><td>吉塚・竹下・東比恵</td><td class="num">35,000〜48,000円</td></tr>
               <tr><td>中洲・春吉</td><td>清川・住吉・渡辺通</td><td class="num">36,000〜46,000円</td></tr>
             </table>
+            <h4 style="margin-top:16px;">住居パターン比較（福岡）</h4>
+            <table>
+              <tr><th>タイプ</th><th class="num">月額目安</th><th class="num">初期費用</th><th>メリット</th><th>デメリット</th></tr>
+              <tr><td>ワンルーム</td><td class="num">38,000〜50,000円</td><td class="num">4〜8万円</td><td>全国最安クラス・敷礼0多い</td><td>—</td></tr>
+              <tr><td>シェアルーム</td><td class="num">22,000〜32,000円</td><td class="num">2〜3万円</td><td>天神/博多近くでも2万台</td><td>物件数はやや少ない</td></tr>
+              <tr><td>ネットカフェ</td><td class="num">30,000〜45,000円</td><td class="num">0円</td><td>初期費用ゼロ・天神/博多に店舗あり</td><td>住民票不可・荷物制限</td></tr>
+            </table>
             <div class="note-info">
-              <strong>福岡のコツ：</strong>天神〜博多が配達中心。コンパクトシティなのでバイクの移動距離が短く効率的。家賃は全国主要都市で最安クラス。敷金0・礼金0物件も豊富。
+              <strong>福岡のコツ：</strong>天神〜博多が配達中心。コンパクトシティなのでバイクの移動距離が短く効率的。家賃は全国主要都市で最安クラス。敷金0・礼金0物件も豊富。<br>
+              <strong>節約スタート：</strong>福岡はワンルーム自体が安いのでシェアルームとの差額が小さい。初期費用を抑えたいならシェアルーム、すぐ始めたいならネットカフェ→ワンルームの段階移行が現実的。
             </div>
           </div>
         </div>
@@ -455,7 +638,15 @@
             </select>
           </div>
           <div class="field">
-            <label>バイク調達</label>
+            <label>住居タイプ</label>
+            <select id="initHousing" onchange="calcInitCost()">
+              <option value="apartment" selected>ワンルーム</option>
+              <option value="share">シェアルーム</option>
+              <option value="netcafe">ネットカフェ</option>
+            </select>
+          </div>
+          <div class="field">
+            <label id="initVehicleLabel">バイク調達</label>
             <select id="initBike" onchange="calcInitCost()">
               <option value="used">中古購入</option>
               <option value="rent" selected>レンタル</option>
@@ -499,33 +690,65 @@
               <option value="fukuoka">福岡</option>
             </select>
           </div>
-        </div>
-        <div class="row">
           <div class="field">
-            <label>稼働時間/日</label>
-            <input type="number" id="simHoursDay" value="8" step="0.5" min="1" max="16">
-          </div>
-          <div class="field">
-            <label>稼働日数/月</label>
-            <input type="number" id="simDaysMonth" value="22" min="1" max="31">
-          </div>
-          <div class="field">
-            <label>配達件数/時間</label>
-            <input type="number" id="simDelsHour" value="2.5" step="0.1" min="0.5" max="6">
+            <label>住居タイプ</label>
+            <select id="simHousing" onchange="updateSimDefaults()">
+              <option value="apartment" selected>ワンルーム</option>
+              <option value="share">シェアルーム</option>
+              <option value="netcafe">ネットカフェ</option>
+            </select>
           </div>
         </div>
-        <div class="row">
-          <div class="field">
-            <label>平均単価/件（円）</label>
-            <input type="number" id="simUnitPrice" value="550" step="10">
+        <!-- Uber Eats 収入入力 -->
+        <div id="simUberInputs">
+          <div class="row">
+            <div class="field">
+              <label>稼働時間/日</label>
+              <input type="number" id="simHoursDay" value="8" step="0.5" min="1" max="16">
+            </div>
+            <div class="field">
+              <label>稼働日数/月</label>
+              <input type="number" id="simDaysMonth" value="22" min="1" max="31">
+            </div>
+            <div class="field">
+              <label>配達件数/時間</label>
+              <input type="number" id="simDelsHour" value="2.5" step="0.1" min="0.5" max="6">
+            </div>
           </div>
-          <div class="field">
-            <label>クエスト/ブースト月額（円）</label>
-            <input type="number" id="simBonus" value="8000" step="1000">
+          <div class="row">
+            <div class="field">
+              <label>平均単価/件（円）</label>
+              <input type="number" id="simUnitPrice" value="550" step="10">
+            </div>
+            <div class="field">
+              <label>クエスト/ブースト月額（円）</label>
+              <input type="number" id="simBonus" value="8000" step="1000">
+            </div>
+            <div class="field">
+              <label>チップ月額（円）</label>
+              <input type="number" id="simTip" value="3000" step="500">
+            </div>
           </div>
-          <div class="field">
-            <label>チップ月額（円）</label>
-            <input type="number" id="simTip" value="3000" step="500">
+        </div>
+
+        <!-- Amazon Flex 収入入力 -->
+        <div id="simFlexInputs" style="display:none">
+          <div class="row">
+            <div class="field">
+              <label>1ブロック時間</label>
+              <input type="number" id="simBlockHours" value="5" step="0.5" min="2" max="8">
+            </div>
+            <div class="field">
+              <label>ブロック時給（円）</label>
+              <input type="number" id="simBlockRate" value="2100" step="50">
+            </div>
+            <div class="field">
+              <label>週あたりブロック数</label>
+              <input type="number" id="simBlocksWeek" value="5" step="1" min="1" max="14">
+            </div>
+          </div>
+          <div class="note-info" style="margin:4px 0 10px;">
+            報酬 = ブロック時間 × 時給 × 週ブロック数 × 4.3週。3点シナリオは「ブロック取得率」で変動（最悪=60%/平均=85%/ベスト=100%）。
           </div>
         </div>
 
@@ -718,7 +941,26 @@
       <div class="card">
         <h2>インボイス制度（2023年10月〜）</h2>
         <div class="note-info">
-          <strong>Uber Eats 配達員の大半は影響なし。</strong>年間売上1,000万円以下の免税事業者は登録不要。Uber Japan は配達員にインボイス番号を要求していない（2026年現在）。年1,000万超を超える場合は課税事業者の届出が必要だが、2割特例（消費税の2割だけ納付）が2026年9月まで適用可能。
+          <strong class="uber-only">Uber Eats 配達員の大半は影響なし。</strong>
+          <strong class="flex-only">Amazon Flex ドライバーも同様の扱い。</strong>
+          年間売上1,000万円以下の免税事業者は登録不要。Uber Japan・Amazon ともに配達員にインボイス番号を要求していない（2026年現在）。年1,000万超を超える場合は課税事業者の届出が必要だが、2割特例（消費税の2割だけ納付）が2026年9月まで適用可能。
+        </div>
+      </div>
+
+      <!-- Amazon Flex 固有の税務ポイント -->
+      <div class="card flex-only">
+        <h2>Amazon Flex 固有の税務ポイント</h2>
+        <table>
+          <tr><th>項目</th><th>内容</th></tr>
+          <tr><td>事業所得の認定</td><td>黒ナンバー取得＝貨物軽自動車運送事業を営んでいるため、<span style="color:var(--ok)">事業所得として認められやすい</span>。青色65万控除を初年度から適用可能。</td></tr>
+          <tr><td>車両の減価償却</td><td>軽貨物車は耐用年数4年（中古はさらに短縮可）。中古70万円→年17.5万円の経費計上が可能。</td></tr>
+          <tr><td>事業用任意保険</td><td>全額経費計上可（事業専用車なら按分100%）。月7,000〜15,000円→年8.4〜18万円の経費。</td></tr>
+          <tr><td>駐車場代</td><td>軽バンの車庫（月極駐車場）は経費計上可。東京月1.5〜3万円、地方月0.5〜1.5万円。</td></tr>
+          <tr><td>ガソリン代</td><td>走行距離が多いため月1〜2万円。全額またはほぼ全額が経費。</td></tr>
+          <tr><td>車検・メンテナンス</td><td>事業用は車検2年毎（約5〜8万円）。タイヤ・オイル等も経費計上可。</td></tr>
+        </table>
+        <div class="note-ok">
+          <strong>Flex は経費が大きい＝節税効果が大きい。</strong>車両関連だけで年30〜50万円の経費計上が可能。Uber（バイク）より経費が多い分、実効税率はFlex の方が低くなる傾向。
         </div>
       </div>
     </div>
@@ -726,14 +968,48 @@
     <!-- 免責事項 -->
     <div class="disclaimer">
       <strong>免責事項：</strong>本ツールは参考情報の提供を目的としています。収入・経費・税額の試算は概算であり、実際の金額を保証するものではありません。
-      Uber Eats の報酬体系は随時変更される可能性があります。税務に関する判断は、必ず税理士等の有資格専門家にご相談ください。
+      Uber Eats・Amazon Flex の報酬体系は随時変更される可能性があります。税務に関する判断は、必ず税理士等の有資格専門家にご相談ください。
       家賃・生活費等のデータは2025〜2026年の一般的な相場に基づく目安です。
-      <br>最終更新: 2026-06-25
+      <br>最終更新: 2026-06-27
     </div>
   </div>
 </div>
 
 <script>
+// ===== Business Type Toggle =====
+let currentBiz = 'uber';
+
+function switchBiz(biz) {
+  currentBiz = biz;
+  document.body.classList.remove('biz-uber', 'biz-flex');
+  document.body.classList.add('biz-' + biz);
+  document.querySelectorAll('#bizToggle button').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && biz === 'uber') || (i === 1 && biz === 'flex'));
+  });
+
+  // Toggle sim inputs
+  document.getElementById('simUberInputs').style.display = biz === 'uber' ? '' : 'none';
+  document.getElementById('simFlexInputs').style.display = biz === 'flex' ? '' : 'none';
+
+  // Toggle vehicle select in sim
+  const simVehicleField = document.getElementById('simVehicle').closest('.field');
+  if (simVehicleField) simVehicleField.style.display = biz === 'uber' ? '' : 'none';
+
+  // Update vehicle select options for init cost
+  const initBike = document.getElementById('initBike');
+  const initLabel = document.getElementById('initVehicleLabel');
+  if (biz === 'flex') {
+    initBike.innerHTML = '<option value="used">中古購入</option><option value="lease" selected>リース</option><option value="rental">レンタル</option>';
+    initLabel.textContent = '軽バン調達';
+  } else {
+    initBike.innerHTML = '<option value="used">中古購入</option><option value="rent" selected>レンタル</option>';
+    initLabel.textContent = 'バイク調達';
+  }
+
+  updateSimDefaults();
+  calcInitCost();
+}
+
 // ===== Navigation =====
 function showMod(idx) {
   document.querySelectorAll('.mod').forEach((m,i) => m.classList.toggle('active', i===idx));
@@ -780,79 +1056,129 @@ function showCityTab(city) {
 
 // ===== Initial Cost Calculator =====
 const cityData = {
-  tokyo:  { rent: 70000, deposit: 1.5, agent: 1, living: 100000, demand: 'A', hourly: [1500, 2000, 2500] },
-  osaka:  { rent: 50000, deposit: 0.5, agent: 1, living: 80000,  demand: 'A+', hourly: [1200, 1700, 2200] },
-  nagoya: { rent: 48000, deposit: 0.5, agent: 0.5, living: 75000, demand: 'B+', hourly: [1000, 1500, 2000] },
-  fukuoka:{ rent: 42000, deposit: 0,   agent: 1, living: 70000,  demand: 'B+', hourly: [1000, 1400, 1800] }
+  tokyo:  { rent: {apartment:70000, share:45000, netcafe:60000}, deposit: {apartment:1.5, share:0.3, netcafe:0}, agent: {apartment:1, share:0, netcafe:0}, living: 100000, demand: 'A', hourly: [1500, 2000, 2500] },
+  osaka:  { rent: {apartment:50000, share:32000, netcafe:48000}, deposit: {apartment:0.5, share:0.2, netcafe:0}, agent: {apartment:1, share:0, netcafe:0}, living: 80000,  demand: 'A+', hourly: [1200, 1700, 2200] },
+  nagoya: { rent: {apartment:48000, share:30000, netcafe:42000}, deposit: {apartment:0.5, share:0.2, netcafe:0}, agent: {apartment:0.5, share:0, netcafe:0}, living: 75000, demand: 'B+', hourly: [1000, 1500, 2000] },
+  fukuoka:{ rent: {apartment:42000, share:27000, netcafe:38000}, deposit: {apartment:0, share:0.2, netcafe:0}, agent: {apartment:1, share:0, netcafe:0}, living: 70000,  demand: 'B+', hourly: [1000, 1400, 1800] }
 };
 
 function calcInitCost() {
   const city = document.getElementById('initCity').value;
+  const housing = document.getElementById('initHousing').value;
   const bike = document.getElementById('initBike').value;
   const move = document.getElementById('initMove').value;
   const c = cityData[city];
-  const rent = c.rent;
-  const depositCost = Math.round(rent * c.deposit);
-  const agentCost = Math.round(rent * c.agent);
-  const bikeCost = bike === 'used' ? 200000 : 10000;
-  const bikeLabel = bike === 'used' ? '中古バイク購入' : 'レンタル初月';
-  const equipCost = 20000;
-  const insuranceCost = bike === 'used' ? 25000 : 0;
+  const rent = c.rent[housing];
+  const depositCost = Math.round(rent * c.deposit[housing]);
+  const agentCost = Math.round(rent * c.agent[housing]);
+  const isFlex = currentBiz === 'flex';
+
+  let vehicleCost, vehicleLabel, equipCost, insuranceCost, blackNumCost = 0;
+  if (isFlex) {
+    vehicleCost = bike === 'used' ? 700000 : bike === 'lease' ? 35000 : 45000;
+    vehicleLabel = bike === 'used' ? '軽バン中古購入' : bike === 'lease' ? 'リース初月' : 'レンタル初月';
+    equipCost = 8000;
+    insuranceCost = bike === 'used' ? 12000 : 0;
+    blackNumCost = 2500;
+  } else {
+    vehicleCost = bike === 'used' ? 200000 : 10000;
+    vehicleLabel = bike === 'used' ? '中古バイク購入' : 'レンタル初月';
+    equipCost = 20000;
+    insuranceCost = bike === 'used' ? 25000 : 0;
+  }
+
   let moveCost = 0;
-  if (move === 'yes') moveCost = 80000;
-  else if (move === 'local') moveCost = 30000;
-  const furnitureCost = move !== 'no' ? 50000 : 0;
-  const total = rent + depositCost + agentCost + bikeCost + equipCost + insuranceCost + moveCost + furnitureCost;
+  if (housing !== 'netcafe' && move === 'yes') moveCost = 80000;
+  else if (housing !== 'netcafe' && move === 'local') moveCost = 30000;
+  const furnitureCost = housing === 'apartment' && move !== 'no' ? 50000 : housing === 'share' && move !== 'no' ? 15000 : 0;
+  const total = rent + depositCost + agentCost + vehicleCost + equipCost + insuranceCost + blackNumCost + moveCost + furnitureCost;
+  const housingLabel = housing === 'apartment' ? 'ワンルーム' : housing === 'share' ? 'シェアルーム' : 'ネットカフェ';
+  const cityLabel = city === 'tokyo' ? '東京' : city === 'osaka' ? '大阪' : city === 'nagoya' ? '名古屋' : '福岡';
+
+  let noteHTML = '';
+  if (housing === 'netcafe') {
+    noteHTML = `<div class="note-warn" style="margin-top:12px;">
+      ネットカフェは初期費用ゼロで即スタート可能ですが、住民票登録が困難（一部店舗で可）、荷物の保管に制限があります。1〜2週間の短期利用→シェアルームへの移行がおすすめです。
+    </div>`;
+  } else if (housing === 'share') {
+    noteHTML = `<div class="note-info" style="margin-top:12px;">
+      シェアルームは家具・光熱費込みの物件が多く、初期費用を大幅に抑えられます。デポジット（1ヶ月分以下）のみで入居可能な物件も多数。
+    </div>`;
+  } else if (!isFlex) {
+    noteHTML = `<div class="note-info" style="margin-top:12px;">
+      レンタル＋敷礼0物件なら <strong>${fmt(rent + vehicleCost + equipCost)}円</strong> まで圧縮可能。
+    </div>`;
+  }
 
   document.getElementById('initCostResult').innerHTML = `
     <table>
       <tr><th>項目</th><th class="num">金額</th></tr>
-      <tr><td>家賃（初月）</td><td class="num">${fmt(rent)}円</td></tr>
-      <tr><td>敷金・礼金</td><td class="num">${fmt(depositCost)}円</td></tr>
-      <tr><td>仲介手数料</td><td class="num">${fmt(agentCost)}円</td></tr>
-      <tr><td>${bikeLabel}</td><td class="num">${fmt(bikeCost)}円</td></tr>
+      <tr><td>${housingLabel}（初月）</td><td class="num">${fmt(rent)}円</td></tr>
+      ${depositCost ? `<tr><td>${housing === 'share' ? 'デポジット' : '敷金・礼金'}</td><td class="num">${fmt(depositCost)}円</td></tr>` : ''}
+      ${agentCost ? `<tr><td>仲介手数料</td><td class="num">${fmt(agentCost)}円</td></tr>` : ''}
+      <tr><td>${vehicleLabel}</td><td class="num">${fmt(vehicleCost)}円</td></tr>
+      ${blackNumCost ? `<tr><td>黒ナンバー取得</td><td class="num">${fmt(blackNumCost)}円</td></tr>` : ''}
       <tr><td>装備一式</td><td class="num">${fmt(equipCost)}円</td></tr>
-      ${insuranceCost ? `<tr><td>任意保険（年額→初年度）</td><td class="num">${fmt(insuranceCost)}円</td></tr>` : ''}
+      ${insuranceCost ? `<tr><td>事業用任意保険（初月）</td><td class="num">${fmt(insuranceCost)}円</td></tr>` : ''}
       ${moveCost ? `<tr><td>引っ越し費用</td><td class="num">${fmt(moveCost)}円</td></tr>` : ''}
       ${furnitureCost ? `<tr><td>家具・生活用品</td><td class="num">${fmt(furnitureCost)}円</td></tr>` : ''}
       <tr style="font-weight:bold;border-top:2px solid var(--accent);">
         <td>初月必要資金 合計</td><td class="num" style="color:var(--head);font-size:16px;">${fmt(total)}円</td>
       </tr>
     </table>
-    <div class="note-info" style="margin-top:12px;">
-      この金額を用意できれば、${city === 'tokyo' ? '東京' : city === 'osaka' ? '大阪' : city === 'nagoya' ? '名古屋' : '福岡'}で配達ビジネスをスタートできます。
-      レンタル＋敷礼0物件なら <strong>${fmt(rent + bikeCost + equipCost)}円</strong> まで圧縮可能。
+    ${noteHTML}
+    <div class="note-info" style="margin-top:8px;">
+      ${cityLabel}で${housingLabel}＋${vehicleLabel}で${isFlex ? 'Amazon Flex' : '配達ビジネス'}をスタートする場合の目安です。
     </div>`;
 }
 
 // ===== Simulation =====
+const flexCityData = {
+  tokyo:  { blockRate: 2200, blocksAvail: 'many' },
+  osaka:  { blockRate: 2100, blocksAvail: 'normal' },
+  nagoya: { blockRate: 2000, blocksAvail: 'easy' },
+  fukuoka:{ blockRate: 2000, blocksAvail: 'easy' }
+};
+
 function updateSimDefaults() {
-  const vehicle = document.getElementById('simVehicle').value;
   const city = document.getElementById('simCity').value;
+  const housing = document.getElementById('simHousing').value;
   const c = cityData[city];
-  const vData = {
-    bicycle:    { unit: 450, delsHr: 2.0, fuel: 500,  vCost: 1000,  ins: 0,    maint: 500 },
-    scooter125: { unit: 550, delsHr: 2.5, fuel: 3000, vCost: 10000, ins: 2500, maint: 1500 },
-    bike250:    { unit: 600, delsHr: 3.0, fuel: 5000, vCost: 15000, ins: 4000, maint: 2500 },
-    kei:        { unit: 600, delsHr: 3.0, fuel: 12000,vCost: 30000, ins: 5000, maint: 4000 }
-  };
-  const v = vData[vehicle];
-  document.getElementById('simUnitPrice').value = v.unit;
-  document.getElementById('simDelsHour').value = v.delsHr;
-  document.getElementById('simFuel').value = v.fuel;
-  document.getElementById('simVehicleCost').value = v.vCost;
-  document.getElementById('simInsurance').value = v.ins;
-  document.getElementById('simMaintenance').value = v.maint;
-  document.getElementById('simRent').value = c.rent;
+
+  if (currentBiz === 'flex') {
+    const fc = flexCityData[city];
+    document.getElementById('simBlockRate').value = fc.blockRate;
+    document.getElementById('simFuel').value = 15000;
+    document.getElementById('simVehicleCost').value = 35000;
+    document.getElementById('simInsurance').value = 12000;
+    document.getElementById('simMaintenance').value = 4000;
+  } else {
+    const vehicle = document.getElementById('simVehicle').value;
+    const vData = {
+      bicycle:    { unit: 450, delsHr: 2.0, fuel: 500,  vCost: 1000,  ins: 0,    maint: 500 },
+      scooter125: { unit: 550, delsHr: 2.5, fuel: 3000, vCost: 10000, ins: 2500, maint: 1500 },
+      bike250:    { unit: 600, delsHr: 3.0, fuel: 5000, vCost: 15000, ins: 4000, maint: 2500 },
+      kei:        { unit: 600, delsHr: 3.0, fuel: 12000,vCost: 30000, ins: 5000, maint: 4000 }
+    };
+    const v = vData[vehicle];
+    document.getElementById('simUnitPrice').value = v.unit;
+    document.getElementById('simDelsHour').value = v.delsHr;
+    document.getElementById('simFuel').value = v.fuel;
+    document.getElementById('simVehicleCost').value = v.vCost;
+    document.getElementById('simInsurance').value = v.ins;
+    document.getElementById('simMaintenance').value = v.maint;
+  }
+
+  document.getElementById('simRent').value = c.rent[housing];
+  if (housing === 'share') {
+    document.getElementById('simUtility').value = 0;
+  } else {
+    document.getElementById('simUtility').value = housing === 'netcafe' ? 0 : 8000;
+  }
 }
 
 function runSimulation() {
-  const hoursDay = +document.getElementById('simHoursDay').value;
-  const daysMonth = +document.getElementById('simDaysMonth').value;
-  const delsHour = +document.getElementById('simDelsHour').value;
-  const unitPrice = +document.getElementById('simUnitPrice').value;
-  const bonus = +document.getElementById('simBonus').value;
-  const tip = +document.getElementById('simTip').value;
+  const isFlex = currentBiz === 'flex';
 
   const fuel = +document.getElementById('simFuel').value;
   const vehicleCost = +document.getElementById('simVehicleCost').value;
@@ -866,27 +1192,60 @@ function runSimulation() {
   const utility = +document.getElementById('simUtility').value;
   const living = +document.getElementById('simLiving').value;
 
-  const scenarios = [
-    { label: '最悪', factor: 0.7, bonusFactor: 0.3, cls: 'badge-worst' },
-    { label: '平均', factor: 1.0, bonusFactor: 1.0, cls: 'badge-avg' },
-    { label: 'ベスト', factor: 1.3, bonusFactor: 1.5, cls: 'badge-best' }
-  ];
-
   const totalExpense = fuel + vehicleCost + insurance + phone + maintenance + other;
   const totalLiving = rent + food + utility + living;
   const pension = 17510;
   const healthIns = 20000;
 
+  let scenarios, calcIncome, colLabel;
+
+  if (isFlex) {
+    const blockHrs = +document.getElementById('simBlockHours').value;
+    const blockRate = +document.getElementById('simBlockRate').value;
+    const blocksWeek = +document.getElementById('simBlocksWeek').value;
+    const monthlyBlocks = blocksWeek * 4.3;
+    const blockPay = blockHrs * blockRate;
+    scenarios = [
+      { label: '最悪', factor: 0.6, cls: 'badge-worst', note: 'ブロック取得率60%' },
+      { label: '平均', factor: 0.85, cls: 'badge-avg', note: 'ブロック取得率85%' },
+      { label: 'ベスト', factor: 1.0, cls: 'badge-best', note: 'フル稼働100%' }
+    ];
+    calcIncome = (s) => {
+      const blocks = Math.round(monthlyBlocks * s.factor);
+      const income = blocks * blockPay;
+      return { income, detail: `${blocks}ブロック` };
+    };
+    colLabel = 'ブロック数';
+  } else {
+    const hoursDay = +document.getElementById('simHoursDay').value;
+    const daysMonth = +document.getElementById('simDaysMonth').value;
+    const delsHour = +document.getElementById('simDelsHour').value;
+    const unitPrice = +document.getElementById('simUnitPrice').value;
+    const bonus = +document.getElementById('simBonus').value;
+    const tip = +document.getElementById('simTip').value;
+    scenarios = [
+      { label: '最悪', factor: 0.7, bonusFactor: 0.3, cls: 'badge-worst' },
+      { label: '平均', factor: 1.0, bonusFactor: 1.0, cls: 'badge-avg' },
+      { label: 'ベスト', factor: 1.3, bonusFactor: 1.5, cls: 'badge-best' }
+    ];
+    calcIncome = (s) => {
+      const deliveries = Math.round(hoursDay * daysMonth * delsHour * s.factor);
+      const income = deliveries * unitPrice + Math.round(bonus * s.bonusFactor) + Math.round(tip * s.bonusFactor);
+      return { income, detail: `${deliveries}件` };
+    };
+    colLabel = '配達件数';
+  }
+
   let rows = '';
   let summaryHTML = '';
+  let avgFxMonthly = 0;
 
-  scenarios.forEach(s => {
-    const deliveries = Math.round(hoursDay * daysMonth * delsHour * s.factor);
-    const baseIncome = deliveries * unitPrice;
-    const totalIncome = baseIncome + Math.round(bonus * s.bonusFactor) + Math.round(tip * s.bonusFactor);
+  scenarios.forEach((s, i) => {
+    const { income: totalIncome, detail } = calcIncome(s);
     const netBusiness = totalIncome - totalExpense;
     const socialIns = pension + healthIns;
     const fxFund = netBusiness - totalLiving - socialIns;
+    if (i === 1) avgFxMonthly = fxFund;
 
     summaryHTML += `
       <div class="summary-box">
@@ -897,8 +1256,8 @@ function runSimulation() {
 
     rows += `
       <tr>
-        <td><span class="badge ${s.cls}">${s.label}</span></td>
-        <td class="num">${deliveries}件</td>
+        <td><span class="badge ${s.cls}">${s.label}${s.note ? ' ('+s.note+')' : ''}</span></td>
+        <td class="num">${detail}</td>
         <td class="num">${fmt(totalIncome)}円</td>
         <td class="num">-${fmt(totalExpense)}円</td>
         <td class="num" style="font-weight:bold;">${fmt(netBusiness)}円</td>
@@ -909,32 +1268,27 @@ function runSimulation() {
   });
 
   document.getElementById('simSummaryGrid').innerHTML = summaryHTML;
+  const scenarioNote = isFlex
+    ? '最悪=ブロック取得率60%　平均=85%　ベスト=フル稼働100%'
+    : '最悪=単価・件数30%減＋ボーナス70%減　ベスト=単価・件数30%増＋ボーナス50%増';
   document.getElementById('simDetailTable').innerHTML = `
     <table>
-      <tr><th>シナリオ</th><th class="num">配達件数</th><th class="num">売上</th><th class="num">経費</th><th class="num">事業利益</th><th class="num">生活費</th><th class="num">社会保険</th><th class="num">FX資金</th></tr>
+      <tr><th>シナリオ</th><th class="num">${colLabel}</th><th class="num">売上</th><th class="num">経費</th><th class="num">事業利益</th><th class="num">生活費</th><th class="num">社会保険</th><th class="num">FX資金</th></tr>
       ${rows}
     </table>
-    <p class="small" style="margin-top:8px;">※ 最悪=単価・件数30%減＋ボーナス70%減　ベスト=単価・件数30%増＋ボーナス50%増。社会保険は国民年金${fmt(pension)}円＋国保概算${fmt(healthIns)}円/月。</p>`;
-
-  // FX fund projection
-  const avgFxFund = scenarios[1].factor; // use average
-  const deliveries = Math.round(hoursDay * daysMonth * delsHour);
-  const baseIncome = deliveries * unitPrice;
-  const totalIncome = baseIncome + bonus + tip;
-  const netBusiness = totalIncome - totalExpense;
-  const fxMonthly = netBusiness - totalLiving - pension - healthIns;
+    <p class="small" style="margin-top:8px;">※ ${scenarioNote}。社会保険は国民年金${fmt(pension)}円＋国保概算${fmt(healthIns)}円/月。</p>`;
 
   document.getElementById('fxFundResult').innerHTML = `
     <div class="summary-grid">
-      <div class="summary-box"><div class="lbl">月額FX資金（平均）</div><div class="val" style="color:${fxMonthly>=0?'var(--ok)':'var(--ng)'}">${fxMonthly>=0?'+':''}${fmt(fxMonthly)}円</div></div>
-      <div class="summary-box"><div class="lbl">3ヶ月後</div><div class="val">${fmt(fxMonthly*3)}円</div></div>
-      <div class="summary-box"><div class="lbl">6ヶ月後</div><div class="val">${fmt(fxMonthly*6)}円</div></div>
-      <div class="summary-box"><div class="lbl">12ヶ月後</div><div class="val">${fmt(fxMonthly*12)}円</div></div>
+      <div class="summary-box"><div class="lbl">月額FX資金（平均）</div><div class="val" style="color:${avgFxMonthly>=0?'var(--ok)':'var(--ng)'}">${avgFxMonthly>=0?'+':''}${fmt(avgFxMonthly)}円</div></div>
+      <div class="summary-box"><div class="lbl">3ヶ月後</div><div class="val">${fmt(avgFxMonthly*3)}円</div></div>
+      <div class="summary-box"><div class="lbl">6ヶ月後</div><div class="val">${fmt(avgFxMonthly*6)}円</div></div>
+      <div class="summary-box"><div class="lbl">12ヶ月後</div><div class="val">${fmt(avgFxMonthly*12)}円</div></div>
     </div>
     <div class="note-info">
-      平均シナリオの場合、月 <strong>${fmt(Math.abs(fxMonthly))}円</strong> を FX口座に回せます。
-      ${fxMonthly > 0
-        ? `年間で <strong>${fmt(fxMonthly*12)}円</strong>。コアルール（FX利益の60〜70%をコア資産へ振替）と合わせて資産形成を加速できます。`
+      平均シナリオの場合、月 <strong>${fmt(Math.abs(avgFxMonthly))}円</strong> を FX口座に回せます。
+      ${avgFxMonthly > 0
+        ? `年間で <strong>${fmt(avgFxMonthly*12)}円</strong>。コアルール（FX利益の60〜70%をコア資産へ振替）と合わせて資産形成を加速できます。`
         : `現在の条件では赤字です。稼働時間・日数を増やすか、生活費を見直してください。`}
     </div>`;
 
@@ -1015,6 +1369,25 @@ function calcTax() {
       </div>` : ''}`;
 }
 
+// ===== Flex Vehicle Tabs =====
+function showFlexVehicleTab(tab) {
+  document.getElementById('flexVBuy').style.display = tab==='buy' ? '' : 'none';
+  document.getElementById('flexVLease').style.display = tab==='lease' ? '' : 'none';
+  document.getElementById('flexVRental').style.display = tab==='rental' ? '' : 'none';
+  document.querySelectorAll('#flexVehicleTabBar button').forEach(b => b.classList.remove('active'));
+  const map = {buy:0, lease:1, rental:2};
+  document.querySelectorAll('#flexVehicleTabBar button')[map[tab]].classList.add('active');
+}
+
+// ===== Flex Equipment Progress =====
+function updateFlexEquipProgress() {
+  const items = document.querySelectorAll('#flexEquipList input[type=checkbox]');
+  const checked = [...items].filter(i => i.checked).length;
+  const pct = Math.round(checked / items.length * 100);
+  document.getElementById('flexEquipBar').style.width = pct + '%';
+  document.getElementById('flexEquipProgress').innerHTML = `<span class="small">準備進捗: ${checked}/${items.length} (${pct}%)</span>`;
+}
+
 // ===== Equipment Progress =====
 function updateEquipProgress() {
   const items = document.querySelectorAll('#equipList input[type=checkbox]');
@@ -1039,11 +1412,15 @@ function gatherState() {
   document.querySelectorAll('#equipList input[type=checkbox]').forEach((cb, i) => {
     checks['equip_' + i] = cb.checked;
   });
-  return { inputs, checks, version: '1.0', date: new Date().toISOString() };
+  document.querySelectorAll('#flexEquipList input[type=checkbox]').forEach((cb, i) => {
+    checks['flexEquip_' + i] = cb.checked;
+  });
+  return { inputs, checks, bizType: currentBiz, version: '1.1', date: new Date().toISOString() };
 }
 
 function applyState(state) {
   if (!state) return;
+  if (state.bizType) switchBiz(state.bizType);
   if (state.inputs) {
     Object.entries(state.inputs).forEach(([id, val]) => {
       const el = document.getElementById(id);
@@ -1054,8 +1431,12 @@ function applyState(state) {
     document.querySelectorAll('#equipList input[type=checkbox]').forEach((cb, i) => {
       if (state.checks['equip_' + i] !== undefined) cb.checked = state.checks['equip_' + i];
     });
+    document.querySelectorAll('#flexEquipList input[type=checkbox]').forEach((cb, i) => {
+      if (state.checks['flexEquip_' + i] !== undefined) cb.checked = state.checks['flexEquip_' + i];
+    });
   }
   updateEquipProgress();
+  updateFlexEquipProgress();
 }
 
 function saveData() {
@@ -1074,13 +1455,15 @@ function exportJSON() {
   const blob = new Blob([JSON.stringify(gatherState(), null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'uber_eats_planner_' + new Date().toISOString().slice(0, 10) + '.json';
+  a.download = 'side_income_planner_' + new Date().toISOString().slice(0, 10) + '.json';
   a.click();
 }
 
 // ===== Init =====
 window.addEventListener('DOMContentLoaded', () => {
+  switchBiz('uber');
   updateEquipProgress();
+  updateFlexEquipProgress();
   calcInitCost();
   const saved = localStorage.getItem('uberEatsPlanner');
   if (saved) applyState(JSON.parse(saved));

@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ライフステージ後期対策プランナー</title>
+<style>
+  :root{
+    --bg:#14161f; --card:#1d2030; --card2:#252939; --border:#2a2e42;
+    --text:#d8dee9; --muted:#8b95a7; --label:#aab2c0;
+    --accent:#5dade2; --accent2:#f5b041; --ok:#58d68d; --ng:#ec7063;
+    --head:#f0f3f7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
+    background:var(--bg); color:var(--text); margin:0; padding:0; line-height:1.6;
+  }
+  header{
+    background:linear-gradient(135deg,#2a3550,#1d2030);
+    border-bottom:1px solid var(--border);
+    padding:13px 22px; display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:10px; position:sticky; top:0; z-index:50;
+  }
+  header h1{font-size:18px; margin:0; color:var(--head);}
+  header .tagline{font-size:11.5px; color:var(--muted); margin-top:2px;}
+  .header-actions{display:flex; gap:6px; flex-wrap:wrap;}
+  .btn{
+    background:var(--card2); color:var(--text); border:1px solid var(--border);
+    border-radius:6px; padding:7px 12px; font-size:12.5px; cursor:pointer;
+  }
+  .btn:hover{border-color:var(--accent);}
+  .btn.primary{background:#1a3a52; border-color:var(--accent); color:#cfe8f7;}
+
+  .layout{display:flex; max-width:1180px; margin:0 auto; gap:18px; padding:18px;}
+  .nav{
+    flex:0 0 236px; background:var(--card); border:1px solid var(--border);
+    border-radius:8px; padding:8px; position:sticky; top:74px; align-self:flex-start;
+    max-height:calc(100vh - 90px); overflow-y:auto;
+  }
+  .nav-item{
+    display:flex; gap:10px; align-items:center; padding:9px 9px; border-radius:6px;
+    cursor:pointer; border:1px solid transparent; margin-bottom:2px;
+  }
+  .nav-item:hover{background:var(--card2);}
+  .nav-item.active{background:#1a2c40; border-color:var(--accent);}
+  .nav-num{
+    flex:0 0 26px; height:26px; border-radius:50%; background:var(--card2);
+    color:var(--label); display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:700;
+  }
+  .nav-item.active .nav-num{background:var(--accent); color:#0b1320;}
+  .nav-item.done .nav-num{background:var(--ok); color:#0b1320;}
+  .nav-label{font-size:13px; color:var(--text);}
+  .nav-sub{font-size:10.5px; color:var(--muted);}
+
+  .main{flex:1 1 auto; min-width:0;}
+  .sec{display:none;}
+  .sec.active{display:block;}
+
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:8px;
+    box-shadow:0 1px 4px rgba(0,0,0,.35); padding:16px 18px; margin-bottom:14px;
+  }
+  .card h2{
+    font-size:16px; margin:0 0 4px 0; border-left:4px solid var(--accent);
+    padding-left:9px; color:var(--head);
+  }
+  .card h3{font-size:13.5px; color:var(--accent2); margin:16px 0 8px;}
+  .lead{font-size:12.5px; color:var(--muted); margin:0 0 12px;}
+
+  label.fld{display:block; margin:10px 0;}
+  label.fld > span{display:block; font-size:12px; color:var(--label); margin-bottom:4px;}
+  input,select,textarea{
+    background:var(--card2); color:var(--text); border:1px solid var(--border);
+    border-radius:5px; padding:7px 9px; font-size:13px; width:100%; font-family:inherit;
+  }
+  textarea{resize:vertical; min-height:62px;}
+  input:focus,select:focus,textarea:focus{outline:none; border-color:var(--accent);}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:8px 14px;}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px 14px;}
+
+  .radios{display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:4px;}
+  .radios label{display:flex; align-items:center; gap:5px; font-size:12.5px; color:var(--text); cursor:pointer;}
+  .radios input{width:auto;}
+  .chk{display:flex; align-items:flex-start; gap:8px; font-size:13px; margin:8px 0; cursor:pointer;}
+  .chk input{width:auto; margin-top:3px;}
+
+  table{width:100%; border-collapse:collapse; font-size:12.5px; margin-top:6px;}
+  th{text-align:left; color:var(--label); font-weight:600; padding:5px 4px; font-size:11.5px; border-bottom:1px solid var(--border);}
+  td{padding:3px 4px; vertical-align:top;}
+  td input,td select{padding:5px 6px; font-size:12px;}
+  .del{background:transparent; border:1px solid var(--border); color:var(--ng); width:30px; padding:4px 0; border-radius:5px; cursor:pointer;}
+  .del:hover{background:#3a2330;}
+  .addrow{margin-top:8px; background:var(--card2); border:1px dashed var(--border); color:var(--accent); padding:7px 12px; border-radius:6px; cursor:pointer; font-size:12.5px;}
+  .addrow:hover{border-color:var(--accent);}
+
+  .note{
+    font-size:12px; color:var(--label); line-height:1.65; background:#1a1d2b;
+    border-left:4px solid var(--muted); padding:11px 13px; border-radius:4px; margin:10px 0;
+  }
+  .note.info{border-left-color:var(--accent); background:#152330;}
+  .note.warn{border-left-color:var(--ng); background:#2a1a20; color:#f3c3c3;}
+  .note strong{color:var(--head);}
+  .note.warn strong{color:#ffb3b3;}
+  .note .small{font-size:11px; color:var(--muted);}
+
+  .guide{font-size:12px; color:var(--text); background:var(--card2); border-radius:6px; padding:10px 12px; margin:8px 0;}
+  .guide b{color:var(--accent);}
+
+  /* progress */
+  .prog{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px;}
+  .prog .pi{background:var(--card2); border:1px solid var(--border); border-radius:6px; padding:9px 11px; font-size:12px;}
+  .prog .pi .st{font-size:11px;}
+  .prog .pi .st.ok{color:var(--ok);}
+  .prog .pi .st.no{color:var(--muted);}
+
+  /* simulator result */
+  .simgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0;}
+  .simbox{background:var(--card2); border:1px solid var(--border); border-radius:8px; padding:13px; text-align:center;}
+  .simbox .lab{font-size:11.5px; color:var(--muted);}
+  .simbox .val{font-size:21px; font-weight:700; margin-top:4px;}
+  .simbox.worst .val{color:var(--ng);}
+  .simbox.mid .val{color:var(--accent);}
+  .simbox.best .val{color:var(--ok);}
+  table.breakdown td{border-bottom:1px solid var(--border); padding:7px 4px;}
+  table.breakdown td.r{text-align:right; font-variant-numeric:tabular-nums;}
+  table.breakdown tr.total td{font-weight:700; color:var(--head); border-top:2px solid var(--accent);}
+  .src{font-size:10.5px; color:var(--muted); margin-top:2px;}
+
+  .navbtns{display:flex; justify-content:space-between; margin-top:6px;}
+
+  .footer-disc{max-width:1180px; margin:0 auto; padding:0 18px 34px;}
+
+  @media (max-width:900px){
+    .layout{flex-direction:column;}
+    .nav{position:static; flex:1 1 auto; width:100%; max-height:none; display:flex; overflow-x:auto; gap:4px;}
+    .nav-item{flex:0 0 auto; flex-direction:column; text-align:center; min-width:84px;}
+    .grid2,.grid3{grid-template-columns:1fr;}
+    .simgrid{grid-template-columns:1fr;}
+  }
+  @media print{
+    header .header-actions,.nav,.navbtns,.addrow,.del{display:none !important;}
+    .sec{display:block !important; page-break-before:always;}
+    .sec:first-of-type{page-break-before:auto;}
+    body{background:#fff; color:#000;}
+    .card{border:1px solid #bbb; box-shadow:none; background:#fff;}
+    .card h2{color:#000;} .note,.guide,.simbox,.prog .pi{background:#f4f4f4; color:#000;}
+    input,select,textarea{background:#fff; color:#000; border:1px solid #999;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>ライフステージ後期対策プランナー</h1>
+    <div class="tagline">元気なうちに「何が・どこに・誰が知っているか」を整理し、介護〜相続の費用も試算</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn primary" onclick="doSave()">💾 保存</button>
+    <button class="btn" onclick="doLoad()">📂 読込</button>
+    <button class="btn" onclick="exportJSON()">⬇ JSON出力</button>
+    <button class="btn" onclick="importJSON()">⬆ JSON取込</button>
+    <button class="btn" onclick="window.print()">🖨 印刷/PDF</button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="nav" id="nav">
+    <div class="nav-item active" data-sec="0" onclick="gotoSec(0)"><div class="nav-num">0</div><div><div class="nav-label">基本情報・進捗</div><div class="nav-sub">対象者・使い方</div></div></div>
+    <div class="nav-item" data-sec="1" onclick="gotoSec(1)"><div class="nav-num">1</div><div><div class="nav-label">介護</div><div class="nav-sub">暮らし・相談先</div></div></div>
+    <div class="nav-item" data-sec="2" onclick="gotoSec(2)"><div class="nav-num">2</div><div><div class="nav-label">医療</div><div class="nav-sub">医師・服薬・方針</div></div></div>
+    <div class="nav-item" data-sec="3" onclick="gotoSec(3)"><div class="nav-num">3</div><div><div class="nav-label">年金・保険</div><div class="nav-sub">書類・証券番号</div></div></div>
+    <div class="nav-item" data-sec="4" onclick="gotoSec(4)"><div class="nav-num">4</div><div><div class="nav-label">お金・契約</div><div class="nav-sub">口座・カード・契約</div></div></div>
+    <div class="nav-item" data-sec="5" onclick="gotoSec(5)"><div class="nav-num">5</div><div><div class="nav-label">相続・手続き</div><div class="nav-sub">不動産・遺言・印鑑</div></div></div>
+    <div class="nav-item" data-sec="6" onclick="gotoSec(6)"><div class="nav-num">6</div><div><div class="nav-label">抜けやすい備え</div><div class="nav-sub">後見・信託・ノート</div></div></div>
+    <div class="nav-item" data-sec="7" onclick="gotoSec(7)"><div class="nav-num">7</div><div><div class="nav-label">費用シミュレーター</div><div class="nav-sub">介護〜相続を3点試算</div></div></div>
+  </nav>
+
+  <div class="main">
+
+    <!-- ===== Section 0 ===== -->
+    <section class="sec active" id="sec0">
+      <div class="card">
+        <h2>基本情報</h2>
+        <p class="lead">記録する親（対象者）の基本情報です。1人分を記録します。父・母など複数を分けたい場合は、それぞれ入力して「JSON出力」で別ファイルに保存してください。</p>
+        <div class="grid3">
+          <label class="fld"><span>呼称（ニックネーム可）</span><input data-k="b_name" placeholder="例：お父さん"></label>
+          <label class="fld"><span>続柄</span><input data-k="b_rel" placeholder="例：父"></label>
+          <label class="fld"><span>生年（西暦）</span><input data-k="b_birth" type="number" placeholder="例：1950" oninput="calcAge()"></label>
+        </div>
+        <div class="grid2">
+          <label class="fld"><span>現在の年齢（自動計算）</span><input id="b_age" readonly></label>
+          <label class="fld"><span>主な居住地</span><input data-k="b_loc" placeholder="例：◯◯県◯◯市"></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>このツールについて・データの注意</h2>
+        <div class="note info">
+          <strong>使い方</strong><br>
+          左のメニュー1〜6を順に埋めていくと、メニューの番号が<span style="color:var(--ok)">緑</span>になります。すべてご本人と相談しながら、分かる範囲で記入してください。空欄のままでも構いません。最後の「7. 費用シミュレーター」で、介護〜相続にかかる概算費用を試算できます。
+        </div>
+        <div class="note warn">
+          <strong>データの保管について（重要）</strong><br>
+          入力内容は<b>このブラウザ（端末）の中だけ</b>に保存され、インターネットには一切送信されません。<br>
+          ・必ず「💾 保存」を押してください（押すまで保存されません）。<br>
+          ・<b>共有パソコンやネットカフェ等では使用しないでください。</b><br>
+          ・印刷物・バックアップJSONには機微な情報が含まれます。<b>施錠できる場所</b>で保管してください。<br>
+          ・<b>暗証番号・パスワードは入力しない設計</b>です（「お金・契約」参照）。
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>入力の進捗</h2>
+        <div class="prog" id="progGrid"></div>
+      </div>
+    </section>
+
+    <!-- ===== Section 1 介護 ===== -->
+    <section class="sec" id="sec1">
+      <div class="card">
+        <h2>① 介護 — どこで・どのように暮らしたいか</h2>
+        <p class="lead">介護が必要になったとき、本人がどう過ごしたいかを元気なうちに聞いておくと、家族が判断に迷いません。</p>
+        <label class="fld"><span>希望する暮らしの場所</span>
+          <div class="radios" data-prog="1">
+            <label><input type="radio" name="care_place" data-k="care_place" value="自宅で暮らし続けたい">自宅で暮らし続けたい</label>
+            <label><input type="radio" name="care_place" data-k="care_place" value="子と同居したい">子と同居したい</label>
+            <label><input type="radio" name="care_place" data-k="care_place" value="施設に入りたい">施設に入りたい</label>
+            <label><input type="radio" name="care_place" data-k="care_place" value="まだ決めていない">まだ決めていない</label>
+          </div>
+        </label>
+        <label class="fld"><span>在宅介護 / 施設介護の希望・条件メモ</span><textarea data-k="care_pref" placeholder="例：できるだけ在宅。難しくなったら近所の施設。延命より生活の質を優先 など"></textarea></label>
+        <label class="fld"><span>介護が必要になったとき頼りたい人・キーパーソン</span><input data-k="care_person" placeholder="例：長男（連絡先）、近くに住む妹 など"></label>
+      </div>
+      <div class="card">
+        <h2>困った時の相談先</h2>
+        <div class="guide">
+          <b>地域包括支援センター</b>：高齢者の介護・福祉・健康の総合相談窓口（市区町村ごとに設置・無料）。まず最初の相談先。<br>
+          <b>ケアマネジャー（介護支援専門員）</b>：要介護認定後のケアプラン作成。<br>
+          <b>市区町村の介護保険課</b>：要介護認定の申請窓口。<br>
+          <b>かかりつけ医・地域医療連携室</b>：医療と介護の橋渡し。
+        </div>
+        <label class="fld"><span>地元の相談先メモ（連絡先など）</span><textarea data-k="care_contact" placeholder="例：◯◯地域包括支援センター TEL 000-000-0000 / 担当ケアマネ ◯◯さん"></textarea></label>
+      </div>
+      <div class="navbtns"><span></span><button class="btn primary" onclick="gotoSec(2)">次へ ②医療 →</button></div>
+    </section>
+
+    <!-- ===== Section 2 医療 ===== -->
+    <section class="sec" id="sec2">
+      <div class="card">
+        <h2>② 医療 — かかりつけ・服薬・治療方針</h2>
+        <p class="lead">急な入院や救急搬送のとき、家族がすぐ答えられるよう、医療情報をまとめます。</p>
+        <h3>かかりつけ医・通院先</h3>
+        <table id="tblDoctors"><thead><tr><th>医院・病院名</th><th>診療科</th><th>電話</th><th></th></tr></thead><tbody></tbody></table>
+        <button class="addrow" onclick="addRow('tblDoctors')">＋ 通院先を追加</button>
+
+        <label class="fld" style="margin-top:14px;"><span>持病・既往歴・アレルギー</span><textarea data-k="med_history" placeholder="例：高血圧、糖尿病、ペニシリンアレルギー など"></textarea></label>
+        <label class="fld"><span>服薬内容・お薬手帳の保管場所</span><textarea data-k="med_drugs" placeholder="例：朝の血圧薬ほか。お薬手帳は居間の引き出し。かかりつけ薬局：◯◯薬局"></textarea></label>
+      </div>
+      <div class="card">
+        <h3>緊急連絡先</h3>
+        <table id="tblContacts"><thead><tr><th>氏名</th><th>続柄</th><th>電話</th><th></th></tr></thead><tbody></tbody></table>
+        <button class="addrow" onclick="addRow('tblContacts')">＋ 連絡先を追加</button>
+      </div>
+      <div class="card">
+        <h3>治療方針の希望</h3>
+        <label class="fld"><span>延命治療について</span>
+          <div class="radios">
+            <label><input type="radio" name="med_eol" data-k="med_eol" value="希望する">希望する</label>
+            <label><input type="radio" name="med_eol" data-k="med_eol" value="希望しない">希望しない</label>
+            <label><input type="radio" name="med_eol" data-k="med_eol" value="家族に任せる">家族に任せる</label>
+            <label><input type="radio" name="med_eol" data-k="med_eol" value="未定">未定</label>
+          </div>
+        </label>
+        <label class="fld"><span>告知・終末期・その他の希望（自由記述）</span><textarea data-k="med_wish" placeholder="例：病名は本人に告知してほしい。最期は自宅で過ごしたい など"></textarea></label>
+        <div class="note info" style="font-size:11.5px;">延命治療の意思表示（事前指示書・リビングウィル）は、書面にしておくと家族・医療者に伝わりやすくなります。具体的な書式は主治医や自治体にご相談ください。</div>
+      </div>
+      <div class="navbtns"><button class="btn" onclick="gotoSec(1)">← 戻る</button><button class="btn primary" onclick="gotoSec(3)">次へ ③年金・保険 →</button></div>
+    </section>
+
+    <!-- ===== Section 3 年金・保険 ===== -->
+    <section class="sec" id="sec3">
+      <div class="card">
+        <h2>③ 年金・保険</h2>
+        <p class="lead">年金や保険は「どこに書類があるか」「証券番号」「受取人」が分かれば、手続きが大きく前進します。</p>
+        <h3>年金</h3>
+        <div class="grid2">
+          <label class="fld"><span>受給状況</span>
+            <select data-k="pen_status"><option value="">選択</option><option>受給中</option><option>未受給（加入中）</option><option>不明</option></select>
+          </label>
+          <label class="fld"><span>年金の種類</span><input data-k="pen_type" placeholder="例：老齢基礎年金＋厚生年金"></label>
+        </div>
+        <label class="fld"><span>年金手帳・年金証書・基礎年金番号の保管場所メモ</span><textarea data-k="pen_doc" placeholder="例：年金証書は仏壇の引き出し。基礎年金番号は別途エンディングノートに記載"></textarea></label>
+      </div>
+      <div class="card">
+        <h3>加入している保険</h3>
+        <p class="lead" style="margin-bottom:6px;">生命保険・医療保険・がん保険・火災/地震・自動車保険など。受取人もあわせて確認しておきましょう。</p>
+        <table id="tblInsurance"><thead><tr><th>保険会社</th><th>種類</th><th>証券番号</th><th>受取人</th><th>証券の保管場所</th><th></th></tr></thead><tbody></tbody></table>
+        <button class="addrow" onclick="addRow('tblInsurance')">＋ 保険を追加</button>
+      </div>
+      <div class="navbtns"><button class="btn" onclick="gotoSec(2)">← 戻る</button><button class="btn primary" onclick="gotoSec(4)">次へ ④お金・契約 →</button></div>
+    </section>
+
+    <!-- ===== Section 4 お金・契約 ===== -->
+    <section class="sec" id="sec4">
+      <div class="card">
+        <h2>④ お金・契約</h2>
+        <div class="note warn">
+          <strong>⚠ 暗証番号・パスワードは入力しないでください</strong><br>
+          このツールには<b>暗証番号・ネットバンキングのパスワード・口座番号の全桁を入力する欄は設けていません。</b>盗難・漏えい時の被害を防ぐためです。「どこにあるか・誰が知っているか」（保管場所メモ）だけを記録してください。口座番号は確認用に<b>末尾4桁のみ</b>とします。
+        </div>
+        <h3>主な口座・金融機関</h3>
+        <table id="tblAccounts"><thead><tr><th>金融機関</th><th>支店</th><th>種別</th><th>口座末尾4桁</th><th>用途・通帳/印鑑の保管場所メモ</th><th></th></tr></thead><tbody></tbody></table>
+        <button class="addrow" onclick="addRow('tblAccounts')">＋ 口座を追加</button>
+      </div>
+      <div class="card">
+        <h3>借入・ローン</h3>
+        <table id="tblLoans"><thead><tr><th>借入先</th><th>残高（万円）</th><th>種類</th><th>備考</th><th></th></tr></thead><tbody></tbody></table>
+        <button class="addrow" onclick="addRow('tblLoans')">＋ 借入を追加</button>
+      </div>
+      <div class="card">
+        <h3>クレジットカード</h3>
+        <table id="tblCards"><thead><tr><th>カード会社</th><th>末尾4桁</th><th>引落口座</th><th>備考</th><th></th></tr></thead><tbody></tbody></table>
+        <button class="addrow" onclick="addRow('tblCards')">＋ カードを追加</button>
+      </div>
+      <div class="card">
+        <h3>サブスク・公共料金・スマホ等の定期契約</h3>
+        <p class="lead" style="margin-bottom:6px;">亡くなった後・施設入所後に「解約し忘れて払い続ける」ことが多い項目です。把握しておくと解約がスムーズです。</p>
+        <table id="tblSubs"><thead><tr><th>サービス・契約名</th><th>月額（円）</th><th>支払方法</th><th>メモ</th><th></th></tr></thead><tbody></tbody></table>
+        <button class="addrow" onclick="addRow('tblSubs')">＋ 契約を追加</button>
+      </div>
+      <div class="navbtns"><button class="btn" onclick="gotoSec(3)">← 戻る</button><button class="btn primary" onclick="gotoSec(5)">次へ ⑤相続・手続き →</button></div>
+    </section>
+
+    <!-- ===== Section 5 相続・手続き ===== -->
+    <section class="sec" id="sec5">
+      <div class="card">
+        <h2>⑤ 相続・手続き</h2>
+        <p class="lead">相続で揉めない・困らないために、財産の所在と意思を整理します。評価額は「7. 費用シミュレーター」の相続税試算にも使われます。</p>
+        <h3>不動産</h3>
+        <table id="tblProps"><thead><tr><th>種類</th><th>所在地</th><th>名義</th><th>概算評価額（万円）</th><th></th></tr></thead><tbody></tbody></table>
+        <button class="addrow" onclick="addRow('tblProps')">＋ 不動産を追加</button>
+      </div>
+      <div class="card">
+        <h3>遺言書</h3>
+        <div class="grid3">
+          <label class="fld"><span>遺言書の有無</span>
+            <select data-k="will_exist" data-prog="5"><option value="">選択</option><option>ある</option><option>ない</option><option>作成予定</option><option>不明</option></select>
+          </label>
+          <label class="fld"><span>種類</span>
+            <select data-k="will_type"><option value="">選択</option><option>公正証書遺言</option><option>自筆証書遺言</option><option>自筆証書（法務局保管）</option><option>不明</option></select>
+          </label>
+          <label class="fld"><span>保管場所</span><input data-k="will_place" placeholder="例：◯◯公証役場 / 自宅金庫"></label>
+        </div>
+      </div>
+      <div class="card">
+        <h3>印鑑・重要書類の保管場所</h3>
+        <label class="fld"><span>実印・印鑑登録証（カード）の保管場所</span><input data-k="seal_place" placeholder="例：実印は寝室の金庫、登録カードは別保管"></label>
+        <label class="fld"><span>重要書類（権利証・登記識別情報・通帳・証券・保険証券等）の保管場所</span><textarea data-k="docs_place" placeholder="例：権利証は貸金庫。通帳は居間の引き出し。マイナンバーカードは本人が携帯"></textarea></label>
+      </div>
+      <div class="card">
+        <h3>家族間で共有しておきたいこと</h3>
+        <label class="fld"><span>自由記述</span><textarea data-k="family_share" placeholder="例：お墓・菩提寺のこと、形見分けの希望、特定の人への配慮、デジタル遺品（SNS・ネット証券）の扱い など"></textarea></label>
+      </div>
+      <div class="navbtns"><button class="btn" onclick="gotoSec(4)">← 戻る</button><button class="btn primary" onclick="gotoSec(6)">次へ ⑥抜けやすい備え →</button></div>
+    </section>
+
+    <!-- ===== Section 6 抜けやすい備え ===== -->
+    <section class="sec" id="sec6">
+      <div class="card">
+        <h2>⑥ 抜けやすい備え</h2>
+        <p class="lead">判断能力が低下してからでは使えない・間に合わない制度です。元気なうちの検討が肝心です。</p>
+
+        <h3>任意後見契約</h3>
+        <div class="guide">本人が元気なうちに、判断能力が低下した将来に備えて「誰に・何を任せるか」を<b>公正証書</b>で決めておく契約。実際に発動する際は家庭裁判所が「任意後見監督人」を選任します。<br><b>相談先</b>：公証役場、司法書士・弁護士、社会福祉協議会。</div>
+        <label class="chk"><input type="checkbox" data-k="prep_kouken" data-prog="6"> 任意後見契約を検討する／したい</label>
+        <label class="fld"><span>任せたい人・内容メモ</span><input data-k="prep_kouken_memo" placeholder="例：長男に財産管理を委任したい"></label>
+
+        <h3>家族信託</h3>
+        <div class="guide">財産（不動産・現預金など）の管理・承継を、信頼する家族に託す仕組み。認知症による「口座凍結・実家の売却不可」を防げる柔軟な手段。<br><b>相談先</b>：家族信託に詳しい司法書士・弁護士・税理士。</div>
+        <label class="chk"><input type="checkbox" data-k="prep_shintaku"> 家族信託を検討する／したい</label>
+        <label class="fld"><span>信託したい財産メモ</span><input data-k="prep_shintaku_memo" placeholder="例：実家（◯◯市）と預金の一部を長女に"></label>
+
+        <h3>エンディングノート</h3>
+        <div class="guide">遺言書のような法的効力はありませんが、本人の希望・連絡先・財産の所在などを自由に書き残せます。本ツールの内容を印刷して保管するのも有効です。</div>
+        <label class="chk"><input type="checkbox" data-k="prep_ending"> エンディングノートを作成している／する</label>
+        <label class="fld"><span>保管場所メモ</span><input data-k="prep_ending_memo" placeholder="例：本ツールを印刷して仏壇の引き出しに保管"></label>
+      </div>
+      <div class="navbtns"><button class="btn" onclick="gotoSec(5)">← 戻る</button><button class="btn primary" onclick="gotoSec(7)">次へ ⑦費用シミュレーター →</button></div>
+    </section>
+
+    <!-- ===== Section 7 費用シミュレーター ===== -->
+    <section class="sec" id="sec7">
+      <div class="card">
+        <h2>⑦ 費用シミュレーター</h2>
+        <p class="lead">介護・医療・葬儀・法的手続き・相続税の概算を、最悪／平均／ベストの3点で試算します。すべて<b>仮定に基づく概算</b>であり、実際の費用・税額を保証するものではありません。</p>
+
+        <h3>介護費</h3>
+        <div class="grid3">
+          <label class="fld"><span>ケア形態</span>
+            <select id="s_care" onchange="runSim()">
+              <option value="home">在宅介護</option>
+              <option value="tokuyou">特別養護老人ホーム</option>
+              <option value="yuryo">介護付有料老人ホーム</option>
+              <option value="sakou">サービス付き高齢者向け住宅</option>
+              <option value="none">介護費は試算しない</option>
+            </select>
+          </label>
+          <label class="fld"><span>想定介護期間（年）</span><input id="s_care_years" type="number" value="5" oninput="runSim()"></label>
+        </div>
+
+        <h3>医療費（介護期間中の自己負担目安）</h3>
+        <div class="grid3">
+          <label class="fld"><span>想定月額（万円）</span><input id="s_med_month" type="number" value="2" oninput="runSim()"></label>
+          <label class="fld"><span>想定年数（年）</span><input id="s_med_years" type="number" value="5" oninput="runSim()"></label>
+        </div>
+        <div class="note info" style="font-size:11px;">高額療養費制度・後期高齢者医療（窓口1〜3割）により自己負担には上限があります。入院・差額ベッド・通院交通費等の自己負担の目安として入力してください。</div>
+
+        <h3>葬儀費</h3>
+        <label class="fld"><span>葬儀の形式</span>
+          <select id="s_funeral" onchange="runSim()">
+            <option value="chokuso">直葬・火葬式</option>
+            <option value="ichinichi">一日葬</option>
+            <option value="kazoku" selected>家族葬</option>
+            <option value="ippan">一般葬</option>
+            <option value="none">葬儀費は試算しない</option>
+          </select>
+        </label>
+
+        <h3>法的手続き費用</h3>
+        <label class="chk"><input type="checkbox" id="s_kouken" onchange="runSim()"> 任意後見契約を利用する</label>
+        <label class="fld" style="margin-left:24px;"><span>後見監督人報酬の想定発動年数（年）</span><input id="s_kouken_years" type="number" value="3" oninput="runSim()"></label>
+        <label class="chk"><input type="checkbox" id="s_shintaku" onchange="runSim()"> 家族信託を利用する</label>
+        <label class="chk"><input type="checkbox" id="s_igon" onchange="runSim()"> 公正証書遺言を専門家に依頼する</label>
+
+        <h3>相続税（概算）</h3>
+        <div class="grid3">
+          <label class="fld"><span>遺産総額（万円）</span><input id="s_estate" type="number" placeholder="未入力なら不動産合計を使用" oninput="runSim()"></label>
+          <label class="fld"><span>法定相続人の数</span><input id="s_heirs" type="number" value="2" oninput="runSim()"></label>
+        </div>
+        <div class="note warn" style="font-size:11px;">相続税は<b>非常に簡略な概算</b>です。法定相続分どおりに均等按分したと仮定し、<b>配偶者の税額軽減・小規模宅地等の特例・各種控除は未考慮</b>です（これらで税額は大きく下がることが多い）。正確な金額は必ず税理士にご相談ください。</div>
+
+        <button class="btn primary" style="margin-top:6px;" onclick="runSim()">試算する</button>
+      </div>
+
+      <div class="card">
+        <h2>試算結果</h2>
+        <div class="simgrid">
+          <div class="simbox worst"><div class="lab">最悪ケース（高め）</div><div class="val" id="r_worst">—</div></div>
+          <div class="simbox mid"><div class="lab">平均ケース</div><div class="val" id="r_mid">—</div></div>
+          <div class="simbox best"><div class="lab">ベストケース（抑えめ）</div><div class="val" id="r_best">—</div></div>
+        </div>
+        <table class="breakdown"><tbody id="r_break"></tbody></table>
+        <div class="src" id="r_src"></div>
+      </div>
+      <div class="navbtns"><button class="btn" onclick="gotoSec(6)">← 戻る</button><span></span></div>
+    </section>
+
+  </div>
+</div>
+
+<div class="footer-disc">
+  <div class="note">
+    <strong>ご注意（免責）</strong><br>
+    本ツールはAIを活用した参考情報です。介護・医療・税務・法務に関する最終的な判断は、必ずご自身で<b>地域包括支援センター・医師・税理士・弁護士・司法書士・FP等の有資格専門家</b>にご相談のうえ行ってください。費用相場・制度・税率は変動します。各数値は調査時点の公表値・仮定値であり、将来の費用や制度の継続を保証するものではありません。<br>
+    <span class="small" id="discMeta"></span>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="application/json" style="display:none">
+
+<script>
+(function(){
+  'use strict';
+  var $=function(id){return document.getElementById(id);};
+  var num=function(id){var v=parseFloat(($(id)||{}).value);return isNaN(v)?0:v;};
+  var STORAGE_KEY='oyano_shukatsu_plan';
+
+  /* ---------- 出典メタ ---------- */
+  var META={
+    care:'介護費：生命保険文化センター「2024年度 生命保険に関する全国実態調査」',
+    funeral:'葬儀費：鎌倉新書「第6回お葬式に関する全国調査（2024）」',
+    legal:'法的手続き：各専門家公表の費用相場（2025年時点）',
+    updated:'2026-06-23'
+  };
+  $('discMeta').textContent='【出典】'+META.care+' ／ '+META.funeral+' ／ '+META.legal+' ｜ 調査時点：'+META.updated;
+
+  /* ---------- ナビ ---------- */
+  window.gotoSec=function(n){
+    document.querySelectorAll('.sec').forEach(function(s){s.classList.remove('active');});
+    $('sec'+n).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(function(it){
+      it.classList.toggle('active', it.getAttribute('data-sec')===String(n));
+    });
+    if(n===7) runSim();
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+
+  /* ---------- 動的テーブル定義 ---------- */
+  var TABLES={
+    tblDoctors:[{k:'name',ph:'医院名'},{k:'dept',ph:'診療科'},{k:'tel',ph:'電話'}],
+    tblContacts:[{k:'name',ph:'氏名'},{k:'rel',ph:'続柄'},{k:'tel',ph:'電話'}],
+    tblInsurance:[{k:'company',ph:'保険会社'},{k:'type',ph:'種類'},{k:'no',ph:'証券番号'},{k:'beneficiary',ph:'受取人'},{k:'place',ph:'保管場所'}],
+    tblAccounts:[{k:'bank',ph:'金融機関'},{k:'branch',ph:'支店'},{k:'type',ph:'種別'},{k:'last4',ph:'末尾4桁'},{k:'memo',ph:'用途・保管場所'}],
+    tblLoans:[{k:'lender',ph:'借入先'},{k:'balance',ph:'残高',type:'number'},{k:'type',ph:'種類'},{k:'memo',ph:'備考'}],
+    tblCards:[{k:'company',ph:'カード会社'},{k:'last4',ph:'末尾4桁'},{k:'account',ph:'引落口座'},{k:'memo',ph:'備考'}],
+    tblSubs:[{k:'name',ph:'サービス名'},{k:'monthly',ph:'月額(円)',type:'number'},{k:'pay',ph:'支払方法'},{k:'memo',ph:'メモ'}],
+    tblProps:[{k:'type',ph:'種類'},{k:'addr',ph:'所在地'},{k:'owner',ph:'名義'},{k:'value',ph:'評価額(万円)',type:'number'}]
+  };
+
+  function buildRow(tblId,data){
+    var cols=TABLES[tblId];
+    var tbody=$(tblId).querySelector('tbody');
+    var tr=document.createElement('tr');
+    var inputs={};
+    cols.forEach(function(c){
+      var td=document.createElement('td');
+      var el=document.createElement('input');
+      el.type=c.type||'text'; el.placeholder=c.ph||'';
+      if(data&&data[c.k]!=null) el.value=data[c.k];
+      el.addEventListener('input',refreshProgress);
+      inputs[c.k]=el; td.appendChild(el); tr.appendChild(td);
+    });
+    var td=document.createElement('td');
+    var b=document.createElement('button'); b.className='del'; b.textContent='×';
+    b.onclick=function(){tr.remove(); refreshProgress();};
+    td.appendChild(b); tr.appendChild(td);
+    tr._get=function(){var o={}; cols.forEach(function(c){o[c.k]=inputs[c.k].value;}); return o;};
+    tbody.appendChild(tr);
+    return tr;
+  }
+  window.addRow=function(tblId){buildRow(tblId); };
+
+  function getRows(tblId){
+    return Array.prototype.map.call($(tblId).querySelector('tbody').children,function(tr){return tr._get();});
+  }
+  function rowsFilled(tblId){
+    return getRows(tblId).some(function(r){return Object.keys(r).some(function(k){return (r[k]||'').toString().trim()!=='';});});
+  }
+
+  /* ---------- 静的フィールド ---------- */
+  function collectStatic(){
+    var o={};
+    document.querySelectorAll('[data-k]').forEach(function(el){
+      var k=el.getAttribute('data-k');
+      if(el.type==='radio'){ if(el.checked) o[el.name]=el.value; }
+      else if(el.type==='checkbox'){ o[k]=el.checked; }
+      else o[k]=el.value;
+    });
+    return o;
+  }
+  function applyStatic(o){
+    document.querySelectorAll('[data-k]').forEach(function(el){
+      var k=el.getAttribute('data-k');
+      if(el.type==='radio'){ el.checked=(o[el.name]===el.value); }
+      else if(el.type==='checkbox'){ el.checked=!!o[k]; }
+      else if(o[k]!=null) el.value=o[k];
+    });
+  }
+
+  window.calcAge=function(){
+    var by=num('b_birth');
+    $('b_age').value = (by>1850 && by<=2026) ? (2026-by)+'歳' : '';
+  };
+
+  /* ---------- 進捗トラッカー ---------- */
+  var SEC_DEF=[
+    {n:0,label:'基本情報',check:function(){return ($('b_name').value||'').trim()!=='';}},
+    {n:1,label:'介護',check:function(){var o=collectStatic();return !!(o.care_place||o.care_pref||o.care_contact);}},
+    {n:2,label:'医療',check:function(){var o=collectStatic();return rowsFilled('tblDoctors')||rowsFilled('tblContacts')||!!(o.med_drugs||o.med_eol);}},
+    {n:3,label:'年金・保険',check:function(){var o=collectStatic();return rowsFilled('tblInsurance')||!!(o.pen_doc||o.pen_status);}},
+    {n:4,label:'お金・契約',check:function(){return rowsFilled('tblAccounts')||rowsFilled('tblLoans')||rowsFilled('tblCards')||rowsFilled('tblSubs');}},
+    {n:5,label:'相続・手続き',check:function(){var o=collectStatic();return rowsFilled('tblProps')||!!(o.will_exist||o.seal_place||o.docs_place||o.family_share);}},
+    {n:6,label:'抜けやすい備え',check:function(){var o=collectStatic();return !!(o.prep_kouken||o.prep_shintaku||o.prep_ending);}}
+  ];
+  function refreshProgress(){
+    var grid=$('progGrid'); if(grid) grid.innerHTML='';
+    SEC_DEF.forEach(function(s){
+      var done=false; try{done=s.check();}catch(e){done=false;}
+      var item=document.querySelector('.nav-item[data-sec="'+s.n+'"]');
+      if(item) item.classList.toggle('done',done);
+      if(grid){
+        var d=document.createElement('div'); d.className='pi';
+        d.innerHTML='<div>'+s.n+'. '+s.label+'</div><div class="st '+(done?'ok':'no')+'">'+(done?'✓ 入力あり':'未入力')+'</div>';
+        grid.appendChild(d);
+      }
+    });
+  }
+
+  /* ===================== 費用シミュレーター ===================== */
+  // 介護：月額レンジ[min,mid,max]（万円）と 一時費用[min,mid,max]（万円）
+  var CARE={
+    home:   {monthly:[3,5.3,8],  once:[20,47,100]},
+    tokuyou:{monthly:[8,12,15],  once:[10,30,60]},
+    yuryo:  {monthly:[15,22,30], once:[0,300,1000]},
+    sakou:  {monthly:[11,18,25], once:[20,80,200]}
+  };
+  // 葬儀：[min,mid,max]（万円）
+  var FUNERAL={
+    chokuso:[20,42.8,60], ichinichi:[60,87.5,110], kazoku:[70,105.7,150], ippan:[120,161.3,220]
+  };
+  var CARE_LABEL={home:'在宅介護',tokuyou:'特別養護老人ホーム',yuryo:'介護付有料老人ホーム',sakou:'サ高住'};
+  var FUN_LABEL={chokuso:'直葬・火葬式',ichinichi:'一日葬',kazoku:'家族葬',ippan:'一般葬'};
+
+  function fmt(man){ // 万円 → 表示
+    man=Math.round(man);
+    if(man>=10000){ return (man/10000).toFixed(man%10000===0?0:2).replace(/\.00$/,'')+'億円'; }
+    return man.toLocaleString('ja-JP')+'万円';
+  }
+
+  // 相続税 速算（万円 in / 万円 out）
+  function sokujin(man){
+    if(man<=0) return 0;
+    var t;
+    if(man<=1000) t=man*0.10;
+    else if(man<=3000) t=man*0.15-50;
+    else if(man<=5000) t=man*0.20-200;
+    else if(man<=10000) t=man*0.30-700;
+    else if(man<=20000) t=man*0.40-1700;
+    else if(man<=30000) t=man*0.45-2700;
+    else if(man<=60000) t=man*0.50-4200;
+    else t=man*0.55-7200;
+    return Math.max(0,t);
+  }
+  function inheritanceTax(estateMan,heirs){
+    heirs=Math.max(1,Math.round(heirs));
+    var basic=3000+600*heirs;
+    var taxable=Math.max(0,estateMan-basic);
+    if(taxable<=0) return 0;
+    var per=taxable/heirs;
+    return sokujin(per)*heirs;
+  }
+
+  window.runSim=function(){
+    var rows=[]; // {label, min, mid, max, src}
+    // --- 介護 ---
+    var careKey=$('s_care').value, years=Math.max(0,num('s_care_years'));
+    if(careKey!=='none' && CARE[careKey]){
+      var c=CARE[careKey], m=c.monthly, o=c.once;
+      rows.push({
+        label:'介護費（'+CARE_LABEL[careKey]+'・'+years+'年）',
+        min:m[0]*12*years+o[0], mid:m[1]*12*years+o[1], max:m[2]*12*years+o[2],
+        src:'月額'+m[0]+'〜'+m[2]+'万＋一時費用'+o[0]+'〜'+o[2]+'万'
+      });
+    }
+    // --- 医療 ---
+    var medM=num('s_med_month'), medY=num('s_med_years');
+    if(medM>0 && medY>0){
+      var medTotal=medM*12*medY;
+      rows.push({label:'医療費（月'+medM+'万×'+medY+'年）',min:medTotal*0.7,mid:medTotal,max:medTotal*1.4,src:'高額療養費制度等で上限あり。自己負担の目安'});
+    }
+    // --- 葬儀 ---
+    var fKey=$('s_funeral').value;
+    if(fKey!=='none' && FUNERAL[fKey]){
+      var f=FUNERAL[fKey];
+      rows.push({label:'葬儀費（'+FUN_LABEL[fKey]+'）',min:f[0],mid:f[1],max:f[2],src:'鎌倉新書 全国平均ベース'});
+    }
+    // --- 法的手続き ---
+    if($('s_kouken').checked){
+      var ky=Math.max(0,num('s_kouken_years'));
+      // 初期費用（公正証書＋専門家）＋ 監督人報酬 月1〜2万
+      rows.push({label:'任意後見契約（監督人報酬'+ky+'年分含む）',
+        min:10+1*12*ky, mid:15+1.5*12*ky, max:20+2*12*ky,
+        src:'初期10〜20万＋監督人報酬 月1〜2万'});
+    }
+    if($('s_shintaku').checked){
+      // 信託財産 = 遺産総額入力 or 不動産合計 を流用
+      var trustAsset=estateBase();
+      var consult=Math.max(30,trustAsset*0.01); // 最低30万 or 1%
+      rows.push({label:'家族信託（組成費用）',
+        min:consult*0.8+15, mid:consult+25, max:consult*1.3+40,
+        src:'コンサル'+Math.round(consult)+'万(信託財産の約1%・最低30万)＋契約書/登記等'});
+    }
+    if($('s_igon').checked){
+      rows.push({label:'公正証書遺言（専門家依頼）',min:15,mid:25,max:40,src:'公証人手数料＋専門家報酬15〜40万'});
+    }
+    // --- 相続税 ---
+    var estate=estateBase(), heirs=num('s_heirs');
+    var tax=inheritanceTax(estate,heirs);
+    if(estate>0){
+      rows.push({label:'相続税 概算（遺産'+fmt(estate)+'・相続人'+Math.max(1,Math.round(heirs))+'人）',
+        min:tax,mid:tax,max:tax,src:'基礎控除3,000万＋600万×相続人。配偶者軽減・特例は未考慮'});
+    }
+
+    // --- 集計 ---
+    var sum={min:0,mid:0,max:0};
+    rows.forEach(function(r){sum.min+=r.min;sum.mid+=r.mid;sum.max+=r.max;});
+    $('r_worst').textContent=fmt(sum.max);
+    $('r_mid').textContent=fmt(sum.mid);
+    $('r_best').textContent=fmt(sum.min);
+
+    var tb=$('r_break'); tb.innerHTML='';
+    var head=document.createElement('tr');
+    head.innerHTML='<td style="color:var(--label);font-size:11px;">費目</td><td class="r" style="color:var(--ng);font-size:11px;">最悪</td><td class="r" style="color:var(--accent);font-size:11px;">平均</td><td class="r" style="color:var(--ok);font-size:11px;">ベスト</td>';
+    tb.appendChild(head);
+    rows.forEach(function(r){
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td>'+r.label+'<div class="src">'+r.src+'</div></td><td class="r">'+fmt(r.max)+'</td><td class="r">'+fmt(r.mid)+'</td><td class="r">'+fmt(r.min)+'</td>';
+      tb.appendChild(tr);
+    });
+    if(rows.length===0){
+      var tr=document.createElement('tr'); tr.innerHTML='<td colspan="4" style="color:var(--muted);">項目を選択・入力すると試算結果が表示されます。</td>'; tb.appendChild(tr);
+    }else{
+      var tt=document.createElement('tr'); tt.className='total';
+      tt.innerHTML='<td>合計</td><td class="r">'+fmt(sum.max)+'</td><td class="r">'+fmt(sum.mid)+'</td><td class="r">'+fmt(sum.min)+'</td>';
+      tb.appendChild(tt);
+    }
+    $('r_src').textContent='※ 概算です。相続税は配偶者の税額軽減・小規模宅地等の特例で大きく下がる場合があります。最終判断は専門家にご相談ください。';
+  };
+
+  function estateBase(){
+    var manual=num('s_estate');
+    if(manual>0) return manual;
+    // 不動産合計を使用
+    var sum=0;
+    getRows('tblProps').forEach(function(r){var v=parseFloat(r.value);if(!isNaN(v))sum+=v;});
+    return sum;
+  }
+
+  /* ---------- 保存・読込 ---------- */
+  function snapshot(){
+    var tables={};
+    Object.keys(TABLES).forEach(function(id){tables[id]=getRows(id);});
+    return {static:collectStatic(), tables:tables, savedAt:new Date().toISOString()};
+  }
+  function restore(data){
+    if(!data) return;
+    // テーブル再構築
+    Object.keys(TABLES).forEach(function(id){
+      var tbody=$(id).querySelector('tbody'); tbody.innerHTML='';
+      var arr=(data.tables&&data.tables[id])||[];
+      arr.forEach(function(row){buildRow(id,row);});
+    });
+    applyStatic(data.static||{});
+    calcAge(); refreshProgress();
+  }
+
+  window.doSave=function(){
+    try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(snapshot())); alert('保存しました（この端末内のみ）。'); }
+    catch(e){ alert('保存に失敗しました：'+e.message); }
+  };
+  window.doLoad=function(){
+    var json=localStorage.getItem(STORAGE_KEY);
+    if(!json){ alert('保存データがありません。'); return; }
+    try{ restore(JSON.parse(json)); alert('読み込みました。'); }catch(e){ alert('読込に失敗しました：'+e.message); }
+  };
+  window.exportJSON=function(){
+    var name=($('b_name').value||'parent').replace(/[^\w぀-ヿ一-鿿]/g,'')||'parent';
+    var blob=new Blob([JSON.stringify(snapshot(),null,2)],{type:'application/json'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='shukatsu_'+name+'_'+new Date().toISOString().slice(0,10)+'.json';
+    a.click(); URL.revokeObjectURL(a.href);
+  };
+  window.importJSON=function(){ $('fileInput').click(); };
+  $('fileInput').addEventListener('change',function(e){
+    var file=e.target.files[0]; if(!file) return;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      try{ restore(JSON.parse(ev.target.result)); alert('JSONを取り込みました。'); }
+      catch(err){ alert('ファイルが不正です：'+err.message); }
+    };
+    reader.readAsText(file); e.target.value='';
+  });
+
+  /* ---------- 初期化 ---------- */
+  document.querySelectorAll('[data-k]').forEach(function(el){
+    var ev=(el.tagName==='SELECT'||el.type==='radio'||el.type==='checkbox')?'change':'input';
+    el.addEventListener(ev,refreshProgress);
+  });
+  // 各テーブルに初期1行
+  Object.keys(TABLES).forEach(function(id){ buildRow(id); });
+  // 前回データがあれば自動復元
+  var saved=localStorage.getItem(STORAGE_KEY);
+  if(saved){ try{ restore(JSON.parse(saved)); }catch(e){} }
+  calcAge(); refreshProgress(); runSim();
+})();
+</script>
+</body>
+</html>

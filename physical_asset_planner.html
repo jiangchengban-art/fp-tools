@@ -196,6 +196,10 @@
       <div class="nav-num">4</div>
       <div><div class="nav-label">注意点・チェック</div><div class="nav-sub">購入前リスト</div></div>
     </div>
+    <div class="nav-item" data-mod="mod5" onclick="switchMod('mod5')">
+      <div class="nav-num">5</div>
+      <div><div class="nav-label">種類・買い方ガイド</div><div class="nav-sub">車・時計・金</div></div>
+    </div>
   </nav>
 
   <div class="main">
@@ -523,6 +527,210 @@
       </div>
     </div>
 
+    <!-- ====== モジュール5: 種類・買い方ガイド ====== -->
+    <div class="mod" id="mod5">
+      <div class="card">
+        <h2>種類・買い方ガイド</h2>
+        <p class="small">車・時計・金の種類を網羅的に比較し、購入ルート別のメリット・デメリットを整理します。</p>
+
+        <div class="tab-bar" id="guideTabs">
+          <button class="active" onclick="switchGuideTab('guide-car')">車</button>
+          <button onclick="switchGuideTab('guide-watch')">時計</button>
+          <button onclick="switchGuideTab('guide-gold')">金</button>
+        </div>
+
+        <!-- ===== 車 種類・買い方 ===== -->
+        <div class="guide-panel" id="guide-car">
+          <h3>車の種類一覧</h3>
+          <table>
+            <thead><tr><th>ボディタイプ</th><th>特徴</th><th>価格帯（新車）</th><th>維持費</th><th>資産性</th></tr></thead>
+            <tbody>
+              <tr><td><strong>軽自動車</strong></td><td>660cc以下。税金・保険が最安。日常使い向き</td><td>130〜200万</td><td class="risk-low">最安</td><td><span class="badge badge-high">低</span></td></tr>
+              <tr><td><strong>コンパクト</strong></td><td>1.0〜1.5L。燃費と実用性のバランス</td><td>150〜300万</td><td class="risk-low">低</td><td><span class="badge badge-high">低</span></td></tr>
+              <tr><td><strong>セダン</strong></td><td>走行安定性・静粛性。ビジネス利用にも</td><td>250〜800万</td><td class="risk-mid">中</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>SUV</strong></td><td>人気最高。車高が高く視界良好。アウトドア向き</td><td>250〜1,200万</td><td class="risk-mid">中〜高</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>ミニバン</strong></td><td>3列シート。ファミリー向け。積載量◎</td><td>250〜600万</td><td class="risk-mid">中</td><td><span class="badge badge-high">低</span></td></tr>
+              <tr><td><strong>ワゴン</strong></td><td>セダンベースの荷室拡大。長距離向き</td><td>300〜700万</td><td class="risk-mid">中</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>クーペ</strong></td><td>2ドア。スタイリング重視。趣味性高い</td><td>400〜2,000万+</td><td class="risk-high">高</td><td><span class="badge badge-mid">中〜高</span></td></tr>
+              <tr><td><strong>オープンカー</strong></td><td>ロードスター・カブリオレ。季節を楽しむ</td><td>300〜3,000万+</td><td class="risk-high">高</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>スポーツカー</strong></td><td>高出力。走りの楽しさ。限定車はプレミア化</td><td>500〜5,000万+</td><td class="risk-high">最高</td><td><span class="badge badge-low">高</span></td></tr>
+              <tr><td><strong>スーパーカー</strong></td><td>フェラーリ・ランボルギーニ等。投資対象にも</td><td>2,500万〜億超</td><td class="risk-high">最高</td><td><span class="badge badge-low">高</span></td></tr>
+              <tr><td><strong>クラシック・ヴィンテージ</strong></td><td>旧車。年式による希少価値。部品確保が課題</td><td>100万〜億超</td><td class="risk-high">最高</td><td><span class="badge badge-low">高</span></td></tr>
+            </tbody>
+          </table>
+
+          <h3>パワートレイン別</h3>
+          <table>
+            <thead><tr><th>種類</th><th>特徴</th><th>燃費目安</th><th>維持費への影響</th></tr></thead>
+            <tbody>
+              <tr><td><strong>ガソリン車</strong></td><td>選択肢最多。整備インフラ充実</td><td>8〜18km/L</td><td>標準</td></tr>
+              <tr><td><strong>ディーゼル車</strong></td><td>トルク◎・長距離向き。軽油で燃費有利</td><td>12〜25km/L</td><td>やや安（燃料）</td></tr>
+              <tr><td><strong>ハイブリッド（HV）</strong></td><td>燃費◎。市街地走行に強い。リセールバリュー高</td><td>20〜35km/L</td><td>燃料費安</td></tr>
+              <tr><td><strong>プラグインHV（PHV）</strong></td><td>短距離EV走行可。補助金対象</td><td>30〜70km/L相当</td><td>電気+燃料</td></tr>
+              <tr><td><strong>EV（電気自動車）</strong></td><td>走行コスト最安。補助金大。充電インフラ課題</td><td>電費6〜9km/kWh</td><td>最安（走行）</td></tr>
+            </tbody>
+          </table>
+
+          <h3>車の買い方ガイド</h3>
+          <table>
+            <thead><tr><th>購入ルート</th><th>メリット</th><th>デメリット</th><th>おすすめ度</th></tr></thead>
+            <tbody>
+              <tr><td><strong>正規ディーラー（新車）</strong></td><td>メーカー保証。最新装備。値引き交渉可</td><td>価格最高。納期長い場合あり</td><td><span class="badge badge-low">★★★★★</span></td></tr>
+              <tr><td><strong>認定中古車（CPO）</strong></td><td>ディーラー整備済。延長保証。安心感◎</td><td>一般中古より割高。選択肢限定</td><td><span class="badge badge-low">★★★★</span></td></tr>
+              <tr><td><strong>中古車販売店</strong></td><td>選択肢豊富。価格交渉余地大</td><td>品質にばらつき。保証が薄い店も</td><td><span class="badge badge-mid">★★★</span></td></tr>
+              <tr><td><strong>オートオークション代行</strong></td><td>業者価格で買える。掘り出し物あり</td><td>現車確認困難。代行手数料。返品不可が多い</td><td><span class="badge badge-mid">★★★</span></td></tr>
+              <tr><td><strong>個人売買（ヤフオク等）</strong></td><td>最安値。消費税不要</td><td>保証なし。名義変更等の手間。トラブルリスク大</td><td><span class="badge badge-high">★★</span></td></tr>
+              <tr><td><strong>残価設定ローン</strong></td><td>月々の支払い軽減。短期乗換え向き</td><td>走行距離制限。総支払額は割高。傷で精算リスク</td><td><span class="badge badge-mid">★★★</span></td></tr>
+              <tr><td><strong>カーリース（KINTOなど）</strong></td><td>税金・保険込み定額。経費計上可</td><td>途中解約に違約金。カスタム不可</td><td><span class="badge badge-mid">★★★</span></td></tr>
+              <tr><td><strong>サブスク／カーシェア</strong></td><td>初期費用ゼロ。複数車種を楽しめる</td><td>月額高め。所有欲は満たされない</td><td><span class="badge badge-mid">★★</span></td></tr>
+            </tbody>
+          </table>
+
+          <div class="note-info">
+            <strong>資産性を重視する場合のポイント：</strong><br>
+            ・限定車・特別仕様車は中古市場でプレミアがつく傾向（例：GT-R NISMO、GR Yaris等）<br>
+            ・MT車は希少性で値崩れしにくい傾向<br>
+            ・色は白・黒が最もリセールバリューが高い（特殊色は好みが分かれる）<br>
+            ・ディーラー整備記録の有無がリセールに大きく影響<br>
+            ・EV補助金を受けた場合、4年以内の売却で返納義務あり
+          </div>
+        </div>
+
+        <!-- ===== 時計 種類・買い方 ===== -->
+        <div class="guide-panel" id="guide-watch" style="display:none">
+          <h3>時計の種類一覧</h3>
+
+          <h3 style="color:var(--label);font-size:13px;margin-top:16px">ムーブメント別</h3>
+          <table>
+            <thead><tr><th>種類</th><th>特徴</th><th>精度</th><th>OH周期</th><th>資産性</th></tr></thead>
+            <tbody>
+              <tr><td><strong>機械式（自動巻き）</strong></td><td>腕の動きで巻上げ。高級時計の主流</td><td>日差±5〜15秒</td><td>3〜5年</td><td><span class="badge badge-low">高</span></td></tr>
+              <tr><td><strong>機械式（手巻き）</strong></td><td>毎日巻く儀式感。薄型化しやすい</td><td>日差±5〜15秒</td><td>3〜5年</td><td><span class="badge badge-low">高</span></td></tr>
+              <tr><td><strong>クォーツ</strong></td><td>電池駆動。高精度・低価格。メンテ楽</td><td>月差±15秒</td><td>電池2〜3年</td><td><span class="badge badge-high">低</span></td></tr>
+              <tr><td><strong>スプリングドライブ</strong></td><td>セイコー独自。機械式+クォーツの融合</td><td>月差±15秒</td><td>3〜5年</td><td><span class="badge badge-mid">中〜高</span></td></tr>
+              <tr><td><strong>ソーラー電波</strong></td><td>光発電+電波補正。実用最強</td><td>10万年に1秒</td><td>ほぼ不要</td><td><span class="badge badge-high">低</span></td></tr>
+              <tr><td><strong>スマートウォッチ</strong></td><td>通知・健康管理。2〜3年で買替え前提</td><td>—</td><td>—</td><td><span class="badge badge-high">なし</span></td></tr>
+            </tbody>
+          </table>
+
+          <h3 style="color:var(--label);font-size:13px;margin-top:16px">カテゴリ別</h3>
+          <table>
+            <thead><tr><th>カテゴリ</th><th>特徴</th><th>代表的モデル例</th><th>価格帯</th></tr></thead>
+            <tbody>
+              <tr><td><strong>ドレスウォッチ</strong></td><td>薄型・シンプル。フォーマル向き</td><td>カラトラバ、サクソニア</td><td>50万〜3,000万+</td></tr>
+              <tr><td><strong>ダイバーズ</strong></td><td>防水200m+。回転ベゼル。タフ</td><td>サブマリーナ、シーマスター</td><td>30万〜300万+</td></tr>
+              <tr><td><strong>パイロット</strong></td><td>視認性重視。大型ケース。GMT機能</td><td>ビッグパイロット、ナビタイマー</td><td>50万〜500万+</td></tr>
+              <tr><td><strong>クロノグラフ</strong></td><td>ストップウォッチ機能。スポーティ</td><td>デイトナ、スピードマスター</td><td>30万〜5,000万+</td></tr>
+              <tr><td><strong>GMT</strong></td><td>2〜3タイムゾーン表示。旅行・ビジネス</td><td>GMTマスターII、アクアテラGMT</td><td>50万〜500万+</td></tr>
+              <tr><td><strong>フィールド／ミリタリー</strong></td><td>堅牢・高視認性。アウトドア向き</td><td>カーキフィールド、レンジャー</td><td>5万〜100万</td></tr>
+              <tr><td><strong>コンプリケーション</strong></td><td>トゥールビヨン・永久カレンダー等。最高峰</td><td>5270G、ランゲ1トゥールビヨン</td><td>500万〜億超</td></tr>
+            </tbody>
+          </table>
+
+          <h3 style="color:var(--label);font-size:13px;margin-top:16px">ブランド帯別の目安</h3>
+          <table>
+            <thead><tr><th>帯</th><th>ブランド例</th><th>新品価格帯</th><th>リセールバリュー</th></tr></thead>
+            <tbody>
+              <tr><td><strong>エントリー</strong></td><td>セイコー、シチズン、ハミルトン、ティソ</td><td>3〜30万</td><td><span class="badge badge-high">低</span></td></tr>
+              <tr><td><strong>ミドル</strong></td><td>タグ・ホイヤー、ロンジン、オリス</td><td>20〜80万</td><td><span class="badge badge-mid">中</span></td></tr>
+              <tr><td><strong>ハイエンド</strong></td><td>オメガ、ブライトリング、IWC、GS</td><td>40〜200万</td><td><span class="badge badge-mid">中〜高</span></td></tr>
+              <tr><td><strong>ラグジュアリー</strong></td><td>ロレックス、カルティエ、ジャガールクルト</td><td>60〜500万+</td><td><span class="badge badge-low">高</span></td></tr>
+              <tr><td><strong>ハイコンプリケーション</strong></td><td>パテック、AP、ヴァシュロン、ランゲ</td><td>200万〜億超</td><td><span class="badge badge-low">最高</span></td></tr>
+              <tr><td><strong>独立時計師</strong></td><td>F.P.ジュルヌ、MB&F、H.モーザー</td><td>500万〜億超</td><td><span class="badge badge-low">非常に高</span></td></tr>
+            </tbody>
+          </table>
+
+          <h3>時計の買い方ガイド</h3>
+          <table>
+            <thead><tr><th>購入ルート</th><th>メリット</th><th>デメリット</th><th>おすすめ度</th></tr></thead>
+            <tbody>
+              <tr><td><strong>正規店（ブティック/AD）</strong></td><td>メーカー正規保証（2〜5年）。真贋リスクゼロ。購入履歴が残る</td><td>人気モデルは在庫なし（マラソン）。定価販売。値引きほぼなし</td><td><span class="badge badge-low">★★★★★</span></td></tr>
+              <tr><td><strong>並行輸入店</strong></td><td>定価より安い場合あり。在庫あれば即購入可</td><td>メーカー保証が適用外の場合あり。店舗独自保証のみ</td><td><span class="badge badge-mid">★★★★</span></td></tr>
+              <tr><td><strong>中古専門店（大手）</strong></td><td>真贋鑑定済み。独自保証あり。品揃え豊富</td><td>プレミア価格。コンディション差あり</td><td><span class="badge badge-low">★★★★</span></td></tr>
+              <tr><td><strong>委託販売店</strong></td><td>個人出品を店舗が仲介。掘り出し物あり</td><td>保証が限定的。在庫回転が遅い</td><td><span class="badge badge-mid">★★★</span></td></tr>
+              <tr><td><strong>オンラインマーケット<br>（Chrono24等）</strong></td><td>世界中の在庫にアクセス。価格比較容易</td><td>実物確認不可。海外取引は関税・送料。偽物リスクあり</td><td><span class="badge badge-mid">★★★</span></td></tr>
+              <tr><td><strong>オークション（Phillips等）</strong></td><td>希少品・ヴィンテージの入手機会。市場価格の指標</td><td>バイヤーズプレミアム（15〜25%上乗せ）。競り負けリスク</td><td><span class="badge badge-mid">★★★</span></td></tr>
+              <tr><td><strong>個人売買（SNS・掲示板）</strong></td><td>中間マージンなし。最安値の可能性</td><td>偽物リスク最大。保証なし。トラブル時の救済なし</td><td><span class="badge badge-high">★</span></td></tr>
+            </tbody>
+          </table>
+
+          <div class="note-info">
+            <strong>資産性を重視する場合のポイント：</strong><br>
+            ・ロレックスのスポーツモデル（デイトナ・GMTマスターII・サブマリーナ）は過去20年安定してプレミア化<br>
+            ・付属品完品（箱・保証書・タグ・コマ）の有無でリセールが10〜30%変わる<br>
+            ・文字盤バリエーション（レア文字盤）は将来のプレミア要因<br>
+            ・研磨（ポリッシュ）を繰り返すとケース痩せで価値低下 → 日常使い用と保管用の2本持ちも一手<br>
+            ・2022年のバブル崩壊（一部モデル-30〜50%）の教訓：「必ず値上がり」は幻想
+          </div>
+        </div>
+
+        <!-- ===== 金 種類・買い方 ===== -->
+        <div class="guide-panel" id="guide-gold" style="display:none">
+          <h3>金の種類一覧</h3>
+          <table>
+            <thead><tr><th>種類</th><th>特徴</th><th>最低投資額目安</th><th>手数料</th><th>現物保有</th></tr></thead>
+            <tbody>
+              <tr><td><strong>金地金（インゴット）</strong></td><td>純度999.9。5g〜1kgのバー。最もシンプルな現物保有</td><td>7.5万〜（5g）</td><td>バーチャージ（500g未満）+ スプレッド</td><td>あり</td></tr>
+              <tr><td><strong>金貨（地金型）</strong></td><td>メイプルリーフ・カンガルー・ウィーン等。小額から買える</td><td>3万〜（1/10oz）</td><td>プレミアム5〜10%上乗せ</td><td>あり</td></tr>
+              <tr><td><strong>金貨（収集型）</strong></td><td>限定発行。デザイン価値。額面あり</td><td>5万〜</td><td>プレミアム10〜50%+</td><td>あり</td></tr>
+              <tr><td><strong>純金積立</strong></td><td>月1,000円〜。ドルコスト平均法。初心者向き</td><td>1,000円/月〜</td><td>購入手数料1.5〜3%</td><td>業者預かり</td></tr>
+              <tr><td><strong>金ETF（現物裏付け型）</strong></td><td>証券口座で売買。流動性最高。1口数千円〜</td><td>数千円〜</td><td>信託報酬0.2〜0.5%/年</td><td>なし（間接保有）</td></tr>
+              <tr><td><strong>金ETF（非裏付け型）</strong></td><td>先物ベース。ロールオーバーコストあり</td><td>数千円〜</td><td>信託報酬+ロールコスト</td><td>なし</td></tr>
+              <tr><td><strong>金先物・CFD</strong></td><td>レバレッジ可。短期売買向き。ハイリスク</td><td>数万円（証拠金）</td><td>スプレッド+スワップ</td><td>なし</td></tr>
+              <tr><td><strong>金鉱株・金鉱ETF</strong></td><td>金価格のレバレッジ効果。企業リスクあり</td><td>数千円〜</td><td>売買手数料+信託報酬</td><td>なし</td></tr>
+              <tr><td><strong>18K/14Kジュエリー</strong></td><td>装飾品。純度75%/58.5%。資産性は低い</td><td>数万円〜</td><td>加工賃が大きい</td><td>あり</td></tr>
+            </tbody>
+          </table>
+
+          <h3 style="color:var(--label);font-size:13px;margin-top:16px">金地金の重量別コスト比較</h3>
+          <table>
+            <thead><tr><th>重量</th><th>購入額目安<br>（15,000円/gの場合）</th><th>バーチャージ</th><th>1gあたり実質コスト</th><th>おすすめ度</th></tr></thead>
+            <tbody>
+              <tr><td>5g</td><td>75,000円</td><td>4,400〜16,500円</td><td>15,880〜18,300円</td><td><span class="badge badge-high">割高</span></td></tr>
+              <tr><td>10g</td><td>150,000円</td><td>4,400〜16,500円</td><td>15,440〜16,650円</td><td><span class="badge badge-high">やや割高</span></td></tr>
+              <tr><td>20g</td><td>300,000円</td><td>4,400〜16,500円</td><td>15,220〜15,825円</td><td><span class="badge badge-mid">普通</span></td></tr>
+              <tr><td>50g</td><td>750,000円</td><td>4,400〜16,500円</td><td>15,088〜15,330円</td><td><span class="badge badge-mid">やや良</span></td></tr>
+              <tr><td>100g</td><td>1,500,000円</td><td>5,500〜16,500円</td><td>15,055〜15,165円</td><td><span class="badge badge-low">良好</span></td></tr>
+              <tr><td>500g</td><td>7,500,000円</td><td>なし</td><td>15,000円</td><td><span class="badge badge-low">最良</span></td></tr>
+              <tr><td>1kg</td><td>15,000,000円</td><td>なし</td><td>15,000円</td><td><span class="badge badge-low">最良</span></td></tr>
+            </tbody>
+          </table>
+          <p class="small">※バーチャージは業者により異なります。田中貴金属・三菱マテリアル・徳力本店等の主要地金商を参考。</p>
+
+          <h3>金の買い方ガイド</h3>
+          <table>
+            <thead><tr><th>購入ルート</th><th>メリット</th><th>デメリット</th><th>おすすめ度</th></tr></thead>
+            <tbody>
+              <tr><td><strong>地金商（店頭）</strong><br><span class="small">田中貴金属・三菱マテリアル等</span></td><td>信頼性最高。即日引渡し。LBMA認定品。買取もスムーズ</td><td>営業時間限定。バーチャージあり（500g未満）</td><td><span class="badge badge-low">★★★★★</span></td></tr>
+              <tr><td><strong>地金商（オンライン）</strong></td><td>24時間注文可。自宅配送。店頭と同品質</td><td>配送リスク。受取に在宅必要</td><td><span class="badge badge-low">★★★★</span></td></tr>
+              <tr><td><strong>銀行（三菱UFJ等）</strong></td><td>銀行ブランドの安心感。純金積立対応</td><td>手数料やや高。品揃え限定</td><td><span class="badge badge-mid">★★★</span></td></tr>
+              <tr><td><strong>証券会社</strong><br><span class="small">純金積立・金ETF</span></td><td>少額から開始可。NISA口座で金ETF購入可（一部）</td><td>現物引出し不可の場合あり。信託報酬</td><td><span class="badge badge-low">★★★★</span></td></tr>
+              <tr><td><strong>貴金属店（宝飾店）</strong><br><span class="small">金貨・ジュエリー</span></td><td>金貨のデザイン選択可。ギフト需要</td><td>プレミアム上乗せ。売却時は地金価格ベース</td><td><span class="badge badge-mid">★★★</span></td></tr>
+              <tr><td><strong>フリマ・個人売買</strong></td><td>—</td><td>偽物リスク極大。品位保証なし。絶対に避けるべき</td><td><span class="badge badge-high">★</span></td></tr>
+            </tbody>
+          </table>
+
+          <div class="note-info">
+            <strong>資産保全を重視する場合のポイント：</strong><br>
+            ・現物保有なら LBMA（ロンドン金市場協会）認定刻印の地金を選ぶ → 世界中で換金可能<br>
+            ・500g以上ならバーチャージ不要で最もコスト効率が良い<br>
+            ・純金積立は「特定保管」を選ぶ → 業者破綻時も資産保全（消費寄託は返還されないリスク）<br>
+            ・金ETFは流動性最高だが現物引出し不可の商品が多い → 有事の金の意味が薄れる<br>
+            ・200万円超の売却で支払調書が税務署に提出される → 分割売却での回避は脱税<br>
+            ・円建て金価格 = ドル建て金価格 × USD/JPY → 為替ヘッジ効果あり（円安時に有利）
+          </div>
+
+          <div class="note">
+            <strong>保管方法の比較：</strong><br>
+            ・<strong>自宅金庫</strong>：即時アクセス可。盗難・火災リスク。保険加入推奨（年0.3〜1%程度）<br>
+            ・<strong>銀行貸金庫</strong>：年1〜5万円。盗難リスク低。営業時間内のみアクセス。預金保護対象外<br>
+            ・<strong>業者預かり（特定保管）</strong>：手数料あり。盗難リスクゼロ。業者破綻でも分別管理で保全<br>
+            ・<strong>業者預かり（消費寄託）</strong>：手数料安 or 無料。業者破綻時に返還されないリスクあり
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 免責 -->
     <div class="disclaimer">
       <strong>免責事項：</strong>本ツールは AI による参考情報です。投資・税務の最終判断は、ユーザー自身が税理士・FP等の有資格専門家と相談のうえ行ってください。相場や税制は変動しうるため、本ツールの前提が将来も妥当である保証はありません。特定の商品・ブランド・販売店の推奨は行っておりません。
@@ -548,6 +756,12 @@ function switchCheckTab(key) {
   document.querySelectorAll('.check-panel').forEach(p => p.style.display = 'none');
   document.getElementById(key).style.display = '';
   document.querySelectorAll('#checkTabs button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function switchGuideTab(key) {
+  document.querySelectorAll('.guide-panel').forEach(p => p.style.display = 'none');
+  document.getElementById(key).style.display = '';
+  document.querySelectorAll('#guideTabs button').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
 }
 function toggleGoldFields() {
